@@ -103,6 +103,12 @@ sudo ufw allow from 172.16.238.0/24 to any port 10050 proto tcp
    - Para los traps, usar los items `snmptrap[<regex>]` y `snmptrap.fallback`.
    - En el equipo, configurar como destino de traps la IP del servidor, puerto 162, con la comunidad de `server_setup.sh`.
    - Los MIBs del fabricante se copian en `./zbx_env/var/lib/zabbix/mibs/` y se aplican reiniciando `zabbix-server` y `zabbix-snmptraps`.
+   - **MikroTik:** en `/snmp` configurar `src-address` con la misma IP de la interfaz SNMP del host en Zabbix. Si no, el trap sale con la IP de la interfaz de salida y el server lo descarta como *unmatched trap*.
+   - **Alertas inmediatas de enlace:** importar `zabbix_templates/mikrotik_link_traps.yaml` y enlazarla a los MikroTik.
+     - Crea un trigger por cada interfaz **con comentario** (`ifAlias`), sin contar las dinámicas `<…>`.
+     - Alerta con un `linkDown` recibido con la interfaz habilitada y se resuelve con el `linkUp`.
+     - Para limitarla a ciertas interfaces, ajustar la macro `{$LINKTRAP.IFALIAS.MATCHES}` en el host.
+   - **Concentradores PPPoE:** añadir `|^<pppoe-` a la macro `{$NET.IF.IFNAME.NOT_MATCHES}` del host, para que no se descubra cada sesión de cliente como interfaz.
 
 ## 5. Tareas programadas
 
