@@ -113,6 +113,10 @@ sudo ufw allow from 172.16.238.0/24 to any port 10050 proto tcp
      - Alerta *High* por desconexión, por *flapping* (4 cambios en 10 min, ajustable con `{$PORT.FLAP.COUNT}`/`{$PORT.FLAP.PERIOD}`) y por cambio de velocidad negociada en cualquier sentido.
      - Poner `{$IFCONTROL}=0` en el host para que el *Link down* de la plantilla del fabricante no duplique alertas.
      - En TP-Link, excluir las VLAN con `{$PORT.IFNAME.NOT_MATCHES}=^(<|Vlan-interface)`.
+   - **Antenas Ubiquiti airOS 8** (LAP-GPS y otros airMAX AC): solo responden a **SNMPv1**. Con v2c ignoran las consultas y aparecen como no disponibles. En la interfaz SNMP del host elegir *SNMPv1*.
+     - La plantilla oficial *Ubiquiti AirOS by SNMP* solo da datos del sistema: su firmware, modelo e interfaces no funcionan en airOS 8.
+     - Añadir `zabbix_templates/ubiquiti_airos8_wireless.yaml`: clientes conectados, señal, ruido, radio, GPS, datos por cliente (señal, CCQ, distancia, CINR, capacidad) y tráfico de `eth0`/`ath0` con contadores de 32 bits.
+     - Triggers: AP sin clientes, ruido alto (`{$UBNT.NOISE.MAX.WARN}`), GPS con pocos satélites y cliente con señal débil (`{$UBNT.STA.SIGNAL.MIN.WARN}`, ajustable por cliente con contexto).
    - **Concentradores PPPoE:** añadir `|^<pppoe-` a la macro `{$NET.IF.IFNAME.NOT_MATCHES}` del host, para que no se descubra cada sesión de cliente como interfaz.
 
 ## 5. Tareas programadas
