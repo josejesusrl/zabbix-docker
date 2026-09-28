@@ -49,6 +49,14 @@ sudo ./server_letsencrypt.sh issue
 
 Hasta emitir el certificado, todo lo que llega por HTTP se redirige a HTTPS, que todavía no responde. Es normal.
 
+Si Let's Encrypt todavía no puede validar (puertos 80/443 sin redirigir en el NAT), instalar un certificado autofirmado temporal para usar la web en la LAN:
+
+```sh
+sudo ./server_letsencrypt.sh selfsigned
+```
+
+El navegador mostrará un aviso. Cuando los puertos estén redirigidos, `sudo ./server_letsencrypt.sh issue` lo reemplaza.
+
 Alias recomendado:
 ```sh
 alias zbx='docker compose --env-file .env --env-file server.env'

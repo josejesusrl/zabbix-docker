@@ -3,6 +3,7 @@
 # Usage (as root, from anywhere):
 #   ./server_letsencrypt.sh issue   first certificate, web stack must be running
 #   ./server_letsencrypt.sh renew   renewal, run daily from cron
+#   ./server_letsencrypt.sh selfsigned   temporary self-signed certificate (no public access)
 # Certbot runs from certbot/certbot image, challenges are served by
 # zabbix-web-nginx-pgsql from ./letsencrypt/webroot (nginx/zabbix_http.conf).
 set -eu
@@ -68,6 +69,23 @@ case "${1:-}" in
         $COMPOSE up -d --force-recreate "$WEB_SERVICE"
         echo "HTTPS enabled: https://${LETSENCRYPT_DOMAIN}/"
         ;;
+    selfsigned)
+        # Temporary certificate while Let's Encrypt is not reachable (e.g. ports not forwarded).
+        # Replaced automatically by "issue".
+        mkdir -p "$SSL_DIR"
+        if [ ! -f "${SSL_DIR}/dhparam.pem" ]; then
+            openssl dhparam -out "${SSL_DIR}/dhparam.pem" 2048
+        fi
+        openssl req -x509 -newkey rsa:2048 -nodes -days 365 \
+            -subj "/CN=${LETSENCRYPT_DOMAIN}" \
+            -addext "subjectAltName=DNS:${LETSENCRYPT_DOMAIN}" \
+            -keyout "${SSL_DIR}/ssl.key" -out "${SSL_DIR}/ssl.crt"
+        chown "${ZBX_UID}:${ZBX_GID}" "${SSL_DIR}/ssl.crt" "${SSL_DIR}/ssl.key" "${SSL_DIR}/dhparam.pem"
+        chmod 644 "${SSL_DIR}/ssl.crt" "${SSL_DIR}/dhparam.pem"
+        chmod 600 "${SSL_DIR}/ssl.key"
+        $COMPOSE up -d --force-recreate "$WEB_SERVICE"
+        echo "Self-signed certificate installed: https://${LETSENCRYPT_DOMAIN}/ (browser warning expected)"
+        ;;
     renew)
         certbot renew --webroot -w /var/www/acme --quiet
         if install_certs; then
@@ -76,7 +94,7 @@ case "${1:-}" in
         fi
         ;;
     *)
-        echo "Usage: $0 issue|renew" >&2
+        echo "Usage: $0 issue|renew|selfsigned" >&2
         exit 1
         ;;
 esac
