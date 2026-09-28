@@ -63,10 +63,11 @@ if [ "$(cat env_vars/.POSTGRES_PASSWORD)" = "zabbix" ]; then
     fi
 fi
 
-# Let's Encrypt account e-mail (expiry notices)
+# Let's Encrypt account contact e-mail (account recovery and policy notices).
+# Let's Encrypt no longer sends expiry notices, expiry is monitored by Zabbix (SERVER_DEPLOY.md).
 if grep -q '^LETSENCRYPT_EMAIL=$' server.env; then
     while :; do
-        printf "E-mail for Let's Encrypt notifications: " >&2
+        printf "E-mail for Let's Encrypt account: " >&2
         IFS= read -r le_email
         case "$le_email" in
             *@*.*) break ;;

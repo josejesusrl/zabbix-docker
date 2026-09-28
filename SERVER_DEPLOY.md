@@ -35,7 +35,7 @@ cd zabbix-docker
 
 El script pide, sin mostrarlos en pantalla:
 - **Contraseña de PostgreSQL.** Si se deja vacía, se genera una aleatoria. Solo se aplica antes de que se cree la base de datos.
-- **E-mail para Let's Encrypt.** Aquí llegan los avisos de caducidad.
+- **E-mail para la cuenta de Let's Encrypt.** Es el contacto de la cuenta. Let's Encrypt ya **no** envía avisos de caducidad; la caducidad la vigila Zabbix (sección 4).
 - **Comunidad SNMP de traps.** Si se deja vacía, se genera una y se muestra **una sola vez**. Solo se aceptan caracteres `A-Z a-z 0-9 . _ -`.
 
 También ofrece instalar **lm-sensors** (apt, dnf o yum) y ejecuta `sensors-detect --auto`. Si los módulos de sensores recién detectados no aparecen en `sensors`, reiniciar el host. En una máquina virtual normalmente no hay sensores.
@@ -91,6 +91,13 @@ sudo ufw allow from 172.16.238.0/24 to any port 10050 proto tcp
      - Triggers: aviso con `{$TEMP.WARN}` (75) y crítico con `{$TEMP.CRIT}` (85). Se pueden ajustar por chip, por ejemplo `{$TEMP.CRIT:"nvme"}=70`.
      - Prueba desde el host: `zbx exec zabbix-agent zabbix_agent2 -t hwmon.temp.discovery`.
 3. *Administration → General → Other*: poner `Frontend URL` en `https://zabbix.likson.com/`. Es necesario para los informes PDF.
+   - **Caducidad del certificado:** enlazar al host "Zabbix server" la plantilla `Website certificate by Zabbix agent 2` con estas macros de host:
+     ```
+     {$CERT.WEBSITE.HOSTNAME} = zabbix.likson.com
+     {$CERT.WEBSITE.IP}       = 127.0.0.1
+     {$CERT.EXPIRY.WARN}      = 14
+     ```
+     El agente se conecta a `127.0.0.1:443` usando el nombre `zabbix.likson.com`, sin depender del DNS público ni del NAT. Avisa si faltan menos de 14 días, es decir, si `renew` lleva más de 2 semanas fallando. Con el certificado autofirmado el resultado es `valid-but-self-signed` y no genera alerta. Cuando `issue` lo sustituya, cambiará la huella del certificado, algo esperado.
 4. Equipos de red:
    - Crear el host con una interfaz SNMP (v2c/v3) y la plantilla del fabricante.
    - Para los traps, usar los items `snmptrap[<regex>]` y `snmptrap.fallback`.
