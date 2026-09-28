@@ -1,0 +1,81 @@
+zabbix_export:
+  version: '7.0'
+  template_groups:
+    - uuid: 2fa17b57e9e84a8d94aa20c1d5f16989
+      name: Templates/Server hardware
+  templates:
+    - uuid: e24b65e7b16d488a887356183a6bba10
+      template: 'Linux hwmon temperature by Zabbix agent 2'
+      name: 'Linux hwmon temperature by Zabbix agent 2'
+      description: |
+        Host temperature sensors from Linux hwmon (/sys/class/hwmon), drivers loaded by lm-sensors on the host.
+        Requires zabbix_agentd.d/sensors_hwmon.conf and sensors_hwmon.sh in agent 2 include directory.
+        Thresholds can be set per chip with macro context, e.g. {$TEMP.CRIT:"nvme"}.
+      groups:
+        - name: Templates/Server hardware
+      discovery_rules:
+        - uuid: 93cc1ad90ef54e219f1c46243f86e7cd
+          name: 'Temperature sensors discovery'
+          key: hwmon.temp.discovery
+          delay: 1h
+          lifetime: 7d
+          description: 'Discovers temperature inputs (tempN_input) of all hwmon chips.'
+          item_prototypes:
+            - uuid: 3e5f48fda7084703b5f70ed0bb94fae0
+              name: 'Temperature {#CHIP} {#LABEL}'
+              key: 'hwmon.temp[{#CHIP},{#DEVICE},{#SENSOR}]'
+              delay: 1m
+              value_type: FLOAT
+              units: '°C'
+              description: 'Chip {#CHIP}, device {#DEVICE}, sensor {#SENSOR}.'
+              tags:
+                - tag: component
+                  value: temperature
+                - tag: chip
+                  value: '{#CHIP}'
+              trigger_prototypes:
+                - uuid: a7d350e0630f4242b8f0c19679f6b74b
+                  expression: 'min(/Linux hwmon temperature by Zabbix agent 2/hwmon.temp[{#CHIP},{#DEVICE},{#SENSOR}],5m)>={$TEMP.CRIT:"{#CHIP}"}'
+                  name: 'Temperature {#CHIP} {#LABEL} is critical (over {$TEMP.CRIT:"{#CHIP}"}°C for 5m)'
+                  priority: HIGH
+                  tags:
+                    - tag: scope
+                      value: availability
+                - uuid: ab90d482813047a0b9a45069cfcf9ca1
+                  expression: 'min(/Linux hwmon temperature by Zabbix agent 2/hwmon.temp[{#CHIP},{#DEVICE},{#SENSOR}],5m)>={$TEMP.WARN:"{#CHIP}"}'
+                  name: 'Temperature {#CHIP} {#LABEL} is high (over {$TEMP.WARN:"{#CHIP}"}°C for 5m)'
+                  priority: WARNING
+                  dependencies:
+                    - name: 'Temperature {#CHIP} {#LABEL} is critical (over {$TEMP.CRIT:"{#CHIP}"}°C for 5m)'
+                      expression: 'min(/Linux hwmon temperature by Zabbix agent 2/hwmon.temp[{#CHIP},{#DEVICE},{#SENSOR}],5m)>={$TEMP.CRIT:"{#CHIP}"}'
+                  tags:
+                    - tag: scope
+                      value: performance
+                - uuid: 25fb4c70de354ab5942cb2e519418fe6
+                  expression: 'nodata(/Linux hwmon temperature by Zabbix agent 2/hwmon.temp[{#CHIP},{#DEVICE},{#SENSOR}],30m)=1'
+                  name: 'Temperature {#CHIP} {#LABEL}: no data for 30m'
+                  priority: WARNING
+                  manual_close: 'YES'
+                  tags:
+                    - tag: scope
+                      value: availability
+          graph_prototypes:
+            - uuid: fdf13f0d61054d9799ffc2a20c1c4c43
+              name: 'Temperature {#CHIP} {#LABEL}'
+              graph_items:
+                - color: F63100
+                  item:
+                    host: 'Linux hwmon temperature by Zabbix agent 2'
+                    key: 'hwmon.temp[{#CHIP},{#DEVICE},{#SENSOR}]'
+      tags:
+        - tag: class
+          value: hardware
+        - tag: target
+          value: linux
+      macros:
+        - macro: '{$TEMP.CRIT}'
+          value: '85'
+          description: 'Critical temperature threshold, °C.'
+        - macro: '{$TEMP.WARN}'
+          value: '75'
+          description: 'Warning temperature threshold, °C.'

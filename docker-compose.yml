@@ -1,0 +1,115 @@
+# Zabbix with PostgreSQL and Nginx frontend (telecom monitoring deployment)
+# Customizations are in compose_server.yaml, both files are selected by COMPOSE_FILE in server.env:
+#   docker compose --env-file .env --env-file server.env up -d
+# Complementary services (agent 2, snmptraps, web service) use profile "postgres-nginx"
+services:
+ server-db-init:
+  extends:
+   file: compose_zabbix_components.yaml
+   service: server-pgsql-db-init
+  image: "${ZABBIX_SERVER_PGSQL_IMAGE}:${ZBX_IMAGE_TAG}"
+  depends_on:
+   postgres-server:
+    condition: service_healthy
+  labels:
+   com.zabbix.os: "${OS}"
+
+ zabbix-server:
+  extends:
+   file: compose_zabbix_components.yaml
+   service: server-pgsql
+  image: "${ZABBIX_SERVER_PGSQL_IMAGE}:${ZBX_IMAGE_TAG}"
+  depends_on:
+   server-db-init:
+    condition: service_completed_successfully
+   postgres-server:
+    condition: service_healthy
+  labels:
+   com.zabbix.os: "${OS}"
+
+ zabbix-web-nginx-pgsql:
+  extends:
+   file: compose_zabbix_components.yaml
+   service: web-nginx-pgsql
+  image: "${ZABBIX_WEB_NGINX_PGSQL_IMAGE}:${ZBX_IMAGE_TAG}"
+  depends_on:
+   server-db-init:
+    condition: service_completed_successfully
+   postgres-server:
+    condition: service_healthy
+  labels:
+   com.zabbix.os: "${OS}"
+
+ zabbix-agent:
+  extends:
+   file: compose_zabbix_components.yaml
+   service: agent2
+  image: "${ZABBIX_AGENT2_IMAGE}:${ZBX_IMAGE_TAG}"
+  profiles: !override
+   - postgres-nginx
+  labels:
+   com.zabbix.os: "${OS}"
+
+ zabbix-snmptraps:
+  extends:
+   file: compose_zabbix_components.yaml
+   service: snmptraps
+  image: "${ZABBIX_SNMPTRAPS_IMAGE}:${ZBX_IMAGE_TAG}"
+  profiles: !override
+   - postgres-nginx
+  labels:
+   com.zabbix.os: "${OS}"
+
+ zabbix-web-service:
+  extends:
+   file: compose_zabbix_components.yaml
+   service: web-service
+  image: "${ZABBIX_WEB_SERVICE_IMAGE}:${ZBX_IMAGE_TAG}"
+  profiles: !override
+   - postgres-nginx
+  labels:
+   com.zabbix.os: "${OS}"
+
+ postgres-server:
+  extends:
+   file: compose_databases.yaml
+   service: postgres-server
+
+networks:
+  frontend:
+    driver: bridge
+    enable_ipv6: "${FRONTEND_ENABLE_IPV6}"
+    ipam:
+      driver: "${FRONTEND_NETWORK_DRIVER}"
+      config:
+      - subnet: "${FRONTEND_SUBNET}"
+  backend:
+    driver: bridge
+    enable_ipv6: "${BACKEND_ENABLE_IPV6}"
+    internal: true
+    ipam:
+      driver: "${BACKEND_NETWORK_DRIVER}"
+      config:
+      - subnet: "${BACKEND_SUBNET}"
+  database:
+    driver: bridge
+    enable_ipv6: "${DATABASE_NETWORK_ENABLE_IPV6}"
+    internal: true
+    ipam:
+      driver: "${DATABASE_NETWORK_DRIVER}"
+  tools_frontend:
+    driver: bridge
+    enable_ipv6: "${ADD_TOOLS_ENABLE_IPV6}"
+    ipam:
+      driver: "${ADD_TOOLS_NETWORK_DRIVER}"
+      config:
+      - subnet: "${ADD_TOOLS_SUBNET}"
+
+volumes:
+  snmptraps: {}
+
+secrets:
+  POSTGRES_USER:
+    file: ${ENV_VARS_DIRECTORY}/.POSTGRES_USER
+  POSTGRES_PASSWORD:
+    file: ${ENV_VARS_DIRECTORY}/.POSTGRES_PASSWORD

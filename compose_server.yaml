@@ -1,0 +1,54 @@
+# Deployment customizations merged on top of docker-compose.yml
+# (server.env sets COMPOSE_FILE=docker-compose.yml:compose_server.yaml)
+# Volumes are merged by container path, so entries below replace the defaults
+# from compose_zabbix_components.yaml and compose_databases.yaml.
+services:
+ zabbix-server:
+# Trapper port receives active checks from local agent 2 (network_mode: host) and remote agents.
+# Set ZABBIX_SERVER_BIND_IP=127.0.0.1 in server.env to accept only local agent 2.
+  ports: !override
+   - name: zabbix-trapper
+     target: 10051
+     published: "${ZABBIX_SERVER_PORT}"
+     host_ip: "${ZABBIX_SERVER_BIND_IP:-0.0.0.0}"
+     protocol: tcp
+     app_protocol: zabbix-trapper
+  volumes:
+   - snmptraps:/var/lib/zabbix/snmptraps:rw
+   - ./alertscripts:/usr/lib/zabbix/alertscripts:ro
+   - ./externalscripts:/usr/lib/zabbix/externalscripts:ro
+
+ zabbix-web-nginx-pgsql:
+# HTTPS is enabled by the image when ssl.crt, ssl.key and dhparam.pem exist
+# in ${DATA_DIRECTORY}/etc/ssl/nginx (see server_letsencrypt.sh).
+# HTTP virtual host only serves ACME challenges and redirects to HTTPS.
+  volumes:
+   - ./nginx/zabbix_http.conf:/etc/zabbix/nginx.conf:ro
+   - ./letsencrypt/webroot:/var/www/acme:ro
+
+ zabbix-snmptraps:
+# Accept traps only with community from server_setup.sh
+  volumes:
+   - ./snmptraps/snmptrapd.conf:/etc/snmp/snmptrapd.conf:ro
+
+ zabbix-agent:
+# Agent 2 without isolation to monitor the host itself
+# With host network Zabbix server reaches the agent via frontend gateway (172.16.238.1:10050)
+  user: root
+  privileged: true
+  pid: "host"
+  network_mode: "host"
+  networks: !reset {}
+  ports: !reset []
+  volumes:
+   - /:/rootfs:ro
+   - /sys:/sys:ro
+   - /dev:/dev:ro
+   - /var/run/docker.sock:/var/run/docker.sock:ro
+   - ./zabbix_agentd.d:/etc/zabbix/zabbix_agentd.d:ro
+# Report host operating system instead of container one (system.sw.os)
+   - /etc/os-release:/etc/os-release:ro
+
+ postgres-server:
+  volumes:
+   - ./zabbix-db-data:/var/lib/postgresql/data:rw
