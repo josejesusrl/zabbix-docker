@@ -1,0 +1,212 @@
+zabbix_export:
+  version: '7.0'
+  template_groups:
+    - uuid: e3caa88084c14afd8d5f7289e78b70e1
+      name: Templates/Network devices
+  templates:
+    - uuid: 8b0d3b229dcc47849d639f0c72d12ebb
+      template: 'Switch port changes by SNMP'
+      name: 'Switch port changes by SNMP'
+      description: |
+        Fast detection of switch port disconnections, flapping and negotiated speed changes (any direction).
+        One SNMP walk of IF-MIB (ifAdminStatus, ifOperStatus, ifHighSpeed) every {$PORT.POLL.INTERVAL},
+        dependent items per Ethernet port. Vendor independent, complements vendor templates.
+        Set {$IFCONTROL}=0 on the host to silence the vendor template "Link down" trigger and avoid duplicates.
+      groups:
+        - name: Templates/Network devices
+      items:
+        - uuid: 0e72c71a51d047d3967510a01bcf4a75
+          name: 'Ports: status and speed walk'
+          type: SNMP_AGENT
+          snmp_oid: 'walk[1.3.6.1.2.1.2.2.1.7,1.3.6.1.2.1.2.2.1.8,1.3.6.1.2.1.31.1.1.1.15]'
+          key: port.status.walk
+          delay: '{$PORT.POLL.INTERVAL}'
+          history: '0'
+          value_type: TEXT
+          description: 'ifAdminStatus, ifOperStatus and ifHighSpeed of all interfaces.'
+          tags:
+            - tag: component
+              value: raw
+      discovery_rules:
+        - uuid: bd965605c19b4d3eb19b023e26bff706
+          name: 'Switch ports discovery'
+          type: SNMP_AGENT
+          snmp_oid: 'walk[1.3.6.1.2.1.31.1.1.1.1,1.3.6.1.2.1.31.1.1.1.18,1.3.6.1.2.1.2.2.1.3]'
+          key: port.discovery
+          delay: 1h
+          lifetime: 7d
+          description: 'Ethernet ports (ifType 6), dynamic MikroTik interfaces excluded.'
+          filter:
+            evaltype: AND
+            conditions:
+              - macro: '{#IFTYPE}'
+                value: '{$PORT.IFTYPE.MATCHES}'
+                formulaid: A
+              - macro: '{#IFNAME}'
+                value: '{$PORT.IFNAME.NOT_MATCHES}'
+                operator: NOT_MATCHES_REGEX
+                formulaid: B
+          item_prototypes:
+            - uuid: dbf677b0bba446fc9d81300be3422169
+              name: 'Port {#IFNAME}({#IFALIAS}): Operational status'
+              type: DEPENDENT
+              key: 'port.oper[{#SNMPINDEX}]'
+              delay: '0'
+              history: 31d
+              valuemap:
+                name: 'IF-MIB::ifOperStatus'
+              preprocessing:
+                - type: SNMP_WALK_VALUE
+                  parameters:
+                    - '1.3.6.1.2.1.2.2.1.8.{#SNMPINDEX}'
+                    - '0'
+                - type: DISCARD_UNCHANGED_HEARTBEAT
+                  parameters:
+                    - 10m
+              master_item:
+                key: port.status.walk
+              tags:
+                - tag: component
+                  value: network
+                - tag: interface
+                  value: '{#IFNAME}'
+              trigger_prototypes:
+                - uuid: 0b169b88edef42c8915e57999c022a0f
+                  expression: 'changecount(/Switch port changes by SNMP/port.oper[{#SNMPINDEX}],{$PORT.FLAP.PERIOD})>={$PORT.FLAP.COUNT}'
+                  name: 'Port {#IFNAME}({#IFALIAS}): Flapping'
+                  opdata: 'Changes in {$PORT.FLAP.PERIOD}: {?changecount(/{HOST.HOST}/port.oper[{#SNMPINDEX}],{$PORT.FLAP.PERIOD})}'
+                  priority: HIGH
+                  description: 'Port link changed state {$PORT.FLAP.COUNT} or more times in {$PORT.FLAP.PERIOD}. Resolves when changes stop.'
+                  tags:
+                    - tag: scope
+                      value: availability
+                - uuid: 6e35c17e38454e699dec2de984b60d9c
+                  expression: 'last(/Switch port changes by SNMP/port.oper[{#SNMPINDEX}])=2 and last(/Switch port changes by SNMP/port.oper[{#SNMPINDEX}],#2)=1 and last(/Switch port changes by SNMP/port.admin[{#SNMPINDEX}])=1'
+                  recovery_mode: RECOVERY_EXPRESSION
+                  recovery_expression: 'last(/Switch port changes by SNMP/port.oper[{#SNMPINDEX}])=1'
+                  name: 'Port {#IFNAME}({#IFALIAS}): Disconnected'
+                  priority: HIGH
+                  description: 'Port went from up to down while administratively enabled. Resolves when link is up again. Suppressed while the port is flapping.'
+                  manual_close: 'YES'
+                  dependencies:
+                    - name: 'Port {#IFNAME}({#IFALIAS}): Flapping'
+                      expression: 'changecount(/Switch port changes by SNMP/port.oper[{#SNMPINDEX}],{$PORT.FLAP.PERIOD})>={$PORT.FLAP.COUNT}'
+                  tags:
+                    - tag: scope
+                      value: availability
+            - uuid: 2cc3fa64ab5e417ab2634993de180131
+              name: 'Port {#IFNAME}({#IFALIAS}): Administrative status'
+              type: DEPENDENT
+              key: 'port.admin[{#SNMPINDEX}]'
+              delay: '0'
+              history: 31d
+              valuemap:
+                name: 'IF-MIB::ifAdminStatus'
+              preprocessing:
+                - type: SNMP_WALK_VALUE
+                  parameters:
+                    - '1.3.6.1.2.1.2.2.1.7.{#SNMPINDEX}'
+                    - '0'
+                - type: DISCARD_UNCHANGED_HEARTBEAT
+                  parameters:
+                    - 10m
+              master_item:
+                key: port.status.walk
+              tags:
+                - tag: component
+                  value: network
+                - tag: interface
+                  value: '{#IFNAME}'
+            - uuid: f27ae1bdcc5b45658503af7f3bf47987
+              name: 'Port {#IFNAME}({#IFALIAS}): Negotiated speed'
+              type: DEPENDENT
+              key: 'port.speed[{#SNMPINDEX}]'
+              delay: '0'
+              history: 31d
+              units: '!Mbps'
+              preprocessing:
+                - type: SNMP_WALK_VALUE
+                  parameters:
+                    - '1.3.6.1.2.1.31.1.1.1.15.{#SNMPINDEX}'
+                    - '0'
+                - type: DISCARD_UNCHANGED_HEARTBEAT
+                  parameters:
+                    - 10m
+              master_item:
+                key: port.status.walk
+              tags:
+                - tag: component
+                  value: network
+                - tag: interface
+                  value: '{#IFNAME}'
+              trigger_prototypes:
+                - uuid: 1894d45c830c4fb2862fe11b01631f35
+                  expression: 'last(/Switch port changes by SNMP/port.speed[{#SNMPINDEX}])>0 and last(/Switch port changes by SNMP/port.speed[{#SNMPINDEX}],#2)>0 and last(/Switch port changes by SNMP/port.speed[{#SNMPINDEX}])<>last(/Switch port changes by SNMP/port.speed[{#SNMPINDEX}],#2)'
+                  recovery_mode: NONE
+                  type: MULTIPLE
+                  name: 'Port {#IFNAME}({#IFALIAS}): Negotiated speed changed'
+                  event_name: 'Port {#IFNAME}({#IFALIAS}): speed changed from {?last(/{HOST.HOST}/port.speed[{#SNMPINDEX}],#2)} Mbps to {?last(/{HOST.HOST}/port.speed[{#SNMPINDEX}])} Mbps'
+                  priority: HIGH
+                  description: 'Negotiated speed changed while the link stayed up (cable, SFP, autonegotiation or remote device problem). Close manually after review.'
+                  manual_close: 'YES'
+                  tags:
+                    - tag: scope
+                      value: performance
+          preprocessing:
+            - type: SNMP_WALK_TO_JSON
+              parameters:
+                - '{#IFNAME}'
+                - 1.3.6.1.2.1.31.1.1.1.1
+                - '0'
+                - '{#IFALIAS}'
+                - 1.3.6.1.2.1.31.1.1.1.18
+                - '0'
+                - '{#IFTYPE}'
+                - 1.3.6.1.2.1.2.2.1.3
+                - '0'
+      tags:
+        - tag: class
+          value: network
+      macros:
+        - macro: '{$PORT.POLL.INTERVAL}'
+          value: 30s
+          description: 'Status and speed polling interval.'
+        - macro: '{$PORT.FLAP.PERIOD}'
+          value: 10m
+          description: 'Flapping evaluation window.'
+        - macro: '{$PORT.FLAP.COUNT}'
+          value: '4'
+          description: 'Status changes within the window considered flapping (4 = two down/up cycles).'
+        - macro: '{$PORT.IFTYPE.MATCHES}'
+          value: '^6$'
+          description: 'ifType of monitored ports. 6 = ethernetCsmacd.'
+        - macro: '{$PORT.IFNAME.NOT_MATCHES}'
+          value: '^<'
+          description: 'Excluded ports. Default: MikroTik dynamic interfaces.'
+      valuemaps:
+        - uuid: fc7adeecfb2d4d108a89ace9e3e4cc14
+          name: 'IF-MIB::ifOperStatus'
+          mappings:
+            - value: '1'
+              newvalue: up
+            - value: '2'
+              newvalue: down
+            - value: '3'
+              newvalue: testing
+            - value: '4'
+              newvalue: unknown
+            - value: '5'
+              newvalue: dormant
+            - value: '6'
+              newvalue: notPresent
+            - value: '7'
+              newvalue: lowerLayerDown
+        - uuid: 52855066e10645988a21a55bddf44c86
+          name: 'IF-MIB::ifAdminStatus'
+          mappings:
+            - value: '1'
+              newvalue: up
+            - value: '2'
+              newvalue: down
+            - value: '3'
+              newvalue: testing

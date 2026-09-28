@@ -108,6 +108,11 @@ sudo ufw allow from 172.16.238.0/24 to any port 10050 proto tcp
      - Crea un trigger por cada interfaz **con comentario** (`ifAlias`), sin contar las dinámicas `<…>`.
      - Alerta con un `linkDown` recibido con la interfaz habilitada y se resuelve con el `linkUp`.
      - Para limitarla a ciertas interfaces, ajustar la macro `{$LINKTRAP.IFALIAS.MATCHES}` en el host.
+   - **Switches con puertos críticos:** importar `zabbix_templates/switch_port_changes.yaml` y enlazarla al switch. Sirve para cualquier fabricante.
+     - Consulta el estado y la velocidad de cada puerto Ethernet cada 30 s, con una sola lectura SNMP.
+     - Alerta *High* por desconexión, por *flapping* (4 cambios en 10 min, ajustable con `{$PORT.FLAP.COUNT}`/`{$PORT.FLAP.PERIOD}`) y por cambio de velocidad negociada en cualquier sentido.
+     - Poner `{$IFCONTROL}=0` en el host para que el *Link down* de la plantilla del fabricante no duplique alertas.
+     - En TP-Link, excluir las VLAN con `{$PORT.IFNAME.NOT_MATCHES}=^(<|Vlan-interface)`.
    - **Concentradores PPPoE:** añadir `|^<pppoe-` a la macro `{$NET.IF.IFNAME.NOT_MATCHES}` del host, para que no se descubra cada sesión de cliente como interfaz.
 
 ## 5. Tareas programadas
