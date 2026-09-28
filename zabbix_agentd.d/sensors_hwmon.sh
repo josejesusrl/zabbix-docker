@@ -32,7 +32,8 @@ case "${1:-}" in
             chip=$(cat "$d/name")
             device=$(device_id "$d")
             for input in "$d"/temp*_input; do
-                [ -r "$input" ] || continue
+                # Skip sensors that cannot be read now (e.g. device of Wi-Fi card is down)
+                cat "$input" >/dev/null 2>&1 || continue
                 sensor=$(basename "$input" _input)
                 label=$sensor
                 [ -r "$d/${sensor}_label" ] && label=$(cat "$d/${sensor}_label")
@@ -51,7 +52,11 @@ case "${1:-}" in
         for d in "$HWMON"/hwmon*; do
             [ "$(cat "$d/name" 2>/dev/null)" = "${2:-}" ] || continue
             [ "$(device_id "$d")" = "${3:-}" ] || continue
-            awk '{ printf "%.1f\n", $1 / 1000 }' "$d/${4}_input"
+            if ! value=$(cat "$d/${4}_input" 2>/dev/null); then
+                echo "Cannot read sensor: ${2} ${3} ${4}" >&2
+                exit 1
+            fi
+            awk -v v="$value" 'BEGIN { printf "%.1f\n", v / 1000 }'
             exit
         done
         echo "Sensor not found: ${2:-} ${3:-} ${4:-}" >&2
