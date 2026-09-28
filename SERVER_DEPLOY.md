@@ -99,12 +99,21 @@ sudo ufw allow from 172.16.238.0/24 to any port 10050 proto tcp
 
 ## 5. Tareas programadas
 
-`/etc/cron.d/zabbix` (ajustar la ruta del repo):
+Se ejecutan como root desde `/etc/cron.d/zabbix`, **no** con `crontab -e`: en un crontab de usuario no existe el campo `root` y los scripts necesitan root. Crear el fichero desde la raíz del repo:
 
-```cron
-30 2 * * * root /opt/zabbix-docker/server_backup.sh >> /var/log/zabbix-backup.log 2>&1
-0 4 * * * root /opt/zabbix-docker/server_letsencrypt.sh renew >> /var/log/zabbix-letsencrypt.log 2>&1
+```sh
+sudo tee /etc/cron.d/zabbix > /dev/null <<EOF
+# Zabbix backups and certificate renewal (times in host time zone)
+30 2 * * * root $(pwd)/server_backup.sh >> /var/log/zabbix-backup.log 2>&1
+0 4 * * * root $(pwd)/server_letsencrypt.sh renew >> /var/log/zabbix-letsencrypt.log 2>&1
+EOF
+sudo chmod 644 /etc/cron.d/zabbix
 ```
+
+Verificación:
+- `cat /etc/cron.d/zabbix` muestra las rutas absolutas del repo.
+- Tras la hora programada: `grep zabbix /var/log/syslog` muestra `CMD (... server_backup.sh ...)` y aparece un respaldo nuevo en `./backups`.
+- `/var/log/zabbix-backup.log` y `/var/log/zabbix-letsencrypt.log` no contienen errores. `renew` no escribe nada mientras no haya un certificado de Let's Encrypt.
 
 Copiar `./backups` fuera del servidor (rsync, almacenamiento externo). El procedimiento de restauración está en la cabecera de `server_backup.sh`.
 
@@ -117,6 +126,14 @@ Copiar `./backups` fuera del servidor (rsync, almacenamiento externo). El proced
   2. `git pull`
   3. Subir `ZBX_IMAGE_TAG` en `server.env`.
   4. `zbx pull && zbx up -d`. El esquema de la BD se migra automáticamente.
+- **Probar traps:** envía un trap de prueba con la comunidad configurada, sin mostrarla, y revisa el log. La IP de origen debe ser la del equipo emisor; desde el propio servidor aparece `172.16.238.1`.
+  ```sh
+  C="docker compose --env-file .env --env-file server.env"
+  export COM=$($C exec -T zabbix-snmptraps awk '/^authCommunity/{print $3}' /etc/snmp/snmptrapd.conf)
+  docker run --rm -e COM alpine:3.22 sh -c 'apk add -q --no-cache net-snmp-tools >/dev/null && snmptrap -v 2c -c "$COM" 192.168.0.191:162 "" 1.3.6.1.6.3.1.1.5.3 1.3.6.1.2.1.2.2.1.1.1 i 1'
+  unset COM
+  $C exec zabbix-snmptraps tail -5 /var/lib/zabbix/snmptraps/snmptraps.log
+  ```
 - **Cambiar la comunidad de traps:** borrar `snmptraps/snmptrapd.conf`, ejecutar `./server_setup.sh` y luego `zbx up -d --force-recreate zabbix-snmptraps`.
 - **Solo agente local:** poner `ZABBIX_SERVER_BIND_IP=127.0.0.1` en `server.env` y ejecutar `zbx up -d`.
 
