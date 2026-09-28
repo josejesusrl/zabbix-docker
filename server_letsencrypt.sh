@@ -39,6 +39,8 @@ certbot() {
 # Copies certificate to nginx SSL directory, returns 1 if it is unchanged
 install_certs() {
     live="${LE_DIR}/etc/live/${LETSENCRYPT_DOMAIN}"
+    # No Let's Encrypt certificate yet (e.g. self-signed in use)
+    [ -f "${live}/fullchain.pem" ] || return 1
 
     mkdir -p "$SSL_DIR"
     if [ ! -f "${SSL_DIR}/dhparam.pem" ]; then
