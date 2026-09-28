@@ -31,6 +31,10 @@ services:
   volumes:
    - ./snmptraps/snmptrapd.conf:/etc/snmp/snmptrapd.conf:ro
 
+ zabbix-web-service:
+# Used only by Zabbix server through backend network, do not publish on host
+  ports: !reset []
+
  zabbix-agent:
 # Agent 2 without isolation to monitor the host itself
 # With host network Zabbix server reaches the agent via frontend gateway (172.16.238.1:10050)
