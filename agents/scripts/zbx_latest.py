@@ -39,7 +39,8 @@ def main():
                 value = f"{i['lastvalue'][:60]} {i['units']}".strip()
                 if i["lastvalue"] in mapped:
                     value += f" ({mapped[i['lastvalue']]})"
-            print(f"   {i['name'][:55]:55} {value}")
+            # Full name: long names (e.g. per client items) differ only at the end
+            print(f"   {i['name']}: {value}")
 
 
 if __name__ == "__main__":

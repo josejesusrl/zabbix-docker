@@ -34,6 +34,8 @@ EDGE 01 (192.168.200.1)  MikroTik CCR2004
 │   │   ├── APs Ubiquiti 172.16.1.2 – 172.16.1.19 (16 APs, uplink = Switch Main Site #01)
 │   │   └── [CPE]-Lk_Hq_Pintores_1 (10.155.0.3)  LiteBeam 5AC, extremo cercano del backhaul
 │   │       └── [AP]-Lk_Hq_Pintores_1 (10.155.0.2)  LiteBeam 5AC, extremo lejano
+│   │           └── [CPE]Lk_Pintores_Canadas_1 (10.155.2.3)  LiteBeam 5AC, backhaul Pintores → Cañadas
+│   │               └── [AP]-Lk_Pintores_Canadas_1 (10.155.2.2)  LiteBeam 5AC, extremo lejano
 │   └── Sector_3, Sector_4, Sector_5 (172.16.2.x, uplink = NAS-01)
 └── NAS-03 (192.168.200.10)  RB2011iL-RM, concentrador PPPoE
     └── LIKSON_CANADAS_A/B/C/D_01 (172.16.3.10 – .13, uplink = NAS-03)
@@ -63,6 +65,8 @@ Los sectores `172.16.2.x` están conectados físicamente a NAS-02, que se va a r
 | STA-Lk_Trunk_01_A (Mimosa C5C, estación) | 10.100.0.3 | Enlaces PTP Troncales | Network Generic Device by SNMP, Mimosa C5C by SNMP, Switch port changes by SNMP | `{$IFCONTROL}=0`, `{$MIMOSA.RX.POWER.MIN.WARN}=-71`, `{$MIMOSA.RX.POWER.MIN.CRIT}=-76` | EDGE 01 |
 | [CPE]-Lk_Hq_Pintores_1 (LiteBeam 5AC, estación) | 10.155.0.3 | Enlaces PTP Backhaul | Ubiquiti AirOS by SNMP, Ubiquiti AirOS 8 wireless by SNMPv1 | `{$UBNT.GPS.SATS.MIN}=0`, `{$UBNT.STA.SIGNAL.MIN.WARN}=-57`, `{$UBNT.STA.RXCAP.MIN}=30` | Switch Main Site #01 |
 | [AP]-Lk_Hq_Pintores_1 (LiteBeam 5AC, AP) | 10.155.0.2 | Enlaces PTP Backhaul | Ubiquiti AirOS by SNMP, Ubiquiti AirOS 8 wireless by SNMPv1 | `{$UBNT.GPS.SATS.MIN}=0`, `{$UBNT.STA.SIGNAL.MIN.WARN}=-57`, `{$UBNT.STA.TXCAP.MIN}=50` | [CPE]-Lk_Hq_Pintores_1 |
+| [CPE]Lk_Pintores_Canadas_1 (LiteBeam 5AC, estación) | 10.155.2.3 | Enlaces PTP Backhaul | Ubiquiti AirOS by SNMP, Ubiquiti AirOS 8 wireless by SNMPv1 | `{$UBNT.GPS.SATS.MIN}=0`, `{$UBNT.STA.SIGNAL.MIN.WARN}=-60`, `{$UBNT.STA.RXCAP.MIN}=50` | [AP]-Lk_Hq_Pintores_1 |
+| [AP]-Lk_Pintores_Canadas_1 (LiteBeam 5AC, AP) | 10.155.2.2 | Enlaces PTP Backhaul | Ubiquiti AirOS by SNMP, Ubiquiti AirOS 8 wireless by SNMPv1 | `{$UBNT.GPS.SATS.MIN}=0`, `{$UBNT.STA.SIGNAL.MIN.WARN}=-59`, `{$UBNT.STA.TXCAP.MIN}=50` | [CPE]Lk_Pintores_Canadas_1 |
 | AP-Lk_Trunk_01_A (Mimosa C5C, AP) | 10.100.0.2 | Enlaces PTP Troncales | Network Generic Device by SNMP, Mimosa C5C by SNMP, Switch port changes by SNMP | `{$IFCONTROL}=0`, `{$MIMOSA.RX.POWER.MIN.WARN}=-71`, `{$MIMOSA.RX.POWER.MIN.CRIT}=-76` | STA-Lk_Trunk_01_A |
 
 IPs de APs: `172.16.1.x` (las `.12` y `.13` no responden y no están dadas de alta), `172.16.2.x` y `172.16.3.x` (la `.14` no responde y no está dada de alta). Las IPs pueden cambiar: ver 4.10.
