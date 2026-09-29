@@ -23,6 +23,7 @@ DOCS = ["README.md", "AGENTS.md", "CLAUDE.md", "agents/scripts/README.md", "docs
 SKIP = {"docs/upstream-zabbix-README.md"}
 REMOVED = ["OPERACION.md", "SERVER_DEPLOY.md"]
 LINK = re.compile(r"\[[^\]]*\]\(([^)\s]+)\)")
+INVENTORY_HEADING = "### Inventario (generado desde Zabbix)"
 FENCE = re.compile(r"^```.*?^```", re.M | re.S)
 
 
@@ -73,6 +74,7 @@ def check_zabbix(inventory):
     from zbx_api import api_from_stdin
 
     text = Path(inventory).read_text(encoding="utf-8")
+    text = text[text.index(INVENTORY_HEADING):]
     documented = set()
     for line in text.splitlines():
         if line.startswith("| ") and not line.startswith("| Host |"):
