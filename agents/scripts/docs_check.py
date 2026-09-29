@@ -36,7 +36,7 @@ def markdown_files():
 
 def slug(heading):
     """GitHub anchor of a heading."""
-    text = re.sub(r"[`*_\[\]()]", "", heading.strip().lower())
+    text = re.sub(r"[`*\[\]()]", "", heading.strip().lower())
     return re.sub(r"[^\w\- ]", "", text).replace(" ", "-")
 
 

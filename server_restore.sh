@@ -4,7 +4,7 @@
 #   ./server_restore.sh [--replace-db] [--config zabbix-config-<date>.tar.gz] [--db zabbix-db-<date>.dump]
 #
 #   --config  restores secrets and local data not stored in git: PostgreSQL credentials, server.env,
-#             TLS certificates, Let's Encrypt account, MIBs, trap community (snmptrapd.conf).
+#             Cloudflare Tunnel token, TLS certificate, MIBs, trap community (snmptrapd.conf).
 #             Versioned files (nginx/, zabbix_agentd.d/, env_vars/.env_*) come from git, not from the archive.
 #   --db      restores a PostgreSQL custom format dump (pg_dump -Fc) and starts the whole stack.
 #             Zabbix server upgrades the schema on start if the dump comes from an older Zabbix version.
@@ -46,7 +46,7 @@ OWNER=$(stat -c %U .git)
 
 if [ -n "$CONFIG" ]; then
     # Only non-versioned paths are restored from the archive
-    wanted="env_vars/.POSTGRES_USER env_vars/.POSTGRES_PASSWORD server.env zbx_env letsencrypt snmptraps/snmptrapd.conf"
+    wanted="env_vars/.POSTGRES_USER env_vars/.POSTGRES_PASSWORD env_vars/.CLOUDFLARE_TUNNEL_TOKEN server.env zbx_env snmptraps/snmptrapd.conf"
     members=""
     for p in $wanted; do
         if tar -tzf "$CONFIG" | grep -q "^${p}\(/\|$\)"; then
@@ -57,7 +57,7 @@ if [ -n "$CONFIG" ]; then
     # shellcheck disable=SC2086
     tar -xzpf "$CONFIG" $members
     sudo -u "$OWNER" git update-index --skip-worktree env_vars/.POSTGRES_PASSWORD
-    for p in /zabbix-db-data/ /server.env /letsencrypt/ /backups/ /snmptraps/snmptrapd.conf; do
+    for p in /zabbix-db-data/ /server.env /backups/ /snmptraps/snmptrapd.conf /env_vars/.CLOUDFLARE_TUNNEL_TOKEN; do
         grep -qxF "$p" .git/info/exclude 2>/dev/null || echo "$p" >> .git/info/exclude
     done
 fi

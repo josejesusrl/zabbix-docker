@@ -39,14 +39,23 @@ ask_secret() {
 
 # Host directories used by compose_server.yaml
 mkdir -p ./zabbix_agentd.d ./zabbix-db-data ./alertscripts ./externalscripts \
-    ./letsencrypt/webroot ./backups ./snmptraps
+    ./backups ./snmptraps
 
 # Keep local data and secrets out of git without changing tracked .gitignore
-for p in /zabbix-db-data/ /server.env /letsencrypt/ /backups/ /snmptraps/snmptrapd.conf; do
+for p in /zabbix-db-data/ /server.env /backups/ /snmptraps/snmptrapd.conf /env_vars/.CLOUDFLARE_TUNNEL_TOKEN; do
     grep -qxF "$p" .git/info/exclude 2>/dev/null || echo "$p" >> .git/info/exclude
 done
 
 [ -e server.env ] || cp server.env.example server.env
+
+# Variables added to server.env.example after server.env was created (existing values are kept)
+grep -E '^[A-Z_]+=' server.env.example | while IFS= read -r line; do
+    name=${line%%=*}
+    if ! grep -q "^${name}=" server.env; then
+        echo "$line" >> server.env
+        echo "Added ${name} to server.env"
+    fi
+done
 
 # PostgreSQL password. It is applied only when database is initialized (empty ./zabbix-db-data).
 if [ "$(cat env_vars/.POSTGRES_PASSWORD)" = "zabbix" ]; then
@@ -63,19 +72,18 @@ if [ "$(cat env_vars/.POSTGRES_PASSWORD)" = "zabbix" ]; then
     fi
 fi
 
-# Let's Encrypt account contact e-mail (account recovery and policy notices).
-# Let's Encrypt no longer sends expiry notices, expiry is monitored by Zabbix (docs/despliegue/instalacion.md).
-if grep -q '^LETSENCRYPT_EMAIL=$' server.env; then
-    while :; do
-        printf "E-mail for Let's Encrypt account: " >&2
-        IFS= read -r le_email
-        case "$le_email" in
-            *@*.*) break ;;
-            *) echo "Invalid e-mail, try again." >&2 ;;
-        esac
-    done
-    sed -i.bak "s|^LETSENCRYPT_EMAIL=.*|LETSENCRYPT_EMAIL=${le_email}|" server.env
-    rm -f server.env.bak
+# Cloudflare Tunnel token (Zero Trust -> Networks -> Tunnels), docs/despliegue/acceso-externo.md.
+# Read by cloudflared container as user 65532.
+if [ ! -s env_vars/.CLOUDFLARE_TUNNEL_TOKEN ]; then
+    tunnel_token=$(read_secret "Cloudflare Tunnel token (empty = skip): ")
+    if [ -n "$tunnel_token" ]; then
+        (umask 077; printf '%s' "$tunnel_token" > env_vars/.CLOUDFLARE_TUNNEL_TOKEN)
+        sudo chown 65532:65532 env_vars/.CLOUDFLARE_TUNNEL_TOKEN
+        echo "Saved Cloudflare Tunnel token in env_vars/.CLOUDFLARE_TUNNEL_TOKEN"
+    else
+        echo "WARNING: no tunnel token, cloudflared will not start. Run ./server_setup.sh again to add it." >&2
+    fi
+    unset tunnel_token
 fi
 
 # SNMP trap community, stored only in snmptraps/snmptrapd.conf
@@ -114,12 +122,11 @@ EOF
     sudo chown "${ZBX_UID}:${ZBX_GID}" snmptraps/snmptrapd.conf
 fi
 
-# Daily backup and certificate renewal, run as root (host cron configuration kept in the project)
+# Daily backup, run as root (host cron configuration kept in the project)
 if [ ! -e /etc/cron.d/zabbix ]; then
     sudo tee /etc/cron.d/zabbix > /dev/null <<EOF
-# Zabbix backups and certificate renewal (times in host time zone), installed by server_setup.sh
+# Zabbix backups (time in host time zone), installed by server_setup.sh
 30 2 * * * root $(pwd)/server_backup.sh >> /var/log/zabbix-backup.log 2>&1
-0 4 * * * root $(pwd)/server_letsencrypt.sh renew >> /var/log/zabbix-letsencrypt.log 2>&1
 EOF
     sudo chmod 644 /etc/cron.d/zabbix
     echo "Installed /etc/cron.d/zabbix"
@@ -157,5 +164,5 @@ fi
 
 echo
 echo "Preparation finished. Next steps (see docs/despliegue/instalacion.md):"
+echo "  sudo ./server_certificate.sh selfsigned   (only if zbx_env/etc/ssl/nginx/ssl.crt does not exist)"
 echo "  docker compose --env-file .env --env-file server.env up -d"
-echo "  sudo ./server_letsencrypt.sh issue"

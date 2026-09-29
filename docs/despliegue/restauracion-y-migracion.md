@@ -35,7 +35,7 @@ Para reconstruir este despliegue en un disco o servidor nuevo a partir de los re
    cd ~/zabbix-docker
    sudo ./server_restore.sh --config backups/zabbix-config-<fecha>.tar.gz --db backups/zabbix-db-<fecha>.dump
    ```
-   - `--config` recupera lo que no está en git: la contraseña de PostgreSQL, `server.env`, los certificados, la cuenta de Let's Encrypt, los MIBs y la comunidad de traps. Los ficheros versionados salen de git.
+   - `--config` recupera lo que no está en git: la contraseña de PostgreSQL, el token del túnel de Cloudflare, `server.env`, el certificado, los MIBs y la comunidad de traps. Los ficheros versionados salen de git.
    - `--db` arranca PostgreSQL, restaura el dump y levanta el stack completo.
    - Si `./zabbix-db-data` ya contiene una BD, el script se detiene. Para sobrescribirla, respaldar primero y añadir `--replace-db`.
 4. **Completar la preparación del host:**
@@ -43,7 +43,8 @@ Para reconstruir este despliegue en un disco o servidor nuevo a partir de los re
    ./server_setup.sh
    ```
    No vuelve a pedir los secretos restaurados; crea las exclusiones de git, el cron y lm-sensors.
-5. **Certificado:** el restaurado sirve si no ha caducado. Si no, `sudo ./server_letsencrypt.sh issue` (o `selfsigned` sin acceso público).
+5. **Certificado y túnel:** el certificado restaurado sirve si no ha caducado; si no, `sudo ./server_certificate.sh selfsigned`. El túnel conecta solo con el token restaurado. Si el servidor viejo sigue encendido, parar antes su `cloudflared` ([acceso externo](acceso-externo.md#rotar-el-token-o-mover-el-túnel-a-otro-servidor)).
+   - Respaldos anteriores al túnel: traen `letsencrypt/`, que ya no se usa, y no traen el token. `./server_setup.sh` lo pedirá.
 6. **Firewall** ([instalación, sección 3](instalacion.md#3-firewall-del-host)) y comprobación: `zbx ps`, acceso web, disponibilidad de los hosts y llegada de traps.
 
 **Si no hay respaldo de la BD**, se recupera todo lo que está en git (stack, plantillas propias, UserParameters, scripts), pero **los hosts, macros de host, acciones, usuarios e historial se pierden**. Por eso los respaldos deben copiarse fuera del servidor. Para reconstruir:

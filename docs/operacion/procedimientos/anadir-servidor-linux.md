@@ -6,7 +6,7 @@
 1. **Instalar Zabbix Agent 2** en el servidor, o en contenedor como `server-04`. En su configuración:
    ```ini
    Server=192.168.0.191          # checks pasivos (IP con la que llega el Zabbix server)
-   ServerActive=zabbix.likson.com
+   ServerActive=192.168.0.191    # no zabbix.likson.com: apunta a Cloudflare, que solo lleva la web
    Hostname=<nombre-del-servidor>
    ```
    El puerto 10050/tcp del servidor debe aceptar conexiones desde 192.168.0.191.
@@ -19,17 +19,10 @@
 
 ## Servidores remotos (fuera de la LAN)
 
-Configuración en cada servidor monitoreado (`zabbix_agentd.conf` o `zabbix_agent2.conf`):
+El puerto `10051/tcp` **no** se publica en Internet: el túnel de Cloudflare solo lleva la web ([acceso externo](../../despliegue/acceso-externo.md)). Hay dos opciones para un servidor remoto:
 
-```ini
-# Checks pasivos: la IP desde la que llega el Zabbix server. En la LAN, 192.168.0.191; desde internet, la IP pública del NAT de Zabbix
-Server=<ip-servidor-zabbix>
-# Checks activos
-ServerActive=zabbix.likson.com
-Hostname=<nombre-unico-del-host>
-```
+- **Checks pasivos** (recomendado): el Zabbix server conecta al `10050/tcp` del agente. En el equipo remoto, abrir ese puerto solo para la IP pública de salida de la red de Likson. En el agente, `Server=<esa IP pública>` y sin `ServerActive`.
+- **Checks activos o alta automática:** requieren que el agente llegue al `10051/tcp` del servidor, a través de una VPN hacia la LAN (en el agente, `ServerActive=192.168.0.191`). Antes de abrir el 10051 en el NAT, registrar la decisión en el [registro](../registro.md).
 
-- **Pasivos:** el server conecta al `10050/tcp` del agente. Abrir ese puerto en el equipo remoto solo para la IP del servidor Zabbix.
-- **Activos:** el agente conecta al `10051/tcp` de `zabbix.likson.com`.
-- **Cifrado recomendado:** el 10051 queda expuesto a Internet. Usar PSK en cada agente (`TLSConnect=psk`, `TLSAccept=psk`, `TLSPSKIdentity`, `TLSPSKFile`) y la misma PSK en *Host → Encryption*. Así los agentes sin PSK son rechazados.
+En cualquier caso, usar cifrado **PSK**: en el agente `TLSConnect=psk`, `TLSAccept=psk`, `TLSPSKIdentity` y `TLSPSKFile`, y la misma PSK en *Host → Encryption*. Así los agentes sin PSK son rechazados.
 - **Alta automática:** con *Alerts → Actions → Autoregistration actions* y `HostMetadata` en el agente, los hosts nuevos se dan de alta solos. Configurar PSK para autoregistro en *Administration → General → Autoregistration*.

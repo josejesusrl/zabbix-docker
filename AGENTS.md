@@ -67,12 +67,13 @@ El respaldo de la base de datos (`pg_dump`) contiene hosts, plantillas importada
 | Scripts de alertas y externos | `alertscripts/`, `externalscripts/` | `git clone` |
 | Configuración que solo está en la BD (medios, acciones, usuarios, ajustes) | Documentada en [`docs/despliegue/configuracion-base.md`](docs/despliegue/configuracion-base.md) (sin secretos) | Respaldo de la BD; si se pierde, a mano según ese documento |
 | Preparación del host: directorios, cron, lm-sensors | `server_setup.sh` | `./server_setup.sh` |
-| Respaldo, restauración y certificados | `server_backup.sh`, `server_restore.sh`, `server_letsencrypt.sh` | `git clone` |
+| Respaldo, restauración y certificado | `server_backup.sh`, `server_restore.sh`, `server_certificate.sh` | `git clone` |
+| Túnel de Cloudflare, ruta pública y Access | Panel de Cloudflare Zero Trust, documentado en [`docs/despliegue/acceso-externo.md`](docs/despliegue/acceso-externo.md). El conector está en `compose_server.yaml` | Ya está en Cloudflare; si se pierde, a mano según ese documento |
 | Scripts de agentes para la API | `agents/scripts/` | `git clone` |
 | Dashboards | `zabbix_dashboards/*.json` (por nombres) | Están también en la BD; si se pierde, `zbx_dashboard_apply.py` |
 | Script y plantillas de mensajes de los medios (Telegram…) | `zabbix_media/` (sin tokens: el token del bot está solo en la BD) | Están también en la BD; si se pierde, `zbx_mediatype_update.py` desde aquí |
-| **Secretos**: contraseña de PostgreSQL, comunidad de traps, `server.env` | **Nunca en git.** En el archivo `zabbix-config-*.tar.gz` del respaldo | `server_restore.sh` o `server_setup.sh` |
-| Certificados TLS y `dhparam` | `zbx_env/etc/ssl/nginx`, `letsencrypt/` (en el respaldo) | `server_restore.sh` o `server_letsencrypt.sh issue` |
+| **Secretos**: contraseña de PostgreSQL, token del túnel (`env_vars/.CLOUDFLARE_TUNNEL_TOKEN`), comunidad de traps, `server.env` | **Nunca en git.** En el archivo `zabbix-config-*.tar.gz` del respaldo | `server_restore.sh` o `server_setup.sh` |
+| Certificado TLS autofirmado del origen y `dhparam` | `zbx_env/etc/ssl/nginx` (en el respaldo) | `server_restore.sh` o `server_certificate.sh selfsigned` |
 | MIBs de fabricantes | `zbx_env/var/lib/zabbix/mibs` (en el respaldo) | `server_restore.sh` |
 
 Al añadir cualquier configuración nueva fuera de la base de datos (un script, un MIB, un fichero montado en un contenedor, una tarea de cron, un paquete del host):

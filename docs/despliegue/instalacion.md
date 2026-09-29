@@ -2,17 +2,17 @@
 
 > **Cuándo:** para instalar desde cero. Para recuperar un servidor perdido o migrar otro Zabbix, ver [restauración y migración](restauracion-y-migracion.md). Para el día a día del servidor, [mantenimiento](mantenimiento.md).
 
-Stack: PostgreSQL + Zabbix server + frontend Nginx con HTTPS (Let's Encrypt) + Agent 2 (automonitoreo) + SNMP traps + web service (informes).
+Stack: PostgreSQL + Zabbix server + frontend Nginx con HTTPS + Agent 2 (automonitoreo) + SNMP traps + web service (informes) + `cloudflared` (acceso público por Cloudflare Tunnel, sin puertos abiertos en el NAT).
 
 | Fichero | Función |
 |---|---|
 | `docker-compose.yml` | Servicios del stack; los complementarios usan el perfil `postgres-nginx` |
-| `compose_server.yaml` | Personalizaciones: puertos, volúmenes, agente en red host, HTTPS, traps |
-| `server.env.example` | Variables del despliegue (versión, dominio, puertos, retención) |
+| `compose_server.yaml` | Personalizaciones: puertos, volúmenes, agente en red host, HTTPS, traps, `cloudflared` |
+| `server.env.example` | Variables del despliegue (versiones, dominio, puertos, retención) |
 | `env_vars/.env_*_override` | Variables de Zabbix: zona horaria, traps, agente, informes |
-| `nginx/zabbix_http.conf` | HTTP: solo el reto ACME y la redirección a HTTPS |
+| `nginx/zabbix_http.conf` | HTTP: solo la redirección a HTTPS |
 | `server_setup.sh` | Preparación inicial y captura segura de secretos |
-| `server_letsencrypt.sh` | Emisión y renovación del certificado |
+| `server_certificate.sh` | Certificado autofirmado del origen (acceso por la LAN) |
 | `server_backup.sh` | Respaldo de la BD y de la configuración que no está en git |
 | `server_restore.sh` | Restauración desde un respaldo o migración de la BD de una implementación anterior |
 | `zabbix_agentd.d/sensors_hwmon.*` | UserParameters del Agent 2 para las temperaturas del host |
@@ -26,8 +26,9 @@ Stack: PostgreSQL + Zabbix server + frontend Nginx con HTTPS (Let's Encrypt) + A
 ## Requisitos
 
 - Linux con Docker Engine y `docker compose` >= 2.24, `openssl` y `sudo`.
-- Registro DNS A `zabbix.likson.com` apuntando a la IP pública del servidor.
-- Puertos abiertos: `80/tcp` (reto ACME y redirección), `443/tcp` (web), `162/udp` (traps desde cualquier red) y `10051/tcp` (agentes remotos).
+- Dominio `likson.com` gestionado en Cloudflare y un túnel creado en Zero Trust con su token ([acceso externo](acceso-externo.md)). El registro DNS de `zabbix.likson.com` lo crea el túnel.
+- **Ningún puerto redirigido en el NAT.** El servidor solo necesita salida a Internet (`443/tcp` y `7844/tcp+udp` hacia Cloudflare).
+- En la LAN: `80/tcp` y `443/tcp` (web directa), `162/udp` (traps de los equipos) y `10051/tcp` (agentes activos de la LAN).
 - Salida desde el servidor hacia `10050/tcp` de los agentes remotos (checks pasivos) y `161/udp` de los equipos SNMP.
 - En el host no debe haber otro agente de Zabbix usando el puerto 10050.
 
@@ -61,27 +62,19 @@ cd zabbix-docker
 
 El script pide, sin mostrarlos en pantalla:
 - **Contraseña de PostgreSQL.** Si se deja vacía, se genera una aleatoria. Solo se aplica antes de que se cree la base de datos.
-- **E-mail para la cuenta de Let's Encrypt.** Es el contacto de la cuenta. Let's Encrypt ya **no** envía avisos de caducidad; la caducidad la vigila Zabbix (sección 4).
+- **Token del túnel de Cloudflare** ([acceso externo](acceso-externo.md#1-crear-el-túnel)). Si se deja vacío, `cloudflared` no arranca; se añade volviendo a ejecutar el script.
 - **Comunidad SNMP de traps.** Si se deja vacía, se genera una y se muestra **una sola vez**. Solo se aceptan caracteres `A-Z a-z 0-9 . _ -`.
 
 También ofrece instalar **lm-sensors** (apt, dnf o yum) y ejecuta `sensors-detect --auto`. Si los módulos de sensores recién detectados no aparecen en `sensors`, reiniciar el host. En una máquina virtual normalmente no hay sensores.
 
-## 2. Arrancar y emitir el certificado
+## 2. Arrancar y crear el certificado
 
 ```sh
 docker compose --env-file .env --env-file server.env up -d
-sudo ./server_letsencrypt.sh issue
+sudo ./server_certificate.sh selfsigned
 ```
 
-Hasta emitir el certificado, todo lo que llega por HTTP se redirige a HTTPS, que todavía no responde. Es normal.
-
-Si Let's Encrypt todavía no puede validar (puertos 80/443 sin redirigir en el NAT), instalar un certificado autofirmado temporal para usar la web en la LAN:
-
-```sh
-sudo ./server_letsencrypt.sh selfsigned
-```
-
-El navegador mostrará un aviso. Cuando los puertos estén redirigidos, `sudo ./server_letsencrypt.sh issue` lo reemplaza.
+El certificado autofirmado (10 años, para `CERT_DOMAIN` y `CERT_LAN_IP` de `server.env`) solo se ve al entrar directamente por la LAN (`https://192.168.0.191`), con un aviso del navegador. Desde Internet se entra por `https://zabbix.likson.com`: Cloudflare presenta su propio certificado válido y `cloudflared` llega al contenedor web por la red interna de Docker. La configuración del túnel y de Cloudflare Access está en [acceso externo](acceso-externo.md).
 
 Alias recomendado:
 ```sh
@@ -90,7 +83,7 @@ alias zbx='docker compose --env-file .env --env-file server.env'
 
 ## 3. Firewall del host
 
-Docker publica los puertos saltándose ufw/firewalld; los puertos 80, 443, 162/udp y 10051 quedan abiertos a propósito.
+Docker publica los puertos saltándose ufw/firewalld; los puertos 80, 443, 162/udp y 10051 quedan abiertos a propósito **para la LAN**. No se redirigen en el router: el acceso desde Internet es solo por el túnel.
 
 El Agent 2 usa la red del host, así que el firewall del host **sí** le afecta. Hay que permitir los checks pasivos desde el contenedor del server:
 
@@ -125,19 +118,19 @@ En `https://zabbix.likson.com` (en la LAN, `https://192.168.0.191`).
      {$CERT.WEBSITE.IP}       = 127.0.0.1
      {$CERT.EXPIRY.WARN}      = 14
      ```
-     El agente se conecta a `127.0.0.1:443` usando el nombre `zabbix.likson.com`, sin depender del DNS público ni del NAT. Avisa si faltan menos de 14 días, es decir, si `renew` lleva más de 2 semanas fallando. Con el certificado autofirmado el resultado es `valid-but-self-signed` y no genera alerta. Cuando `issue` lo sustituya, cambiará la huella del certificado, algo esperado.
+     El agente se conecta a `127.0.0.1:443` usando el nombre `zabbix.likson.com`, sin depender del DNS público ni del túnel. Vigila el certificado autofirmado del origen: el resultado es `valid-but-self-signed`, sin alerta, y avisa 14 días antes de que caduque (10 años). El certificado público lo renueva Cloudflare.
+   - **Túnel:** importar `zabbix_templates/cloudflared_tunnel.yaml` y enlazar la plantilla *Cloudflare Tunnel by HTTP* al host "Zabbix server" ([plantillas](../operacion/plantillas.md#cloudflare-tunnel-by-http--cloudflared_tunnelyaml)).
 4. **Equipos a monitorear** (routers, switches, APs, servidores), plantillas propias, dependencias, alertas y umbrales: ver la [documentación de operación](../README.md). La configuración que vive solo en la BD (medios, acciones, usuarios, ajustes) está en [configuración base](configuracion-base.md).
    - Los MIBs de fabricantes van en `./zbx_env/var/lib/zabbix/mibs/` (incluidos en el respaldo) y se aplican reiniciando `zabbix-server` y `zabbix-snmptraps`.
 
 ## 5. Tareas programadas
 
-`server_setup.sh` instala `/etc/cron.d/zabbix` si no existe: respaldo diario a las 02:30 y renovación del certificado a las 04:00, como root. Se instalan en `/etc/cron.d`, **no** con `crontab -e`, porque en un crontab de usuario no existe el campo `root` y los scripts necesitan root. Equivalente manual:
+`server_setup.sh` instala `/etc/cron.d/zabbix` si no existe: respaldo diario a las 02:30, como root. Se instalan en `/etc/cron.d`, **no** con `crontab -e`, porque en un crontab de usuario no existe el campo `root` y los scripts necesitan root. Equivalente manual:
 
 ```sh
 sudo tee /etc/cron.d/zabbix > /dev/null <<EOF
-# Zabbix backups and certificate renewal (times in host time zone)
+# Zabbix backups (time in host time zone)
 30 2 * * * root $(pwd)/server_backup.sh >> /var/log/zabbix-backup.log 2>&1
-0 4 * * * root $(pwd)/server_letsencrypt.sh renew >> /var/log/zabbix-letsencrypt.log 2>&1
 EOF
 sudo chmod 644 /etc/cron.d/zabbix
 ```
@@ -145,6 +138,6 @@ sudo chmod 644 /etc/cron.d/zabbix
 Verificación:
 - `cat /etc/cron.d/zabbix` muestra las rutas absolutas del repo.
 - Tras la hora programada: `grep zabbix /var/log/syslog` muestra `CMD (... server_backup.sh ...)` y aparece un respaldo nuevo en `./backups`.
-- `/var/log/zabbix-backup.log` y `/var/log/zabbix-letsencrypt.log` no contienen errores. `renew` no escribe nada mientras no haya un certificado de Let's Encrypt.
+- `/var/log/zabbix-backup.log` no contiene errores.
 
 Copiar `./backups` fuera del servidor (rsync, almacenamiento externo). Ver [mantenimiento](mantenimiento.md#copiar-los-respaldos-fuera-del-servidor). La restauración está en [restauración y migración](restauracion-y-migracion.md#restauración).

@@ -34,13 +34,15 @@ Avisos reales que se mantienen a propósito. No son falsos positivos.
 | Telegram solo para High y superiores; Gmail desde Warning | Telegram es para lo urgente; el resto queda en el correo |
 | `{$SNMP_COMMUNITY}` es macro de tipo texto, no secreta | Los scripts de sondeo la leen por la API sin mostrarla ([configuración base](../despliegue/configuracion-base.md)) |
 | Las dependencias se **añaden**, nunca se reemplazan | Las plantillas traen dependencias internas (p. ej. *Link down* → *Speed changed*) que se perderían ([dependencias](procedimientos/dependencias.md)) |
-| Certificado autofirmado | Los puertos 80/443 aún no están redirigidos en el NAT; Let's Encrypt no puede validar ([instalación](../despliegue/instalacion.md#2-arrancar-y-emitir-el-certificado)) |
+| Acceso público por **Cloudflare Tunnel + Access**, sin puertos redirigidos en el NAT (2026-09-29) | No se expone ningún puerto a Internet. Access añade un login previo al de Zabbix y Cloudflare gestiona el certificado público. Sustituye a Let's Encrypt con redirección de 80/443 ([acceso externo](../despliegue/acceso-externo.md)) |
+| Certificado autofirmado de 10 años en el origen | Solo lo ven `cloudflared` (sin verificarlo) y el acceso directo por la LAN, que muestra un aviso ([instalación](../despliegue/instalacion.md#2-arrancar-y-crear-el-certificado)) |
+| Traps y agentes usan `192.168.0.191`, no `zabbix.likson.com` | El nombre apunta a Cloudflare, que solo lleva la web |
 
 ## Pendientes
 
 | Pendiente | Qué hacer |
 |---|---|
-| Certificado de Let's Encrypt | Redirigir 80 y 443 en el NAT y ejecutar `sudo ./server_letsencrypt.sh issue` |
+| Activar Cloudflare Tunnel en producción | Pasos 1 a 3 de [acceso externo](../despliegue/acceso-externo.md) (túnel, Access, ruta), token con `./server_setup.sh`, `sudo ./server_certificate.sh selfsigned` (10 años), importar y enlazar *Cloudflare Tunnel by HTTP*. Quitar la línea `server_letsencrypt.sh renew` de `/etc/cron.d/zabbix` y borrar `letsencrypt/`. Revisar que el agente de server-04 no tenga `ServerActive=zabbix.likson.com` |
 | Respaldos fuera del servidor | Copiarlos periódicamente ([mantenimiento](../despliegue/mantenimiento.md#copiar-los-respaldos-fuera-del-servidor)) |
 | MFA desactivado | Activar TOTP en *Users → Authentication → MFA settings* |
 | Cierre automático de sesión de `jjrl` en `0` | Poner un valor (p. ej. 15 min) en *User settings → Profile* |

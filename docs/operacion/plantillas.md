@@ -102,6 +102,17 @@ Umbrales por chip: `{$TEMP.CRIT:"nvme"}=70`.
 **Para:** el host **KPI Likson** (sin interfaz, grupo *Likson KPIs*). Items calculados a partir de otros hosts para el dashboard: clientes conectados (total de APs), APs en línea y totales, y CPU media de EDGE 01, NAS-01 y NAS-03.
 Sus fórmulas usan el grupo *Access Points PPPoE Clients* y los nombres de host `EDGE 01`, `NAS-01`, `NAS-03`: si cambian, actualizar la plantilla. Sin triggers.
 
+### Cloudflare Tunnel by HTTP — `cloudflared_tunnel.yaml`
+**Para:** el host **Zabbix server**. Vigila el conector `cloudflared` que publica la web ([acceso externo](../despliegue/acceso-externo.md)). El Zabbix server lee las métricas Prometheus de `http://cloudflared:2000/metrics` por la red Docker `frontend`, sin agente ni interfaz.
+
+| Trigger | Severidad | Cuándo |
+|---|---|---|
+| Cloudflared: Tunnel connector not responding | High | Sin métricas durante 5 min: contenedor parado o colgado |
+| Cloudflared: Tunnel down, public web not reachable | High | 0 conexiones con Cloudflare durante 3 min (Internet caído, token revocado). Depende del anterior |
+| Cloudflared: Tunnel degraded | Warning | Menos de `{$CLOUDFLARED.CONN.MIN}` (4) conexiones durante 15 min. Depende del anterior |
+
+Macros: `{$CLOUDFLARED.METRICS.URL}` (`http://cloudflared:2000`) y `{$CLOUDFLARED.CONN.MIN}` (4). Si cae Internet, las alertas por Telegram y Gmail tampoco salen hasta que vuelva.
+
 ## Plantillas oficiales en uso y ajustes necesarios
 
 | Plantilla | Para | Ajustes |
@@ -111,7 +122,7 @@ Sus fórmulas usan el grupo *Access Points PPPoE Clients* y los nombres de host 
 | *Ubiquiti AirOS by SNMP* | APs Ubiquiti (sistema: CPU, memoria, ping) | En airOS 8, *Firmware version* y *Hardware model name* quedan como no soportados (airOS 8 no publica esos datos). Es normal |
 | *Linux by Zabbix agent* | Servidores Linux | Si el agente corre en un contenedor con `/rootfs`: macros de sistemas de archivos ([Añadir un servidor Linux](procedimientos/anadir-servidor-linux.md)) |
 | *Docker by Zabbix agent 2* | Servidores con Docker | El agente necesita acceso a `/var/run/docker.sock`. Solo descubre los contenedores en ejecución |
-| *Website certificate by Zabbix agent 2* | Caducidad del certificado de `zabbix.likson.com` (host Zabbix server) | `{$CERT.WEBSITE.HOSTNAME}`, `{$CERT.WEBSITE.IP}=127.0.0.1`, `{$CERT.EXPIRY.WARN}=14` |
+| *Website certificate by Zabbix agent 2* | Caducidad del certificado autofirmado del origen (host Zabbix server); el público lo renueva Cloudflare | `{$CERT.WEBSITE.HOSTNAME}`, `{$CERT.WEBSITE.IP}=127.0.0.1`, `{$CERT.EXPIRY.WARN}=14` |
 
 ## Particularidades por tipo de equipo
 

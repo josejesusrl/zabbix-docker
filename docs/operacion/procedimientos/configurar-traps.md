@@ -3,7 +3,7 @@
 > **Cuándo:** al configurar un equipo para que envíe traps SNMP a Zabbix.
 > **Requisitos:** respaldo reciente antes de cualquier cambio ([AGENTS.md](../../../AGENTS.md), regla 1). Todos los pasos se pueden hacer desde la interfaz web.
 
-1. Destino de traps: `192.168.0.191` (o `zabbix.likson.com`), puerto **162/udp**, SNMPv2c, comunidad de traps.
+1. Destino de traps: `192.168.0.191`, puerto **162/udp**, SNMPv2c, comunidad de traps. **No** usar `zabbix.likson.com`: apunta a Cloudflare, que solo lleva la web ([acceso externo](../../despliegue/acceso-externo.md)).
 2. El trap debe salir con la misma IP que la interfaz SNMP del host en Zabbix.
 3. Comprobar la llegada en el servidor:
    ```sh

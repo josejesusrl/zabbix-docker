@@ -20,11 +20,11 @@ services:
 
  zabbix-web-nginx-pgsql:
 # HTTPS is enabled by the image when ssl.crt, ssl.key and dhparam.pem exist
-# in ${DATA_DIRECTORY}/etc/ssl/nginx (see server_letsencrypt.sh).
-# HTTP virtual host only serves ACME challenges and redirects to HTTPS.
+# in ${DATA_DIRECTORY}/etc/ssl/nginx (see server_certificate.sh).
+# HTTP virtual host only redirects to HTTPS.
+# Published ports are for LAN access only: public access goes through cloudflared, no NAT port forwarding.
   volumes:
    - ./nginx/zabbix_http.conf:/etc/zabbix/nginx.conf:ro
-   - ./letsencrypt/webroot:/var/www/acme:ro
 
  zabbix-snmptraps:
 # Accept traps only with community from server_setup.sh
@@ -53,6 +53,36 @@ services:
 # Report host operating system instead of container one (system.sw.os)
    - /etc/os-release:/etc/os-release:ro
 
+ cloudflared:
+# Cloudflare Tunnel: outbound connection to Cloudflare, public hostname and Access are configured
+# in Cloudflare dashboard (docs/despliegue/acceso-externo.md). No published ports.
+# Metrics and /ready on port 2000 are read by Zabbix server through frontend network.
+# Image entrypoint already runs "cloudflared --no-autoupdate".
+  image: "cloudflare/cloudflared:${CLOUDFLARED_IMAGE_TAG}"
+  command: tunnel --metrics 0.0.0.0:2000 run --token-file /run/secrets/CLOUDFLARE_TUNNEL_TOKEN
+  profiles:
+   - postgres-nginx
+  restart: "${RESTART_POLICY}"
+  depends_on:
+   - zabbix-web-nginx-pgsql
+  secrets:
+   - CLOUDFLARE_TUNNEL_TOKEN
+  networks:
+   frontend:
+    aliases:
+     - cloudflared
+  healthcheck:
+   test: ["CMD", "cloudflared", "tunnel", "--metrics", "localhost:2000", "ready"]
+   interval: 30s
+   timeout: 5s
+   retries: 3
+   start_period: 30s
+
  postgres-server:
   volumes:
    - ./zabbix-db-data:/var/lib/postgresql/data:rw
+
+secrets:
+# Tunnel token, created by server_setup.sh (owner 65532, cloudflared image user), never in git
+  CLOUDFLARE_TUNNEL_TOKEN:
+    file: ${ENV_VARS_DIRECTORY}/.CLOUDFLARE_TUNNEL_TOKEN

@@ -1,6 +1,6 @@
 # Mantenimiento del servidor
 
-> **Cuándo:** tareas del servidor y del stack Docker: estado, logs, actualización, traps, respaldos. Los comandos se ejecutan en `~/zabbix-docker` con el alias `zbx` ([instalación](instalacion.md#2-arrancar-y-emitir-el-certificado)).
+> **Cuándo:** tareas del servidor y del stack Docker: estado, logs, actualización, traps, respaldos. Los comandos se ejecutan en `~/zabbix-docker` con el alias `zbx` ([instalación](instalacion.md#2-arrancar-y-crear-el-certificado)).
 
 ## Operación
 
@@ -12,6 +12,8 @@
   2. `git pull`
   3. Subir `ZBX_IMAGE_TAG` en `server.env`.
   4. `zbx pull && zbx up -d`. El esquema de la BD se migra automáticamente.
+- **Actualizar `cloudflared`:** respaldo, subir `CLOUDFLARED_IMAGE_TAG` en `server.env` (versiones en [GitHub](https://github.com/cloudflare/cloudflared/releases)) y `zbx pull cloudflared && zbx up -d cloudflared`. Cloudflare avisa en el panel cuando una versión queda sin soporte.
+- **Túnel:** `zbx logs cloudflared`. Configuración y Access: [acceso externo](acceso-externo.md).
 - **Probar traps:** envía un trap de prueba con la comunidad configurada, sin mostrarla, y revisa el log. La IP de origen debe ser la del equipo emisor; desde el propio servidor aparece `172.16.238.1`.
   ```sh
   C="docker compose --env-file .env --env-file server.env"

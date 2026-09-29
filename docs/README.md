@@ -44,6 +44,7 @@ Catálogo de plantillas, macros y triggers: [plantillas](operacion/plantillas.md
 | Recuperar tras perder el servidor o migrar otro Zabbix | [Restauración y migración](despliegue/restauracion-y-migracion.md) |
 | Estado, logs, actualizar Zabbix, probar traps, copiar respaldos | [Mantenimiento](despliegue/mantenimiento.md) |
 | Medios, usuarios, acciones y ajustes (lo que solo está en la BD) | [Configuración base](despliegue/configuracion-base.md) |
+| Acceso desde Internet (Cloudflare Tunnel), dar acceso a una persona | [Acceso externo](despliegue/acceso-externo.md) |
 
 ## Soy un agente de IA
 
@@ -56,7 +57,7 @@ Catálogo de plantillas, macros y triggers: [plantillas](operacion/plantillas.md
 ```
 docs/
 ├── README.md                  este índice
-├── despliegue/                el servidor: instalación, restauración, mantenimiento, configuración base
+├── despliegue/                el servidor: instalación, restauración, mantenimiento, acceso externo, configuración base
 └── operacion/                 Zabbix en el día a día
     ├── inventario.md          qué hay (cambia con cada alta o baja)
     ├── plantillas.md          catálogo y particularidades

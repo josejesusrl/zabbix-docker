@@ -1,0 +1,87 @@
+zabbix_export:
+  version: '7.0'
+  template_groups:
+    - uuid: 3a6730e62a4f4685831df097d40f3044
+      name: Templates/Likson
+  templates:
+    - uuid: 0bcc17f590fe4d02b056749b7c827543
+      template: 'Cloudflare Tunnel by HTTP'
+      name: 'Cloudflare Tunnel by HTTP'
+      description: |
+        Cloudflare Tunnel connector (cloudflared container of compose_server.yaml), which publishes the web
+        interface without NAT port forwarding. Zabbix server reads the Prometheus metrics of cloudflared
+        through the Docker frontend network. Linked to the host "Zabbix server".
+        See docs/despliegue/acceso-externo.md.
+      groups:
+        - name: Templates/Likson
+      items:
+        - uuid: b6f2d7327e644ae4aaff544685ed6160
+          name: 'Cloudflared: Get metrics'
+          type: HTTP_AGENT
+          key: cloudflared.metrics.get
+          history: '0'
+          value_type: TEXT
+          trends: '0'
+          url: '{$CLOUDFLARED.METRICS.URL}/metrics'
+          timeout: 5s
+          description: 'Raw Prometheus metrics of cloudflared, master item.'
+          tags:
+            - tag: component
+              value: tunnel
+        - uuid: 1267710929e2413b81238b163458a3ae
+          name: 'Cloudflared: Tunnel connections'
+          type: DEPENDENT
+          key: cloudflared.ha_connections
+          units: connections
+          description: 'Active connections from cloudflared to Cloudflare edge (normally 4). 0 means the public web is down.'
+          preprocessing:
+            - type: PROMETHEUS_PATTERN
+              parameters:
+                - cloudflared_tunnel_ha_connections
+                - value
+                - ''
+          master_item:
+            key: cloudflared.metrics.get
+          tags:
+            - tag: component
+              value: tunnel
+      macros:
+        - macro: '{$CLOUDFLARED.METRICS.URL}'
+          value: 'http://cloudflared:2000'
+          description: 'Metrics server of cloudflared (--metrics), reachable from Zabbix server.'
+        - macro: '{$CLOUDFLARED.CONN.MIN}'
+          value: '4'
+          description: 'Expected tunnel connections. Fewer during 15m raises a warning.'
+  triggers:
+    - uuid: e87d4e600cca463991c8e455de08a5b1
+      expression: 'nodata(/Cloudflare Tunnel by HTTP/cloudflared.ha_connections,5m)=1'
+      name: 'Cloudflared: Tunnel connector not responding'
+      priority: HIGH
+      description: 'No metrics from cloudflared for 5 minutes: container stopped or unhealthy. The public web (Cloudflare) is not reachable, LAN access still works. Check: zbx ps cloudflared; zbx logs cloudflared.'
+      tags:
+        - tag: scope
+          value: availability
+    - uuid: 562f2ec3c1c04baca958ae1df80c699e
+      expression: 'max(/Cloudflare Tunnel by HTTP/cloudflared.ha_connections,3m)=0'
+      name: 'Cloudflared: Tunnel down, public web not reachable'
+      opdata: 'Connections: {ITEM.LASTVALUE1}'
+      priority: HIGH
+      description: 'cloudflared is running but has no connection to Cloudflare: Internet down, token revoked or tunnel deleted. Check: zbx logs cloudflared and the tunnel status in Cloudflare Zero Trust.'
+      dependencies:
+        - name: 'Cloudflared: Tunnel connector not responding'
+          expression: 'nodata(/Cloudflare Tunnel by HTTP/cloudflared.ha_connections,5m)=1'
+      tags:
+        - tag: scope
+          value: availability
+    - uuid: 6dff376ce38349b29fe1d0101f8623a7
+      expression: 'max(/Cloudflare Tunnel by HTTP/cloudflared.ha_connections,15m)<{$CLOUDFLARED.CONN.MIN}'
+      name: 'Cloudflared: Tunnel degraded (fewer than {$CLOUDFLARED.CONN.MIN} connections for 15m)'
+      opdata: 'Connections: {ITEM.LASTVALUE1}'
+      priority: WARNING
+      description: 'Some connections to Cloudflare edge are down. The web still works; persistent degradation points to Internet or Cloudflare problems.'
+      dependencies:
+        - name: 'Cloudflared: Tunnel down, public web not reachable'
+          expression: 'max(/Cloudflare Tunnel by HTTP/cloudflared.ha_connections,3m)=0'
+      tags:
+        - tag: scope
+          value: performance

@@ -2,7 +2,7 @@
 # Backup of Zabbix database and deployment configuration to ./backups.
 # Usage (as root, from anywhere): ./server_backup.sh
 #   zabbix-db-<date>.dump        PostgreSQL custom format dump (consistent, taken while running)
-#   zabbix-config-<date>.tar.gz  secrets, server.env, certificates, traps and agent configuration
+#   zabbix-config-<date>.tar.gz  secrets (env_vars: database, tunnel token), server.env, certificate, traps and agent configuration
 # Backups older than BACKUP_RETENTION_DAYS (server.env) are removed.
 # Copy ./backups to another machine, local copies do not protect against disk loss.
 #
@@ -35,7 +35,7 @@ $COMPOSE exec -T postgres-server \
 mv "$DB_FILE.tmp" "$DB_FILE"
 
 config_paths=""
-for p in env_vars server.env zbx_env letsencrypt snmptraps nginx zabbix_agentd.d alertscripts externalscripts; do
+for p in env_vars server.env zbx_env snmptraps nginx zabbix_agentd.d alertscripts externalscripts; do
     [ -e "$p" ] && config_paths="$config_paths $p"
 done
 # shellcheck disable=SC2086
