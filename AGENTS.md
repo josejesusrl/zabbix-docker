@@ -52,6 +52,7 @@ El respaldo de la base de datos (`pg_dump`) contiene hosts, plantillas importada
 | Preparación del host: directorios, cron, lm-sensors | `server_setup.sh` | `./server_setup.sh` |
 | Respaldo, restauración y certificados | `server_backup.sh`, `server_restore.sh`, `server_letsencrypt.sh` | `git clone` |
 | Scripts de agentes para la API | `agents/scripts/` | `git clone` |
+| Dashboards | `zabbix_dashboards/*.json` (por nombres) | Están también en la BD; si se pierde, `zbx_dashboard_apply.py` |
 | Script y plantillas de mensajes de los medios (Telegram…) | `zabbix_media/` (sin tokens: el token del bot está solo en la BD) | Están también en la BD; si se pierde, `zbx_mediatype_update.py` desde aquí |
 | **Secretos**: contraseña de PostgreSQL, comunidad de traps, `server.env` | **Nunca en git.** En el archivo `zabbix-config-*.tar.gz` del respaldo | `server_restore.sh` o `server_setup.sh` |
 | Certificados TLS y `dhparam` | `zbx_env/etc/ssl/nginx`, `letsencrypt/` (en el respaldo) | `server_restore.sh` o `server_letsencrypt.sh issue` |
@@ -108,7 +109,7 @@ Particularidades ya conocidas (detalle en `OPERACION.md`):
 | Ubiquiti en enlaces PTP | Umbrales propios de cada enlace como macros de host: `{$UBNT.STA.TXCAP.MIN}` en el AP y `{$UBNT.STA.RXCAP.MIN}` en la estación (Mbps, 0 = desactivado), y la señal. Nombres con `[ ]`: *Host name* sin ellos y `--visible-name` con el nombre exacto |
 | Equipos raíz de la topología | Su trigger de disponibilidad depende de *Zabbix server: Interface enp2s0: Link down*, para que una caída de red del servidor no se reporte como caída de toda la red |
 | MikroTik NAS con muchas sesiones PPPoE | *Max repetition count* 50 en la interfaz SNMP; desactivar *SNMP walk wireless interfaces* en routers sin radios |
-| Problemas de objetos ya no descubiertos o desactivados | Zabbix no los cierra: cerrarlos con comentario (`zbx_close_problems.py`). Cada objeto desactivado a propósito se registra en `OPERACION.md`, sección 6 |
+| Problemas de objetos ya no descubiertos o desactivados | Zabbix no los cierra: cerrarlos con comentario (`zbx_close_problems.py`). Cada objeto desactivado a propósito se registra en `OPERACION.md`, sección 7 |
 | Enlaces con problemas largos y conocidos (lluvia) | Etiqueta de host `escalation=off`: la acción de escalada no repite sus *High*. Señal crítica con `{$UBNT.STA.SIGNAL.MIN.CRIT}` y la histéresis `{$UBNT.STA.SIGNAL.HYST}` de la plantilla |
 | *Switch port changes* | Requiere SNMPv2 (`ifXTable`): no usar en airOS (SNMPv1), cuyas plantillas ya vigilan la velocidad de `eth0` |
 | Cualquier radio con *Switch port changes* | Nunca vigilar interfaces inalámbricas (`wifi*`, `wlan*`, `ath*`): su velocidad es adaptativa. La plantilla ya las excluye por defecto |

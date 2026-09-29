@@ -1,0 +1,79 @@
+zabbix_export:
+  version: '7.0'
+  template_groups:
+    - uuid: 3a6730e62a4f4685831df097d40f3044
+      name: Templates/Likson
+  templates:
+    - uuid: e2e317368047473b8e803655c2ccd367
+      template: 'Likson KPIs'
+      name: 'Likson KPIs'
+      description: |
+        Network wide indicators for dashboards, calculated from other hosts. Linked to the host "KPI Likson"
+        (no interface). Group names used by the formulas: "Access Points PPPoE Clients".
+      groups:
+        - name: Templates/Likson
+      items:
+        - uuid: 2ddbe75db9104ce8ab95872ff7349889
+          name: 'Clientes conectados (total APs)'
+          type: CALCULATED
+          key: kpi.clients.total
+          units: clientes
+          params: 'sum(last_foreach(/*/ubnt.wl.stations?[group="Access Points PPPoE Clients"]))'
+          description: 'Sum of connected wireless clients of all access points.'
+          tags:
+            - tag: component
+              value: kpi
+        - uuid: 044982c6057544ed960e4a47ca9f884d
+          name: 'APs en línea'
+          type: CALCULATED
+          key: kpi.aps.online
+          units: APs
+          params: 'count(last_foreach(/*/zabbix[host,snmp,available]?[group="Access Points PPPoE Clients"]),"eq","1")'
+          description: 'Access points with SNMP available.'
+          tags:
+            - tag: component
+              value: kpi
+        - uuid: 5d98d35be11145938d6a5466c431e711
+          name: 'APs totales'
+          type: CALCULATED
+          key: kpi.aps.total
+          delay: 10m
+          units: APs
+          params: 'count(last_foreach(/*/zabbix[host,snmp,available]?[group="Access Points PPPoE Clients"]))'
+          description: 'Access points monitored.'
+          tags:
+            - tag: component
+              value: kpi
+        - uuid: 5c3feb924b7b495697ed1f736f0d1c3c
+          name: 'CPU EDGE 01 (media)'
+          type: CALCULATED
+          key: kpi.cpu.edge01
+          value_type: FLOAT
+          units: '%'
+          params: 'avg(last_foreach(/EDGE 01/system.cpu.util[*]))'
+          description: 'Average CPU utilization of all cores of EDGE 01.'
+          tags:
+            - tag: component
+              value: kpi
+        - uuid: e16f63a0b2e74fcd911d7461f36432ec
+          name: 'CPU NAS-01 (media)'
+          type: CALCULATED
+          key: kpi.cpu.nas01
+          value_type: FLOAT
+          units: '%'
+          params: 'avg(last_foreach(/NAS-01/system.cpu.util[*]))'
+          description: 'Average CPU utilization of all cores of NAS-01.'
+          tags:
+            - tag: component
+              value: kpi
+        - uuid: 2846131c306547bf99566523ffc54b52
+          name: 'CPU NAS-03 (media)'
+          type: CALCULATED
+          key: kpi.cpu.nas03
+          value_type: FLOAT
+          units: '%'
+          params: 'avg(last_foreach(/NAS-03/system.cpu.util[*]))'
+          description: 'Average CPU utilization of all cores of NAS-03.'
+          tags:
+            - tag: component
+              value: kpi

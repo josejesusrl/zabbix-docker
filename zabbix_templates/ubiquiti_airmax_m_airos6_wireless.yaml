@@ -167,6 +167,18 @@ zabbix_export:
       tags:
       - tag: component
         value: wireless
+    - uuid: 1b3a46c63a7f472e9d069a9d326ffe1e
+      name: 'Clients: minimum signal'
+      type: CALCULATED
+      key: ubnt.sta.signal.min
+      value_type: FLOAT
+      units: dBm
+      params: min(last_foreach(//ubnt.sta.signal[*]))
+      description: Worst signal among connected clients (the peer on PTP links). Fixed
+        name for dashboards.
+      tags:
+      - tag: component
+        value: wireless
     discovery_rules:
     - uuid: b18f990669a04fbeba43c4bb9e12c8c0
       name: Wireless clients discovery

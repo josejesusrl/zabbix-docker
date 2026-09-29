@@ -1,0 +1,622 @@
+{
+  "name": "Likson NOC",
+  "display_period": 60,
+  "auto_start": 0,
+  "pages": [
+    {
+      "name": "Resumen",
+      "widgets": [
+        {
+          "type": "item",
+          "name": "Clientes conectados",
+          "x": 0,
+          "y": 0,
+          "width": 12,
+          "height": 4,
+          "fields": {
+            "itemid.0": {
+              "item": [
+                "KPI Likson",
+                "kpi.clients.total"
+              ]
+            },
+            "show.0": 1,
+            "show.1": 2,
+            "show.2": 5,
+            "description": "Clientes conectados",
+            "desc_size": 14,
+            "value_size": 45,
+            "decimal_places": 0,
+            "units_show": 0,
+            "sparkline.width": 2,
+            "sparkline.fill": 2
+          }
+        },
+        {
+          "type": "item",
+          "name": "APs en línea",
+          "x": 12,
+          "y": 0,
+          "width": 12,
+          "height": 4,
+          "fields": {
+            "itemid.0": {
+              "item": [
+                "KPI Likson",
+                "kpi.aps.online"
+              ]
+            },
+            "show.0": 1,
+            "show.1": 2,
+            "show.2": 5,
+            "description": "APs en línea",
+            "desc_size": 14,
+            "value_size": 45,
+            "decimal_places": 0,
+            "units_show": 0,
+            "sparkline.width": 2,
+            "sparkline.fill": 2
+          }
+        },
+        {
+          "type": "problemsbysv",
+          "name": "Problemas por severidad",
+          "x": 24,
+          "y": 0,
+          "width": 48,
+          "height": 4,
+          "fields": {
+            "show_type": 1
+          }
+        },
+        {
+          "type": "hostavail",
+          "name": "Disponibilidad de equipos",
+          "x": 0,
+          "y": 4,
+          "width": 24,
+          "height": 5,
+          "fields": {
+            "interface_type.0": 1,
+            "interface_type.1": 2
+          }
+        },
+        {
+          "type": "svggraph",
+          "name": "Proveedores de internet (EDGE 01) — Coefi01 principal, Telmex respaldo",
+          "x": 24,
+          "y": 4,
+          "width": 48,
+          "height": 5,
+          "fields": {
+            "ds.0.hosts.0": "EDGE 01",
+            "ds.0.items.0": "Interface ether1(Coefi01): Bits received",
+            "ds.0.color": "1E88E5",
+            "ds.0.type": 0,
+            "ds.0.width": 2,
+            "ds.0.fill": 1,
+            "ds.0.transparency": 5,
+            "ds.1.hosts.0": "EDGE 01",
+            "ds.1.items.0": "Interface ether1(Coefi01): Bits sent",
+            "ds.1.color": "43A047",
+            "ds.1.type": 0,
+            "ds.1.width": 2,
+            "ds.1.fill": 1,
+            "ds.1.transparency": 5,
+            "ds.2.hosts.0": "EDGE 01",
+            "ds.2.items.0": "Interface ether2(TelmexBalcones): Bits received",
+            "ds.2.color": "FB8C00",
+            "ds.2.type": 0,
+            "ds.2.width": 2,
+            "ds.2.fill": 1,
+            "ds.2.transparency": 5,
+            "ds.3.hosts.0": "EDGE 01",
+            "ds.3.items.0": "Interface ether2(TelmexBalcones): Bits sent",
+            "ds.3.color": "8E24AA",
+            "ds.3.type": 0,
+            "ds.3.width": 2,
+            "ds.3.fill": 1,
+            "ds.3.transparency": 5
+          }
+        },
+        {
+          "type": "gauge",
+          "name": "CPU EDGE 01",
+          "x": 0,
+          "y": 9,
+          "width": 8,
+          "height": 4,
+          "fields": {
+            "itemid.0": {
+              "item": [
+                "KPI Likson",
+                "kpi.cpu.edge01"
+              ]
+            },
+            "min": "0",
+            "max": "100",
+            "angle": 180,
+            "show.0": 1,
+            "show.1": 2,
+            "show.2": 3,
+            "show.3": 4,
+            "show.4": 5,
+            "th_show_arc": 1,
+            "th_arc_size": 10,
+            "value_bold": 1,
+            "thresholds.0.color": "9CCC65",
+            "thresholds.0.threshold": "0",
+            "thresholds.1.color": "FFEE58",
+            "thresholds.1.threshold": "60",
+            "thresholds.2.color": "FFA726",
+            "thresholds.2.threshold": "80",
+            "thresholds.3.color": "E45959",
+            "thresholds.3.threshold": "90"
+          }
+        },
+        {
+          "type": "gauge",
+          "name": "CPU NAS-01",
+          "x": 8,
+          "y": 9,
+          "width": 8,
+          "height": 4,
+          "fields": {
+            "itemid.0": {
+              "item": [
+                "KPI Likson",
+                "kpi.cpu.nas01"
+              ]
+            },
+            "min": "0",
+            "max": "100",
+            "angle": 180,
+            "show.0": 1,
+            "show.1": 2,
+            "show.2": 3,
+            "show.3": 4,
+            "show.4": 5,
+            "th_show_arc": 1,
+            "th_arc_size": 10,
+            "value_bold": 1,
+            "thresholds.0.color": "9CCC65",
+            "thresholds.0.threshold": "0",
+            "thresholds.1.color": "FFEE58",
+            "thresholds.1.threshold": "60",
+            "thresholds.2.color": "FFA726",
+            "thresholds.2.threshold": "80",
+            "thresholds.3.color": "E45959",
+            "thresholds.3.threshold": "90"
+          }
+        },
+        {
+          "type": "gauge",
+          "name": "CPU NAS-03",
+          "x": 16,
+          "y": 9,
+          "width": 8,
+          "height": 4,
+          "fields": {
+            "itemid.0": {
+              "item": [
+                "KPI Likson",
+                "kpi.cpu.nas03"
+              ]
+            },
+            "min": "0",
+            "max": "100",
+            "angle": 180,
+            "show.0": 1,
+            "show.1": 2,
+            "show.2": 3,
+            "show.3": 4,
+            "show.4": 5,
+            "th_show_arc": 1,
+            "th_arc_size": 10,
+            "value_bold": 1,
+            "thresholds.0.color": "9CCC65",
+            "thresholds.0.threshold": "0",
+            "thresholds.1.color": "FFEE58",
+            "thresholds.1.threshold": "60",
+            "thresholds.2.color": "FFA726",
+            "thresholds.2.threshold": "80",
+            "thresholds.3.color": "E45959",
+            "thresholds.3.threshold": "90"
+          }
+        },
+        {
+          "type": "problems",
+          "name": "Problemas activos",
+          "x": 24,
+          "y": 9,
+          "width": 48,
+          "height": 8,
+          "fields": {
+            "show": 3,
+            "show_tags": 0,
+            "severities.0": 2,
+            "severities.1": 3,
+            "severities.2": 4,
+            "severities.3": 5,
+            "show_lines": 15
+          }
+        },
+        {
+          "type": "svggraph",
+          "name": "Clientes conectados (histórico)",
+          "x": 0,
+          "y": 13,
+          "width": 24,
+          "height": 4,
+          "fields": {
+            "ds.0.hosts.0": "KPI Likson",
+            "ds.0.items.0": "Clientes conectados (total APs)",
+            "ds.0.color": "1E88E5",
+            "ds.0.type": 0,
+            "ds.0.width": 2,
+            "ds.0.fill": 1,
+            "ds.0.transparency": 5
+          }
+        }
+      ]
+    },
+    {
+      "name": "Access Points",
+      "widgets": [
+        {
+          "type": "honeycomb",
+          "name": "Clientes por AP",
+          "x": 0,
+          "y": 0,
+          "width": 72,
+          "height": 6,
+          "fields": {
+            "groupids.0": {
+              "group": "Access Points PPPoE Clients"
+            },
+            "items.0": "Wireless: Connected clients",
+            "show.0": 1,
+            "show.1": 2,
+            "primary_label": "{HOST.NAME}",
+            "secondary_label_type": 1,
+            "secondary_label_decimal_places": 0,
+            "interpolation": 0,
+            "thresholds.0.color": "E45959",
+            "thresholds.0.threshold": "0",
+            "thresholds.1.color": "FFF59D",
+            "thresholds.1.threshold": "1",
+            "thresholds.2.color": "AED581",
+            "thresholds.2.threshold": "10",
+            "thresholds.3.color": "66BB6A",
+            "thresholds.3.threshold": "20",
+            "thresholds.4.color": "FFA726",
+            "thresholds.4.threshold": "35"
+          }
+        },
+        {
+          "type": "tophosts",
+          "name": "Estado de los APs",
+          "x": 0,
+          "y": 6,
+          "width": 72,
+          "height": 9,
+          "fields": {
+            "groupids.0": {
+              "group": "Access Points PPPoE Clients"
+            },
+            "columns.0.name": "AP",
+            "columns.0.base_color": "",
+            "columns.0.data": 2,
+            "columns.1.name": "Clientes",
+            "columns.1.base_color": "",
+            "columns.1.data": 1,
+            "columns.1.item": "Wireless: Connected clients",
+            "columns.1.decimal_places": 0,
+            "columns.1.display": 2,
+            "columns.1.min": "0",
+            "columns.1.max": "40",
+            "columns.2.name": "Peor señal de cliente",
+            "columns.2.base_color": "",
+            "columns.2.data": 1,
+            "columns.2.item": "Clients: minimum signal",
+            "columns.2.decimal_places": 0,
+            "columns.3.name": "Peor capacidad TX de cliente",
+            "columns.3.base_color": "",
+            "columns.3.data": 1,
+            "columns.3.item": "Clients: minimum TX capacity",
+            "columns.3.decimal_places": 0,
+            "columns.4.name": "Ruido",
+            "columns.4.base_color": "",
+            "columns.4.data": 1,
+            "columns.4.item": "Wireless: Noise floor",
+            "columns.4.decimal_places": 0,
+            "columns.5.name": "Carga (1 min)",
+            "columns.5.base_color": "",
+            "columns.5.data": 1,
+            "columns.5.item": "Load average (1m avg)",
+            "columns.5.decimal_places": 2,
+            "columns.6.name": "Tráfico radio RX",
+            "columns.6.base_color": "",
+            "columns.6.data": 1,
+            "columns.6.item": "Interface ath0: Bits received",
+            "columns.6.decimal_places": 0,
+            "column": 1,
+            "order": 2,
+            "show_lines": 30
+          }
+        }
+      ]
+    },
+    {
+      "name": "Enlaces PTP",
+      "widgets": [
+        {
+          "type": "tophosts",
+          "name": "Enlaces backhaul (Ubiquiti)",
+          "x": 0,
+          "y": 0,
+          "width": 72,
+          "height": 5,
+          "fields": {
+            "groupids.0": {
+              "group": "Enlaces PTP Backhaul"
+            },
+            "columns.0.name": "Radio",
+            "columns.0.base_color": "",
+            "columns.0.data": 2,
+            "columns.1.name": "Señal del par",
+            "columns.1.base_color": "",
+            "columns.1.data": 1,
+            "columns.1.item": "Clients: minimum signal",
+            "columns.1.decimal_places": 0,
+            "columns.2.name": "Capacidad TX",
+            "columns.2.base_color": "",
+            "columns.2.data": 1,
+            "columns.2.item": "Clients: minimum TX capacity",
+            "columns.2.decimal_places": 0,
+            "columns.3.name": "Capacidad RX",
+            "columns.3.base_color": "",
+            "columns.3.data": 1,
+            "columns.3.item": "Clients: minimum RX capacity",
+            "columns.3.decimal_places": 0,
+            "columns.4.name": "Ruido",
+            "columns.4.base_color": "",
+            "columns.4.data": 1,
+            "columns.4.item": "Wireless: Noise floor",
+            "columns.4.decimal_places": 0,
+            "columns.5.name": "eth0",
+            "columns.5.base_color": "",
+            "columns.5.data": 1,
+            "columns.5.item": "Interface eth0: Speed",
+            "columns.5.decimal_places": 0,
+            "column": 1,
+            "order": 3,
+            "show_lines": 20
+          }
+        },
+        {
+          "type": "tophosts",
+          "name": "Enlace troncal (Mimosa)",
+          "x": 0,
+          "y": 5,
+          "width": 72,
+          "height": 3,
+          "fields": {
+            "groupids.0": {
+              "group": "Enlaces PTP Troncales"
+            },
+            "columns.0.name": "Radio",
+            "columns.0.base_color": "",
+            "columns.0.data": 2,
+            "columns.1.name": "Enlace",
+            "columns.1.base_color": "",
+            "columns.1.data": 1,
+            "columns.1.item": "Link: Status",
+            "columns.1.decimal_places": 0,
+            "columns.1.display_value_as": 1,
+            "columns.2.name": "Potencia RX",
+            "columns.2.base_color": "",
+            "columns.2.data": 1,
+            "columns.2.item": "RF: Total RX power",
+            "columns.2.decimal_places": 1,
+            "columns.3.name": "PHY TX",
+            "columns.3.base_color": "",
+            "columns.3.data": 1,
+            "columns.3.item": "Performance: Total TX PHY rate",
+            "columns.3.decimal_places": 0,
+            "columns.4.name": "PHY RX",
+            "columns.4.base_color": "",
+            "columns.4.data": 1,
+            "columns.4.item": "Performance: Total RX PHY rate",
+            "columns.4.decimal_places": 0,
+            "columns.5.name": "PER TX %",
+            "columns.5.base_color": "",
+            "columns.5.data": 1,
+            "columns.5.item": "Performance: TX packet error rate",
+            "columns.5.decimal_places": 2,
+            "columns.6.name": "Temperatura",
+            "columns.6.base_color": "",
+            "columns.6.data": 1,
+            "columns.6.item": "Temperature",
+            "columns.6.decimal_places": 0,
+            "column": 0,
+            "order": 2,
+            "show_lines": 5
+          }
+        },
+        {
+          "type": "svggraph",
+          "name": "Capacidad TX de los backhaul",
+          "x": 0,
+          "y": 8,
+          "width": 36,
+          "height": 5,
+          "fields": {
+            "ds.0.hosts.0": "*Lk_*",
+            "ds.0.items.0": "Clients: minimum TX capacity",
+            "ds.0.color": "1E88E5",
+            "ds.0.type": 0,
+            "ds.0.width": 2,
+            "ds.0.fill": 1,
+            "ds.0.transparency": 5
+          }
+        },
+        {
+          "type": "svggraph",
+          "name": "Troncal Mimosa: velocidad PHY",
+          "x": 36,
+          "y": 8,
+          "width": 36,
+          "height": 5,
+          "fields": {
+            "ds.0.hosts.0": "AP-Lk_Trunk_01_A",
+            "ds.0.items.0": "Performance: Total TX PHY rate",
+            "ds.0.color": "1E88E5",
+            "ds.0.type": 0,
+            "ds.0.width": 2,
+            "ds.0.fill": 1,
+            "ds.0.transparency": 5,
+            "ds.1.hosts.0": "AP-Lk_Trunk_01_A",
+            "ds.1.items.0": "Performance: Total RX PHY rate",
+            "ds.1.color": "43A047",
+            "ds.1.type": 0,
+            "ds.1.width": 2,
+            "ds.1.fill": 1,
+            "ds.1.transparency": 5
+          }
+        }
+      ]
+    },
+    {
+      "name": "Infraestructura",
+      "widgets": [
+        {
+          "type": "svggraph",
+          "name": "CPU de routers y NAS (media)",
+          "x": 0,
+          "y": 0,
+          "width": 36,
+          "height": 5,
+          "fields": {
+            "ds.0.hosts.0": "KPI Likson",
+            "ds.0.items.0": "CPU * (media)",
+            "ds.0.color": "1E88E5",
+            "ds.0.type": 0,
+            "ds.0.width": 2,
+            "ds.0.fill": 1,
+            "ds.0.transparency": 5
+          }
+        },
+        {
+          "type": "svggraph",
+          "name": "Tráfico EDGE 01 → NAS",
+          "x": 36,
+          "y": 0,
+          "width": 36,
+          "height": 5,
+          "fields": {
+            "ds.0.hosts.0": "EDGE 01",
+            "ds.0.items.0": "Interface sfp-sfpplus2(NAS-01): Bits*",
+            "ds.0.color": "1E88E5",
+            "ds.0.type": 0,
+            "ds.0.width": 2,
+            "ds.0.fill": 1,
+            "ds.0.transparency": 5,
+            "ds.1.hosts.0": "EDGE 01",
+            "ds.1.items.0": "Interface ether7(NAS-03): Bits*",
+            "ds.1.color": "FB8C00",
+            "ds.1.type": 0,
+            "ds.1.width": 2,
+            "ds.1.fill": 1,
+            "ds.1.transparency": 5
+          }
+        },
+        {
+          "type": "tophosts",
+          "name": "Servidores",
+          "x": 0,
+          "y": 5,
+          "width": 72,
+          "height": 3,
+          "fields": {
+            "groupids.0": {
+              "group": "Linux servers"
+            },
+            "groupids.1": {
+              "group": "Zabbix servers"
+            },
+            "columns.0.name": "Servidor",
+            "columns.0.base_color": "",
+            "columns.0.data": 2,
+            "columns.1.name": "CPU %",
+            "columns.1.base_color": "",
+            "columns.1.data": 1,
+            "columns.1.item": "CPU utilization",
+            "columns.1.decimal_places": 0,
+            "columns.1.display": 2,
+            "columns.1.min": "0",
+            "columns.1.max": "100",
+            "columns.2.name": "Memoria %",
+            "columns.2.base_color": "",
+            "columns.2.data": 1,
+            "columns.2.item": "Memory utilization",
+            "columns.2.decimal_places": 0,
+            "columns.2.display": 2,
+            "columns.2.min": "0",
+            "columns.2.max": "100",
+            "columns.3.name": "Disco /rootfs %",
+            "columns.3.base_color": "",
+            "columns.3.data": 1,
+            "columns.3.item": "FS [/rootfs]: Space: Used, in %",
+            "columns.3.decimal_places": 0,
+            "columns.3.display": 2,
+            "columns.3.min": "0",
+            "columns.3.max": "100",
+            "columns.4.name": "Contenedores activos",
+            "columns.4.base_color": "",
+            "columns.4.data": 1,
+            "columns.4.item": "Containers running",
+            "columns.4.decimal_places": 0,
+            "column": 0,
+            "order": 2,
+            "show_lines": 10
+          }
+        },
+        {
+          "type": "svggraph",
+          "name": "Temperaturas del servidor Zabbix",
+          "x": 0,
+          "y": 8,
+          "width": 36,
+          "height": 4,
+          "fields": {
+            "ds.0.hosts.0": "Zabbix server",
+            "ds.0.items.0": "Temperature *",
+            "ds.0.color": "E53935",
+            "ds.0.type": 0,
+            "ds.0.width": 2,
+            "ds.0.fill": 1,
+            "ds.0.transparency": 5
+          }
+        },
+        {
+          "type": "svggraph",
+          "name": "Switch Main Site #01: tráfico de puertos",
+          "x": 36,
+          "y": 8,
+          "width": 36,
+          "height": 4,
+          "fields": {
+            "ds.0.hosts.0": "Switch Main Site #01",
+            "ds.0.items.0": "Interface gigabitEthernet*: Bits received",
+            "ds.0.color": "1E88E5",
+            "ds.0.type": 0,
+            "ds.0.width": 2,
+            "ds.0.fill": 1,
+            "ds.0.transparency": 5
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -19,7 +19,7 @@ Todos los procedimientos se pueden hacer desde la interfaz web (`https://zabbix.
 | Grupos de hosts | `Routers & Switches Likson` (MikroTik, switches), `Access Points PPPoE Clients` (APs Ubiquiti), `Enlaces PTP Troncales` y `Enlaces PTP Backhaul` (radios PTP), `Linux servers`, `Zabbix servers` |
 | Etiqueta `uplink` | Nombre del equipo del que depende (p. ej. `uplink = EDGE 01`). Sirve para filtrar y como documentación de la dependencia |
 | Interfaz SNMP | Comunidad `{$SNMP_COMMUNITY}` (macro global de tipo secreto). MikroTik, TP-Link y Mimosa: SNMPv2. **Ubiquiti: SNMPv1** |
-| Dependencias | Cada equipo depende del que le da conectividad hacia Zabbix (sección 4.1) |
+| Dependencias | Cada equipo depende del que le da conectividad hacia Zabbix (sección 5.1) |
 
 ### Topología y dependencias actuales
 
@@ -77,11 +77,31 @@ Los sectores `172.16.2.x` están conectados físicamente a NAS-02, que se va a r
 | [AP]Lk_Hq_Caribe_1 (LiteBeam 5AC, AP) | 10.155.3.2 | Enlaces PTP Backhaul | Ubiquiti AirOS by SNMP, Ubiquiti AirOS 8 wireless by SNMPv1 | `{$UBNT.GPS.SATS.MIN}=0`, `{$UBNT.STA.SIGNAL.MIN.WARN}=-64`, `{$UBNT.STA.SIGNAL.MIN.CRIT}=-70`, `{$UBNT.STA.TXCAP.MIN}=37`. Etiqueta `escalation=off` | [STA]Lk_Hq_Caribe_1 |
 | AP-Lk_Trunk_01_A (Mimosa C5C, AP) | 10.100.0.2 | Enlaces PTP Troncales | Network Generic Device by SNMP, Mimosa C5C by SNMP, Switch port changes by SNMP | `{$IFCONTROL}=0`, `{$MIMOSA.RX.POWER.MIN.WARN}=-71`, `{$MIMOSA.RX.POWER.MIN.CRIT}=-76` | STA-Lk_Trunk_01_A |
 
-IPs de APs: `172.16.1.x` (las `.12` y `.13` no responden y no están dadas de alta), `172.16.2.x` y `172.16.3.x` (la `.14` no responde y no está dada de alta). Las IPs pueden cambiar: ver 4.10.
+IPs de APs: `172.16.1.x` (las `.12` y `.13` no responden y no están dadas de alta), `172.16.2.x` y `172.16.3.x` (la `.14` no responde y no está dada de alta). Las IPs pueden cambiar: ver 5.10.
 
 ---
 
-## 2. Alertas
+## 2. Dashboard "Likson NOC"
+
+*Dashboards → Likson NOC*: 4 páginas; se pueden rotar automáticamente con el botón de reproducción (60 s por página).
+
+| Página | Contenido |
+|---|---|
+| **Resumen** | Clientes conectados y APs en línea (con tendencia), problemas por severidad, disponibilidad de equipos, tráfico de los proveedores de internet de EDGE 01 (Coefi01 principal, Telmex respaldo), CPU media de EDGE 01 / NAS-01 / NAS-03, problemas activos (Warning o superior) e histórico de clientes |
+| **Access Points** | Panal con un AP por celda coloreado por clientes (rojo = 0, verde, naranja a partir de 35), y tabla por AP: clientes, peor señal y peor capacidad de sus clientes, ruido, carga y tráfico radio |
+| **Enlaces PTP** | Tabla de backhaul (señal del par, capacidad TX/RX, ruido, velocidad de `eth0`; ordenada por peor señal), tabla del troncal Mimosa (estado, potencia RX, PHY, PER, temperatura) y gráficos de capacidad y PHY |
+| **Infraestructura** | CPU media de routers y NAS, tráfico EDGE 01 → NAS, tabla de servidores (CPU, memoria, disco, contenedores), temperaturas del servidor Zabbix y tráfico del switch |
+
+**Indicadores globales:** el host **KPI Likson** (grupo *Likson KPIs*, plantilla `zabbix_templates/likson_kpis.yaml`) calcula el total de clientes conectados, los APs en línea y totales, y la CPU media de EDGE 01, NAS-01 y NAS-03. Sus fórmulas usan el grupo *Access Points PPPoE Clients* y los nombres de esos hosts: si cambian, hay que actualizar la plantilla.
+
+**Para modificar el dashboard:**
+1. Editar `zabbix_dashboards/likson_noc.json`. Los hosts, grupos e items se escriben por nombre.
+2. Respaldo.
+3. Aplicar con `agents/scripts/zbx_dashboard_apply.py`, que reemplaza todas las páginas.
+
+Los cambios hechos en la interfaz se pierden en la siguiente aplicación si no se copian al JSON. Las tablas (*Top hosts*) necesitan el nombre exacto del item en todos los hosts. Por eso las plantillas Ubiquiti tienen items con nombre fijo: *Clients: minimum signal / minimum TX capacity / minimum RX capacity* (el peor cliente, o el par en un enlace PTP).
+
+## 3. Alertas
 
 ### A quién y cómo llegan
 
@@ -145,7 +165,7 @@ En *Monitoring → Problems* → *Update* sobre el problema:
 
 ---
 
-## 3. Catálogo de plantillas
+## 4. Catálogo de plantillas
 
 ### 3.1 Plantillas propias (en `zabbix_templates/`)
 
@@ -200,7 +220,7 @@ Mismos triggers y macros, salvo los de GPS y capacidad (airOS 6 no la publica); 
 
 #### MikroTik link traps by SNMP — `mikrotik_link_traps.yaml`
 **Para:** routers MikroTik, junto con su plantilla oficial de modelo. Alerta **al instante** cuando cae un enlace, a partir del trap `linkDown`.
-**Requisitos en el router:** traps configurados y `src-address` igual a la IP del host en Zabbix (sección 4.3).
+**Requisitos en el router:** traps configurados y `src-address` igual a la IP del host en Zabbix (sección 5.3).
 
 | Trigger | Severidad | Cuándo | Se resuelve |
 |---|---|---|---|
@@ -247,18 +267,18 @@ Umbrales por chip: `{$TEMP.CRIT:"nvme"}=70`.
 
 | Plantilla | Para | Ajustes |
 |---|---|---|
-| *MikroTik \<modelo\> by SNMP* | Routers MikroTik. Usar la del modelo exacto; si no existe, *Mikrotik by SNMP* | En concentradores PPPoE, excluir sesiones (4.3) |
+| *MikroTik \<modelo\> by SNMP* | Routers MikroTik. Usar la del modelo exacto; si no existe, *Mikrotik by SNMP* | En concentradores PPPoE, excluir sesiones (5.3) |
 | *TP-LINK by SNMP* | Switches TP-Link | Con *Switch port changes*: `{$IFCONTROL}=0` |
 | *Ubiquiti AirOS by SNMP* | APs Ubiquiti (sistema: CPU, memoria, ping) | En airOS 8, *Firmware version* y *Hardware model name* quedan como no soportados (airOS 8 no publica esos datos). Es normal |
-| *Linux by Zabbix agent* | Servidores Linux | Si el agente corre en un contenedor con `/rootfs`: macros de sistemas de archivos (4.5) |
+| *Linux by Zabbix agent* | Servidores Linux | Si el agente corre en un contenedor con `/rootfs`: macros de sistemas de archivos (5.5) |
 | *Docker by Zabbix agent 2* | Servidores con Docker | El agente necesita acceso a `/var/run/docker.sock`. Solo descubre los contenedores en ejecución |
 | *Website certificate by Zabbix agent 2* | Caducidad del certificado de `zabbix.likson.com` (host Zabbix server) | `{$CERT.WEBSITE.HOSTNAME}`, `{$CERT.WEBSITE.IP}=127.0.0.1`, `{$CERT.EXPIRY.WARN}=14` |
 
 ---
 
-## 4. Procedimientos
+## 5. Procedimientos
 
-### 4.1 Configurar las dependencias de un host
+### 5.1 Configurar las dependencias de un host
 
 Las dependencias evitan recibir decenas de alertas cuando cae un equipo del que dependen otros: solo avisa el equipo de arriba.
 
@@ -277,7 +297,7 @@ Las dependencias evitan recibir decenas de alertas cuando cae un equipo del que 
 
 Para configurar varios hosts a la vez, filtrar en *Data collection → Triggers* por grupo o etiqueta y por nombre, seleccionarlos todos y usar **Mass update**.
 
-### 4.2 Añadir un AP Ubiquiti
+### 5.2 Añadir un AP Ubiquiti
 
 **En el AP (airOS):**
 1. *Services* → **SNMP Agent**: activar. Poner la comunidad de lectura (la misma que `{$SNMP_COMMUNITY}`), *Contact* y *Location*. **Save** y **Apply**.
@@ -294,15 +314,15 @@ Para configurar varios hosts a la vez, filtrar en *Data collection → Triggers*
      - airOS 6 (M5, series M): `Ubiquiti AirOS by SNMP` + `Ubiquiti airMAX M (airOS 6) wireless by SNMPv1`.
    - **Macros** (solo AC **sin** GPS): `{$UBNT.GPS.SATS.MIN}` = `0`.
    - **Tags:** `uplink` = equipo del que cuelga.
-2. **Add**. Configurar las dependencias (4.1), incluida la de "AP has no connected clients".
+2. **Add**. Configurar las dependencias (5.1), incluida la de "AP has no connected clients".
 3. **Verificar** (unos 5 min):
    - En *Data collection → Hosts*, el icono **SNMP** en verde.
    - En *Monitoring → Latest data*, filtrado por el host: *Connected clients* igual al número de clientes que muestra airOS, y un grupo de items *Client …* por cada uno.
-   - *Firmware version* y *Hardware model name* no soportados es normal en airOS 8. Cualquier otro item no soportado se revisa en la sección 5.
+   - *Firmware version* y *Hardware model name* no soportados es normal en airOS 8. Cualquier otro item no soportado se revisa en la sección 6.
 
 **Por qué SNMPv1:** airOS ignora las consultas SNMPv2c aunque la comunidad sea correcta, y el host aparece como no disponible.
 
-### 4.3 Añadir un router MikroTik
+### 5.3 Añadir un router MikroTik
 
 **En el router (terminal de RouterOS):**
 ```routeros
@@ -325,23 +345,23 @@ Para configurar varios hosts a la vez, filtrar en *Data collection → Triggers*
 3. **Si el router no tiene radios** (CCR, RB2011…): en *Items*, desactivar *SNMP walk wireless interfaces*. Lee de nuevo toda la tabla de interfaces cada minuto para nada.
    **Si es concentrador PPPoE (NAS):** en la interfaz SNMP, *Max repetition count* = `50` (defecto 10). Con cientos de sesiones, la tabla de interfaces se lee con 5 veces menos peticiones y se evitan los timeouts cuando el router tiene la CPU alta.
    **Además, en un NAS:** en *Macros* → *Inherited and host macros*, copiar `{$NET.IF.IFNAME.NOT_MATCHES}` y añadir `|^<pppoe-` **antes del paréntesis final**. Si no, cada sesión de cliente se descubre como interfaz y los items crecen sin control.
-4. Dependencias (4.1) y etiqueta `uplink`.
+4. Dependencias (5.1) y etiqueta `uplink`.
 5. **Verificar:** SNMP en verde. En *Latest data*, interfaces sin `<pppoe-…>` (en un NAS, el filtro tarda hasta 1 h en aplicarse). Prueba de traps: deshabilitar y habilitar una interfaz **sin uso** con comentario:
    ```routeros
    /interface disable etherX; :delay 5s; /interface enable etherX
    ```
    Aparecerá en *Latest data* → *SNMP traps* del host, o en el trigger *Link down (SNMP trap)*.
 
-### 4.4 Añadir un switch con vigilancia de puertos
+### 5.4 Añadir un switch con vigilancia de puertos
 
 1. En el switch: activar SNMP (v2c) con la comunidad de lectura, accesible desde 192.168.0.191.
 2. *Create host*: grupo `Routers & Switches Likson`, interfaz **SNMP** (SNMPv2, `{$SNMP_COMMUNITY}`).
 3. **Templates:** la del fabricante (p. ej. `TP-LINK by SNMP`) + `Switch port changes by SNMP`.
 4. **Macros:** `{$IFCONTROL}` = `0`. En TP-Link, `{$PORT.IFNAME.NOT_MATCHES}` = `^(<|Vlan-interface)`.
-5. Dependencias (4.1).
+5. Dependencias (5.1).
 6. **Verificar:** en *Latest data*, items *Port …: Operational status / Negotiated speed* con valores (`up`/`down`, 1000/100 Mbps). Desconectar un puerto no crítico 5 s → *Port X: Disconnected* y luego resuelto.
 
-### 4.5 Añadir un servidor Linux
+### 5.5 Añadir un servidor Linux
 
 1. **Instalar Zabbix Agent 2** en el servidor, o en contenedor como `server-04`. En su configuración:
    ```ini
@@ -357,7 +377,7 @@ Para configurar varios hosts a la vez, filtrar en *Data collection → Triggers*
    - En *Items*, desactivar `Checksum of /etc/passwd` y `Number of logged in users` (leen el contenedor, no el host).
 5. **Verificar:** icono **ZBX** en verde, y en *Latest data* CPU, memoria y sistemas de archivos del host (solo `/rootfs…` si está en contenedor).
 
-### 4.6 Ajustar umbrales
+### 5.6 Ajustar umbrales
 
 Las plantillas propias usan macros; los umbrales se cambian **en el host**, sin tocar la plantilla:
 
@@ -365,9 +385,9 @@ Las plantillas propias usan macros; los umbrales se cambian **en el host**, sin 
 2. Con **contexto**, solo para un elemento concreto:
    - `{$UBNT.STA.SIGNAL.MIN.WARN:"NOMBRE_CLIENTE"}` = `-80`: un cliente lejano con señal débil aceptable.
    - `{$TEMP.CRIT:"nvme"}` = `70`: umbral propio para los discos NVMe.
-3. Para cambiar el valor por defecto en todos los hosts, se edita la macro en la plantilla (4.8).
+3. Para cambiar el valor por defecto en todos los hosts, se edita la macro en la plantilla (5.8).
 
-### 4.7 Configurar el envío de traps desde un equipo nuevo
+### 5.7 Configurar el envío de traps desde un equipo nuevo
 
 1. Destino de traps: `192.168.0.191` (o `zabbix.likson.com`), puerto **162/udp**, SNMPv2c, comunidad de traps.
 2. El trap debe salir con la misma IP que la interfaz SNMP del host en Zabbix.
@@ -378,7 +398,7 @@ Las plantillas propias usan macros; los umbrales se cambian **en el host**, sin 
    Debe aparecer `ZBXTRAP <IP del equipo>`. Los traps sin host coincidente se registran en el log del server como *unmatched trap*.
 4. Si se ha olvidado la comunidad de traps: `sudo awk '/^authCommunity/{print $3}' ~/zabbix-docker/snmptraps/snmptrapd.conf`.
 
-### 4.8 Crear o modificar una plantilla propia
+### 5.8 Crear o modificar una plantilla propia
 
 1. Editar el YAML en `zabbix_templates/` (reglas de formato en `AGENTS.md`, regla 6), hacer commit y push, y documentar el cambio en esta guía.
 2. Respaldo en el servidor.
@@ -387,13 +407,13 @@ Las plantillas propias usan macros; los umbrales se cambian **en el host**, sin 
 
 No editar las plantillas propias desde la interfaz: el cambio se perdería al reimportar el YAML. Las plantillas oficiales tampoco se editan; se ajustan con macros de host.
 
-### 4.9 Dar de baja un equipo
+### 5.9 Dar de baja un equipo
 
 - **Temporal** (equipo apagado o en reparación): *Data collection → Hosts* → estado **Disabled**. Se conserva el historial.
 - **Definitiva:** antes, revisar qué hosts dependen de él (etiqueta `uplink`, sección 1) y reasignar sus dependencias. Después, **Delete**. Se pierde su historial.
 - Actualizar el inventario y la topología de esta guía.
 
-### 4.10 Cambiar la IP de un equipo
+### 5.10 Cambiar la IP de un equipo
 
 Las dependencias, el historial y las alertas van ligados al **host**, no a su IP. Cambiar la IP no rompe nada:
 
@@ -403,7 +423,7 @@ Las dependencias, el historial y las alertas van ligados al **host**, no a su IP
 4. Si otros equipos filtran por IP la comunicación con Zabbix (comunidades SNMP con `addresses`, `Server=` de agentes), revisar que sigan apuntando a `192.168.0.191`. Solo cambia la IP del equipo monitoreado, no la de Zabbix.
 5. Actualizar el inventario de esta guía y **verificar** que el icono SNMP/ZBX vuelve a verde.
 
-### 4.11 Añadir un enlace PTP Mimosa
+### 5.11 Añadir un enlace PTP Mimosa
 
 **En los radios** (los dos extremos): activar SNMP v2c con la comunidad de lectura, en la sección de gestión SNMP del radio (firmware 2.x: *Preferences → Management*). Anotar la **señal de diseño** (RSL) del enlace.
 
@@ -414,22 +434,22 @@ Las dependencias, el historial y las alertas van ligados al **host**, no a su IP
    - Interfaz **SNMP** (IP, 161, **SNMPv2**, `{$SNMP_COMMUNITY}`).
    - **Templates:** `Network Generic Device by SNMP` + `Mimosa C5C by SNMP` + `Switch port changes by SNMP`.
    - **Macros:** `{$IFCONTROL}` = `0`, `{$MIMOSA.RX.POWER.MIN.WARN}` = diseño − 6 y `{$MIMOSA.RX.POWER.MIN.CRIT}` = diseño − 11.
-3. **Dependencias (4.1):** el extremo lejano depende del cercano (si no hay conexión con el cercano, tampoco con el lejano), y el cercano depende del equipo que le da conectividad hacia Zabbix.
+3. **Dependencias (5.1):** el extremo lejano depende del cercano (si no hay conexión con el cercano, tampoco con el lejano), y el cercano depende del equipo que le da conectividad hacia Zabbix.
 4. **Verificar:** SNMP en verde, *Link: Status = connected*, potencias y SNR con valores reales en *Latest data*, y en *Switch port changes* solo el puerto Ethernet (`eth1_emac1`), no `wifi0`.
 
-### 4.12 Añadir un enlace PTP Ubiquiti (airOS)
+### 5.12 Añadir un enlace PTP Ubiquiti (airOS)
 
 Para enlaces punto a punto con equipos airMAX AC (LiteBeam, PowerBeam, Rocket…). Cada enlace tiene **sus propios umbrales**, que se ponen como macros en sus hosts, no en la plantilla.
 
-1. **En los radios:** SNMP activado (4.2) y anotar la **capacidad mínima aceptable** en cada sentido y la señal normal.
-2. **Crear primero el extremo más cercano a Zabbix**, y después el lejano (4.2):
+1. **En los radios:** SNMP activado (5.2) y anotar la **capacidad mínima aceptable** en cada sentido y la señal normal.
+2. **Crear primero el extremo más cercano a Zabbix**, y después el lejano (5.2):
    - Grupo `Enlaces PTP Backhaul` (o `Troncales`), **SNMPv1**, plantillas `Ubiquiti AirOS by SNMP` + `Ubiquiti AirOS 8 wireless by SNMPv1`.
    - Si el nombre lleva caracteres no válidos (`[AP]`), *Host name* sin ellos y *Visible name* exacto.
 3. **Macros de cada host:**
    - `{$UBNT.GPS.SATS.MIN}` = `0` si no tiene GPS.
    - `{$UBNT.STA.SIGNAL.MIN.WARN}` ≈ señal normal − 7 dB.
    - Capacidad: en ambos radios SNMP reporta el mismo par de valores, **TX = capacidad AP→estación** y **RX = estación→AP**. Para no duplicar alertas, cada sentido se vigila en un solo host: en el **AP** `{$UBNT.STA.TXCAP.MIN}` (capacidad del AP) y en la **estación** `{$UBNT.STA.RXCAP.MIN}` (capacidad de la estación).
-4. **Dependencias (4.1):** extremo lejano → extremo cercano → equipo que da conectividad al cercano. Si el enlace cae, avisa el lejano por ping (*High*).
+4. **Dependencias (5.1):** extremo lejano → extremo cercano → equipo que da conectividad al cercano. Si el enlace cae, avisa el lejano por ping (*High*).
 5. **Verificar** en *Latest data*: *Client …: TX/RX capacity* con los valores de la interfaz de airOS, y en *Triggers* los de capacidad con el umbral correcto en el nombre.
 
 Ejemplo `Lk_Hq_Pintores_1`: AP `{$UBNT.STA.TXCAP.MIN}=50`, estación `{$UBNT.STA.RXCAP.MIN}=30`, señal normal -50 → aviso -57.
@@ -440,38 +460,38 @@ Ejemplo `Lk_Hq_Pintores_1`: AP `{$UBNT.STA.TXCAP.MIN}=50`, estación `{$UBNT.STA
 - Con la histéresis de la plantilla, una lluvia de ~2 h produce **un aviso al empezar y otro al terminar**, sin repeticiones ni avisos por cada oscilación.
 - Capacidades de Caribe: 20 % de la capacidad medida al darlo de alta (AP 183.6 → 37 Mbps; estación 63.7 → 13 Mbps).
 
-### 4.13 Revisar falsos positivos y salud del monitoreo
+### 5.13 Revisar falsos positivos y salud del monitoreo
 
 Conviene hacerlo tras cada alta de equipos y periódicamente:
 1. *Monitoring → Problems* con *Show: History* de las últimas 24 h, agrupando por trigger. Un trigger que se abre muchas veces indica umbral mal ajustado o *flapping*. Por API: `agents/scripts/zbx_events.py --hours 24`.
 2. *Data collection → Hosts*: iconos de disponibilidad en rojo e items no soportados. Por API: `zbx_host_status.py --details`.
-3. Log del server: `docker compose --env-file .env --env-file server.env logs --since 12h zabbix-server | grep -iE "timed out|not supported|failed"`. Muchos *timed out* de un equipo = equipo sobrecargado o lecturas demasiado grandes (ver 4.3, NAS).
-4. Corregir con los mecanismos de esta guía (macros, dependencias, *overrides*). Desactivar un objeto solo si es inútil por diseño, y registrarlo en la tabla de la sección 6.
+3. Log del server: `docker compose --env-file .env --env-file server.env logs --since 12h zabbix-server | grep -iE "timed out|not supported|failed"`. Muchos *timed out* de un equipo = equipo sobrecargado o lecturas demasiado grandes (ver 5.3, NAS).
+4. Corregir con los mecanismos de esta guía (macros, dependencias, *overrides*). Desactivar un objeto solo si es inútil por diseño, y registrarlo en la tabla de la sección 7.
 
 ---
 
-## 5. Solución de problemas
+## 6. Solución de problemas
 
 | Síntoma | Causa probable | Solución |
 |---|---|---|
 | Host SNMP no disponible (*timed out*) y el ping responde | Versión SNMP incorrecta (Ubiquiti solo v1), comunidad distinta, SNMP desactivado o firewall del equipo | Probar SNMPv1 en la interfaz. Revisar la comunidad y la regla de input del 161 |
 | Traps que no aparecen en el host | `src-address` distinto de la IP del host. Comunidad de traps incorrecta | Log del server (*unmatched trap from …*): configurar `src-address`. Si no llega nada al log de traps, revisar comunidad y destino |
-| NAS con cientos de interfaces `<pppoe-…>` | Falta la exclusión de PPPoE | 4.3, paso 3. Las sesiones se desactivan en ≤ 1 h y se borran a los 7 días |
-| Alerta de GPS en un AP sin GPS | Falta `{$UBNT.GPS.SATS.MIN}=0` | 4.2 |
+| NAS con cientos de interfaces `<pppoe-…>` | Falta la exclusión de PPPoE | 5.3, paso 3. Las sesiones se desactivan en ≤ 1 h y se borran a los 7 días |
+| Alerta de GPS en un AP sin GPS | Falta `{$UBNT.GPS.SATS.MIN}=0` | 5.2 |
 | AP airOS 6 sin datos de clientes (*noSuchName*) | En SNMPv1, leer la última columna del MIB falla | Usar la plantilla airMAX M (no lee esa columna) |
-| Discos "fantasma" (`/etc/hosts`, `/var/lib/zabbix/…`) en un servidor | Agente en contenedor | Macros de sistemas de archivos (4.5). Se aplican en ≤ 1 h |
+| Discos "fantasma" (`/etc/hosts`, `/var/lib/zabbix/…`) en un servidor | Agente en contenedor | Macros de sistemas de archivos (5.5). Se aplican en ≤ 1 h |
 | *Firmware version* / *Hardware model name* no soportados en APs AC | airOS 8 no los publica | Normal, ignorar |
 | El cambio de una macro no se refleja en el descubrimiento | Las reglas de descubrimiento reprocesan como mucho 1 vez por hora si el resultado no cambia | Esperar hasta 1 h |
-| Aviso duplicado de desconexión en un switch | Falta `{$IFCONTROL}=0` con *Switch port changes* | 4.4, paso 4 |
-| Muchos *timed out* SNMP en el log y datos con huecos en un MikroTik, sobre todo cuando su CPU está alta | La lectura de la tabla de interfaces (con todas las sesiones PPPoE) es grande y el router responde tarde | 4.3: *Max repetition count* = 50 y desactivar *SNMP walk wireless interfaces* si no tiene radios. Si persiste, el router está saturado (hardware) |
-| A la vez saltan *Unavailable* en EDGE 01, NAS-01… sin fallo real | Cayó la red del propio servidor Zabbix (log del kernel: `enp2s0: Link is Down`) | Dependencia de los equipos raíz sobre *Zabbix server: Interface enp2s0: Link down* (4.1, paso 6). Revisar el cable del servidor si renegocia a 100 Mbps (*downshifted*) |
+| Aviso duplicado de desconexión en un switch | Falta `{$IFCONTROL}=0` con *Switch port changes* | 5.4, paso 4 |
+| Muchos *timed out* SNMP en el log y datos con huecos en un MikroTik, sobre todo cuando su CPU está alta | La lectura de la tabla de interfaces (con todas las sesiones PPPoE) es grande y el router responde tarde | 5.3: *Max repetition count* = 50 y desactivar *SNMP walk wireless interfaces* si no tiene radios. Si persiste, el router está saturado (hardware) |
+| A la vez saltan *Unavailable* en EDGE 01, NAS-01… sin fallo real | Cayó la red del propio servidor Zabbix (log del kernel: `enp2s0: Link is Down`) | Dependencia de los equipos raíz sobre *Zabbix server: Interface enp2s0: Link down* (5.1, paso 6). Revisar el cable del servidor si renegocia a 100 Mbps (*downshifted*) |
 | Un problema sigue abierto aunque su item o trigger ya no se descubre o está desactivado | Zabbix no cierra los problemas de triggers desactivados por el descubrimiento | *Monitoring → Problems → Update → Close problem* con un comentario. Por API: `zbx_close_problems.py` |
 | Alertas continuas "speed changed" en la interfaz de radio (`wifi0`, `ath0`) | La vigilancia de puertos incluía una interfaz inalámbrica, cuya velocidad es adaptativa | La plantilla ya las excluye por defecto. Si un host tiene su propio `{$PORT.IFNAME.NOT_MATCHES}`, incluir `wifi\|wlan\|ath`. Cerrar los problemas falsos (*Update → Close problem*) |
 | Al caer un equipo llegan varias alertas (ping, pérdida, latencia, SNMP) en vez de una | Se usó *Replace* al configurar dependencias y se borraron las internas de la plantilla | En cada trigger (*Dependencies*): *High ICMP ping loss* y *No SNMP data collection* → *Unavailable by ICMP ping* propio; *High ICMP ping response time* → *Unavailable by ICMP ping* y *High ICMP ping loss* propios |
 
 ---
 
-## 6. Objetos desactivados a propósito
+## 7. Objetos desactivados a propósito
 
 No son errores. Se desactivaron porque no aplican a ese equipo y solo generaban ruido. Si se reactiva alguno, hay que actualizar esta tabla.
 
@@ -488,11 +508,11 @@ No son errores. Se desactivaron porque no aplican a ese equipo y solo generaban 
 
 ---
 
-## 7. Situaciones conocidas
+## 8. Situaciones conocidas
 
 Avisos reales que se mantienen a propósito. No son falsos positivos.
 
 | Equipo | Situación | Decisión |
 |---|---|---|
-| NAS-03 (RB2011iL-RM) | CPU al 91–95 % cada noche (≈ 16:00–00:00, hora de México), con picos del 98 %. El trigger *High CPU utilization* de la plantilla se abre y cierra varias veces por noche (*Warning*, Gmail) | Se deja como está: indica que el RB2011 está saturado y necesita reemplazo. Al cambiar el equipo, revisar la plantilla de modelo y los ajustes de NAS (4.3) |
-| Zabbix server | El 2026-09-29 la tarjeta `enp2s0` perdió el enlace 2 min y volvió a **100 Mbps (downshifted)**: cable o conector que no soporta gigabit | Revisar o cambiar el cable. Mientras tanto, los equipos raíz dependen de su *Link down* (4.1) |
+| NAS-03 (RB2011iL-RM) | CPU al 91–95 % cada noche (≈ 16:00–00:00, hora de México), con picos del 98 %. El trigger *High CPU utilization* de la plantilla se abre y cierra varias veces por noche (*Warning*, Gmail) | Se deja como está: indica que el RB2011 está saturado y necesita reemplazo. Al cambiar el equipo, revisar la plantilla de modelo y los ajustes de NAS (5.3) |
+| Zabbix server | El 2026-09-29 la tarjeta `enp2s0` perdió el enlace 2 min y volvió a **100 Mbps (downshifted)**: cable o conector que no soporta gigabit | Revisar o cambiar el cable. Mientras tanto, los equipos raíz dependen de su *Link down* (5.1) |

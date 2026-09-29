@@ -182,6 +182,42 @@ zabbix_export:
       tags:
       - tag: component
         value: raw
+    - uuid: 2a2ac653d0634f0a8fe56e8d52661235
+      name: 'Clients: minimum signal'
+      type: CALCULATED
+      key: ubnt.sta.signal.min
+      value_type: FLOAT
+      units: dBm
+      params: min(last_foreach(//ubnt.sta.signal[*]))
+      description: Worst signal among connected clients (the peer on PTP links). Fixed
+        name for dashboards.
+      tags:
+      - tag: component
+        value: wireless
+    - uuid: 650dbdc477b44d87983cff196afc3f58
+      name: 'Clients: minimum TX capacity'
+      type: CALCULATED
+      key: ubnt.sta.txcap.min
+      value_type: FLOAT
+      units: bps
+      params: min(last_foreach(//ubnt.sta.txcap[*]))
+      description: Lowest airMAX TX capacity among clients (link capacity on PTP).
+        Fixed name for dashboards.
+      tags:
+      - tag: component
+        value: wireless
+    - uuid: 443618bd6a554f389f372d11d9bae472
+      name: 'Clients: minimum RX capacity'
+      type: CALCULATED
+      key: ubnt.sta.rxcap.min
+      value_type: FLOAT
+      units: bps
+      params: min(last_foreach(//ubnt.sta.rxcap[*]))
+      description: Lowest airMAX RX capacity among clients (link capacity on PTP).
+        Fixed name for dashboards.
+      tags:
+      - tag: component
+        value: wireless
     discovery_rules:
     - uuid: 1d602c562caa4cce8f2d0690582ae39b
       name: Wireless clients discovery

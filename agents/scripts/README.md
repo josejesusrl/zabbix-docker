@@ -34,9 +34,10 @@ printf '%s\n' "$TOKEN" | agents/scripts/run_remote.sh -f zabbix_templates/X.yaml
 | `zbx_check_now.py` | Acción | Ejecuta ya los items y reglas de descubrimiento de unos hosts |
 | `zbx_events.py` | Lectura | Eventos de problema de las últimas horas agrupados por trigger: veces abierto, notificaciones, cierres manuales. Detecta falsos positivos y *flapping* |
 | `zbx_add_dependency.py` | Escritura | Añade una dependencia a cualquier trigger (p. ej. equipos raíz → enlace de red del Zabbix server), conservando las existentes |
-| `zbx_set_status.py` | Escritura | Activa o desactiva items o triggers por nombre (registrar el motivo en `OPERACION.md`, sección 6) |
+| `zbx_set_status.py` | Escritura | Activa o desactiva items o triggers por nombre (registrar el motivo en `OPERACION.md`, sección 7) |
 | `zbx_mediatype_update.py` | Escritura | Aplica a un medio el script, las plantillas y parámetros concretos desde `zabbix_media/`, sin tocar ni mostrar el token |
 | `zbx_test_notification.py` | Escritura | Prueba real de extremo a extremo: host temporal que abre, actualiza y resuelve un problema, muestra el estado de entrega de cada notificación y se borra |
+| `zbx_dashboard_apply.py` | Escritura | Crea o actualiza un dashboard desde `zabbix_dashboards/*.json` (hosts, grupos e items por nombre) |
 | `zbx_close_problems.py` | Escritura | Cierra problemas abiertos por nombre con un comentario (falsos positivos, problemas de objetos desactivados) |
 | `run_remote.sh` | Envoltorio | Ejecuta un script en el servidor con el token por la entrada estándar |
 
