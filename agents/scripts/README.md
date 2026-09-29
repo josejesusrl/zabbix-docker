@@ -31,6 +31,7 @@ printf '%s\n' "$TOKEN" | agents/scripts/run_remote.sh -f zabbix_templates/X.yaml
 | `zbx_create_snmp_host.py` | Escritura | Alta de un host SNMP con plantillas, macros, etiquetas y dependencia de su uplink (`--visible-name` si el nombre del equipo tiene caracteres no válidos para el *Host name*) |
 | `zbx_set_uplink.py` | Escritura | Cambia el equipo padre (dependencias + etiqueta `uplink`), conservando las dependencias internas de la plantilla |
 | `zbx_import_template.py` | Escritura | Importa plantillas YAML (`--delete-missing` para eliminar lo que ya no está en el fichero) |
+| `zbx_link_template.py` | Escritura | Enlaza plantillas a hosts (`host.massadd`), conservando las que ya tienen |
 | `zbx_check_now.py` | Acción | Ejecuta ya los items y reglas de descubrimiento de unos hosts |
 | `zbx_events.py` | Lectura | Eventos de problema de las últimas horas agrupados por trigger: veces abierto, notificaciones, cierres manuales. Detecta falsos positivos y *flapping* |
 | `zbx_add_dependency.py` | Escritura | Añade una dependencia a cualquier trigger (p. ej. equipos raíz → enlace de red del Zabbix server), conservando las existentes |
@@ -70,6 +71,8 @@ printf '%s\n' "$TOKEN" | $S zbx_latest.py --host AP-Lk_Trunk_01_A --key mimosa.
 printf '%s\n' "$TOKEN" | $S -f zabbix_media/telegram/telegram.js -f zabbix_media/telegram/message_templates.json \
     zbx_mediatype_update.py --name Telegram --script telegram.js --templates message_templates.json --param api_parse_mode=html
 printf '%s\n' "$TOKEN" | $S zbx_test_notification.py
+# Enlazar una plantilla a un host
+printf '%s\n' "$TOKEN" | $S zbx_link_template.py --host "Zabbix server" --template "Cloudflare Tunnel by HTTP" --dry-run
 # Actualizar una plantilla propia
 printf '%s\n' "$TOKEN" | $S -f zabbix_templates/switch_port_changes.yaml zbx_import_template.py switch_port_changes.yaml --delete-missing
 ```
