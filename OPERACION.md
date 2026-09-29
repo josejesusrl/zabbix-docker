@@ -28,10 +28,13 @@ Zabbix server (192.168.0.191)                 sin dependencia
 server-04 (192.168.50.254)                    sin dependencia
 EDGE 01 (192.168.200.1)  MikroTik CCR2004
 ├── NAS-01 (192.168.200.2)  CCR2004, concentrador PPPoE
-│   └── Switch Main Site #01 (172.16.100.2)  TP-Link
-│       └── APs Ubiquiti 172.16.1.2 – 172.16.1.19 (16 APs, uplink = Switch Main Site #01)
+│   ├── Switch Main Site #01 (172.16.100.2)  TP-Link
+│   │   └── APs Ubiquiti 172.16.1.2 – 172.16.1.19 (16 APs, uplink = Switch Main Site #01)
+│   └── Sector_3, Sector_4, Sector_5 (172.16.2.x, uplink = NAS-01)
 └── NAS-03 (192.168.200.10)  RB2011iL-RM, concentrador PPPoE
 ```
+
+Los sectores `172.16.2.x` están conectados físicamente a NAS-02, que se va a retirar y no está dado de alta en Zabbix. Por eso dependen de NAS-01.
 
 ### Inventario
 
@@ -47,8 +50,11 @@ EDGE 01 (192.168.200.1)  MikroTik CCR2004
 | LIKSON_PDV_3, LK_C3, LIKSON_BETA01, LIKSON_PDV_7, LIKSON_HQ_DELTA_01 | .4, .11, .14, .15, .18 | Access Points PPPoE Clients | Ubiquiti AirOS by SNMP, Ubiquiti AirOS 8 wireless by SNMPv1 | — (tienen GPS) | Switch Main Site #01 |
 | LIKSON_PDV_1, _2, _4, _6, _9, _10, LKON_SGAMMA01, LK_C2, LK_C4 | .2, .3, .5, .7, .8, .9, .10, .16, .17 | Access Points PPPoE Clients | Ubiquiti AirOS by SNMP, Ubiquiti AirOS 8 wireless by SNMPv1 | `{$UBNT.GPS.SATS.MIN}=0` (sin GPS) | Switch Main Site #01 |
 | LIKSON_PDV_5 (Rocket M5) | 172.16.1.6 | Access Points PPPoE Clients | Ubiquiti AirOS by SNMP, Ubiquiti airMAX M (airOS 6) wireless by SNMPv1 | — | Switch Main Site #01 |
+| Sector_4 (airOS 8, con GPS) | 172.16.2.10 | Access Points PPPoE Clients | Ubiquiti AirOS by SNMP, Ubiquiti AirOS 8 wireless by SNMPv1 | — | NAS-01 |
+| Sector_3 (airOS 8, sin GPS) | 172.16.2.3 | Access Points PPPoE Clients | Ubiquiti AirOS by SNMP, Ubiquiti AirOS 8 wireless by SNMPv1 | `{$UBNT.GPS.SATS.MIN}=0` | NAS-01 |
+| Sector_5 (NanoStation loco M, airOS 6) | 172.16.2.4 | Access Points PPPoE Clients | Ubiquiti AirOS by SNMP, Ubiquiti airMAX M (airOS 6) wireless by SNMPv1 | — | NAS-01 |
 
-Todas las IPs de APs son `172.16.1.x`. Las IPs `.12` y `.13` no responden y no están dadas de alta.
+IPs de APs: `172.16.1.x` (las `.12` y `.13` no responden y no están dadas de alta) y `172.16.2.x`. Las IPs pueden cambiar: ver 4.10.
 
 ---
 
@@ -300,6 +306,16 @@ No editar las plantillas propias desde la interfaz: el cambio se perdería al re
 - **Temporal** (equipo apagado o en reparación): *Data collection → Hosts* → estado **Disabled**. Se conserva el historial.
 - **Definitiva:** antes, revisar qué hosts dependen de él (etiqueta `uplink`, sección 1) y reasignar sus dependencias. Después, **Delete**. Se pierde su historial.
 - Actualizar el inventario y la topología de esta guía.
+
+### 4.10 Cambiar la IP de un equipo
+
+Las dependencias, el historial y las alertas van ligados al **host**, no a su IP. Cambiar la IP no rompe nada:
+
+1. Respaldo.
+2. *Data collection → Hosts* → host → pestaña **Host** → *Interfaces*: nueva IP → **Update**.
+3. Si es un MikroTik que envía traps, actualizar también `/snmp set src-address=<nueva IP>`: los traps se asocian por la IP de la interfaz.
+4. Si otros equipos filtran por IP la comunicación con Zabbix (comunidades SNMP con `addresses`, `Server=` de agentes), revisar que sigan apuntando a `192.168.0.191`. Solo cambia la IP del equipo monitoreado, no la de Zabbix.
+5. Actualizar el inventario de esta guía y **verificar** que el icono SNMP/ZBX vuelve a verde.
 
 ---
 

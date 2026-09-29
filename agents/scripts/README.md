@@ -22,7 +22,7 @@ printf '%s\n' "$TOKEN" | agents/scripts/run_remote.sh -f zabbix_templates/X.yaml
 | Script | Tipo | Para qué |
 |---|---|---|
 | `zbx_api.py` | Librería | Cliente de la API y funciones compartidas (búsquedas, dependencias, macros, etiquetas, importación) |
-| `zbx_inventory.py` | Lectura | Inventario de hosts: interfaces, grupos, plantillas, macros, etiquetas y de quién depende. `--markdown` genera la tabla para `OPERACION.md` |
+| `zbx_inventory.py` | Lectura | Inventario de hosts: interfaces, grupos, plantillas, macros, etiquetas y de quién depende. `--markdown` genera la tabla para `OPERACION.md`; `--dependencies` muestra las dependencias de cada trigger de disponibilidad |
 | `zbx_host_status.py` | Lectura | Estado tras un cambio: disponibilidad, items sin datos o no soportados (separa las limitaciones conocidas) y problemas |
 | `snmp_probe.py` | Lectura | Sondeo previo al alta: ping, SNMPv1/v2c, `sysName`, modelo/firmware airOS 6, clientes y GPS Ubiquiti |
 | `zbx_create_snmp_host.py` | Escritura | Alta de un host SNMP con plantillas, macros, etiquetas y dependencia de su uplink |
