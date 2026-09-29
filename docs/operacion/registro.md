@@ -42,7 +42,8 @@ Avisos reales que se mantienen a propósito. No son falsos positivos.
 
 | Pendiente | Qué hacer |
 |---|---|
-| Activar Cloudflare Tunnel en producción | Pasos 1 a 3 de [acceso externo](../despliegue/acceso-externo.md) (túnel, Access, ruta), token con `./server_setup.sh`, `sudo ./server_certificate.sh selfsigned` (10 años), importar y enlazar *Cloudflare Tunnel by HTTP*. Quitar la línea `server_letsencrypt.sh renew` de `/etc/cron.d/zabbix` y borrar `letsencrypt/`. Revisar que el agente de server-04 no tenga `ServerActive=zabbix.likson.com` |
+| Terminar la configuración de Cloudflare Access | El 2026-09-29 se dejó la web publicada mientras se termina de configurar Access. Revisar en *Access → Applications* la aplicación `zabbix.likson.com` (política *Allow* solo con los correos autorizados, sin *Bypass*) y comprobar desde fuera que un correo no autorizado no entra ([acceso externo](../despliegue/acceso-externo.md#2-proteger-la-web-con-access)) |
+| Cerrar la puesta en marcha del túnel | Importar y enlazar *Cloudflare Tunnel by HTTP* al host Zabbix server. Quitar la línea `server_letsencrypt.sh renew` de `/etc/cron.d/zabbix` y borrar `letsencrypt/`. Revisar que el agente de server-04 no use `ServerActive=zabbix.likson.com`. Comprobar que el router no redirige 80/443 |
 | Respaldos fuera del servidor | Copiarlos periódicamente ([mantenimiento](../despliegue/mantenimiento.md#copiar-los-respaldos-fuera-del-servidor)) |
 | MFA desactivado | Activar TOTP en *Users → Authentication → MFA settings* |
 | Cierre automático de sesión de `jjrl` en `0` | Poner un valor (p. ej. 15 min) en *User settings → Profile* |
