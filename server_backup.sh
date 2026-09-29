@@ -6,13 +6,8 @@
 # Backups older than BACKUP_RETENTION_DAYS (server.env) are removed.
 # Copy ./backups to another machine, local copies do not protect against disk loss.
 #
-# Restore:
-#   1. Extract config archive in repository root: tar -xzf backups/zabbix-config-<date>.tar.gz
-#   2. Start database only: docker compose --env-file .env --env-file server.env up -d postgres-server
-#   3. docker compose --env-file .env --env-file server.env exec -T postgres-server \
-#        sh -c 'pg_restore -U "$(cat /run/secrets/POSTGRES_USER)" -d "$POSTGRES_DB" --clean --if-exists' \
-#        < backups/zabbix-db-<date>.dump
-#   4. docker compose --env-file .env --env-file server.env up -d
+# Restore: server_restore.sh --config backups/zabbix-config-<date>.tar.gz --db backups/zabbix-db-<date>.dump
+# (see SERVER_DEPLOY.md, "Restauración").
 set -eu
 
 cd "$(dirname "$0")"

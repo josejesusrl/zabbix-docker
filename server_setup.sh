@@ -114,6 +114,17 @@ EOF
     sudo chown "${ZBX_UID}:${ZBX_GID}" snmptraps/snmptrapd.conf
 fi
 
+# Daily backup and certificate renewal, run as root (host cron configuration kept in the project)
+if [ ! -e /etc/cron.d/zabbix ]; then
+    sudo tee /etc/cron.d/zabbix > /dev/null <<EOF
+# Zabbix backups and certificate renewal (times in host time zone), installed by server_setup.sh
+30 2 * * * root $(pwd)/server_backup.sh >> /var/log/zabbix-backup.log 2>&1
+0 4 * * * root $(pwd)/server_letsencrypt.sh renew >> /var/log/zabbix-letsencrypt.log 2>&1
+EOF
+    sudo chmod 644 /etc/cron.d/zabbix
+    echo "Installed /etc/cron.d/zabbix"
+fi
+
 # lm-sensors on host: loads sensor drivers, agent 2 reads them from /sys/class/hwmon
 # (zabbix_agentd.d/sensors_hwmon.conf)
 if ! command -v sensors >/dev/null 2>&1; then

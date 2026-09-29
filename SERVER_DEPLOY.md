@@ -11,9 +11,11 @@ Stack: PostgreSQL + Zabbix server + frontend Nginx con HTTPS (Let's Encrypt) + A
 | `nginx/zabbix_http.conf` | HTTP: solo el reto ACME y la redirección a HTTPS |
 | `server_setup.sh` | Preparación inicial y captura segura de secretos |
 | `server_letsencrypt.sh` | Emisión y renovación del certificado |
-| `server_backup.sh` | Respaldo de la BD y la configuración |
+| `server_backup.sh` | Respaldo de la BD y de la configuración que no está en git |
+| `server_restore.sh` | Restauración desde un respaldo o migración de la BD de una implementación anterior |
 | `zabbix_agentd.d/sensors_hwmon.*` | UserParameters del Agent 2 para las temperaturas del host |
-| `zabbix_templates/linux_hwmon_temperature.yaml` | Plantilla de temperaturas para importar en Zabbix |
+| `zabbix_templates/*.yaml` | Plantillas propias: temperaturas, traps de enlace MikroTik, puertos de switch, Ubiquiti airOS 8/airOS 6 |
+| `AGENTS.md` | Reglas para modificar el proyecto y la producción (respaldo previo, qué debe estar en git) |
 
 ## Requisitos
 
@@ -22,6 +24,24 @@ Stack: PostgreSQL + Zabbix server + frontend Nginx con HTTPS (Let's Encrypt) + A
 - Puertos abiertos: `80/tcp` (reto ACME y redirección), `443/tcp` (web), `162/udp` (traps desde cualquier red) y `10051/tcp` (agentes remotos).
 - Salida desde el servidor hacia `10050/tcp` de los agentes remotos (checks pasivos) y `161/udp` de los equipos SNMP.
 - En el host no debe haber otro agente de Zabbix usando el puerto 10050.
+
+## 0. Antes de empezar: elegir el camino
+
+| Situación | Camino |
+|---|---|
+| Servidor nuevo, sin datos previos que conservar | Secciones 1 a 5 |
+| Este despliegue se perdió (disco, servidor) y hay respaldos de `server_backup.sh` | [Restauración](#restauración) |
+| Ya existe **otra implementación de Zabbix** (en este servidor o en otro) y se quieren conservar sus datos | [Migración desde una implementación anterior](#migración-desde-una-implementación-anterior), luego secciones 2 a 5 |
+
+Antes de instalar en un servidor que ya tuvo Zabbix, revisar qué queda:
+
+```sh
+docker ps -a --format '{{.Names}}\t{{.Image}}\t{{.Status}}'
+docker network ls
+docker volume ls
+```
+
+Las redes `*_frontend`, `*_backend` y `*_tools_frontend` de otra instalación usan las mismas subredes (`172.16.238-240.0/24`), y otro contenedor web puede estar ocupando los puertos 80 y 443. El nuevo stack no arranca hasta que se eliminen, **después** de respaldar sus datos si se van a conservar.
 
 ## 1. Clonar y preparar
 
@@ -124,7 +144,7 @@ sudo ufw allow from 172.16.238.0/24 to any port 10050 proto tcp
 
 ## 5. Tareas programadas
 
-Se ejecutan como root desde `/etc/cron.d/zabbix`, **no** con `crontab -e`: en un crontab de usuario no existe el campo `root` y los scripts necesitan root. Crear el fichero desde la raíz del repo:
+`server_setup.sh` instala `/etc/cron.d/zabbix` si no existe: respaldo diario a las 02:30 y renovación del certificado a las 04:00, como root. Se instalan en `/etc/cron.d`, **no** con `crontab -e`, porque en un crontab de usuario no existe el campo `root` y los scripts necesitan root. Equivalente manual:
 
 ```sh
 sudo tee /etc/cron.d/zabbix > /dev/null <<EOF
@@ -142,10 +162,56 @@ Verificación:
 
 Copiar `./backups` fuera del servidor (rsync, almacenamiento externo). El procedimiento de restauración está en la cabecera de `server_backup.sh`.
 
+## Migración desde una implementación anterior
+
+Para conservar hosts, plantillas, historial y usuarios de un Zabbix existente.
+
+1. **Respaldar la base de datos anterior** mientras sigue en marcha. Con PostgreSQL:
+   ```sh
+   docker exec <contenedor-postgres-anterior> sh -c 'pg_dump -U <usuario> -d <bd> -Fc' > zabbix-anterior.dump
+   ls -lh zabbix-anterior.dump     # debe pesar más de unos pocos MB
+   ```
+   - Si la anterior usaba **MySQL/MariaDB**, su dump no se puede restaurar en PostgreSQL. Hay que exportar las plantillas y los hosts desde su interfaz (*Data collection → Hosts/Templates → Export*) e importarlos en la nueva; el historial no se migra.
+   - Copiar también lo que la instalación anterior tuviera fuera de la BD (scripts de alertas, scripts externos, MIBs, UserParameters). Según `AGENTS.md`, se incorpora a este repositorio.
+2. **Detener y eliminar la instalación anterior:** contenedores, redes y volúmenes, en su directorio con `docker compose down`, o uno a uno. Conservar su carpeta de datos hasta verificar la migración.
+3. **Clonar y preparar** este repositorio (sección 1). La contraseña de PostgreSQL que se introduzca será la de la nueva BD.
+4. **Restaurar el dump** en la nueva BD, que tiene que estar vacía:
+   ```sh
+   sudo ./server_restore.sh --db zabbix-anterior.dump
+   ```
+   Si el dump es de una versión anterior de Zabbix, el server migra el esquema al arrancar. Seguir el progreso con `zbx logs -f zabbix-server`: la actualización de la BD puede tardar varios minutos.
+5. **Revisar en la nueva interfaz** la interfaz del agente del host "Zabbix server" (`172.16.238.1`) y sus macros (sección 4). Importar las plantillas de `zabbix_templates/` que falten y comprobar los hosts.
+6. Continuar con las secciones 2 a 5 (certificado, firewall, tareas programadas).
+
+## Restauración
+
+Para reconstruir este despliegue en un disco o servidor nuevo a partir de los respaldos de `server_backup.sh`. Hacen falta los dos ficheros del mismo momento: `zabbix-db-<fecha>.dump` y `zabbix-config-<fecha>.tar.gz`, copiados fuera del servidor.
+
+1. **Preparar el host:** requisitos, Docker y clonar el repositorio (sección 1, **sin** ejecutar todavía `server_setup.sh`).
+2. **Copiar los respaldos** a `~/zabbix-docker/backups/`.
+3. **Restaurar configuración y base de datos:**
+   ```sh
+   cd ~/zabbix-docker
+   sudo ./server_restore.sh --config backups/zabbix-config-<fecha>.tar.gz --db backups/zabbix-db-<fecha>.dump
+   ```
+   - `--config` recupera lo que no está en git: la contraseña de PostgreSQL, `server.env`, los certificados, la cuenta de Let's Encrypt, los MIBs y la comunidad de traps. Los ficheros versionados salen de git.
+   - `--db` arranca PostgreSQL, restaura el dump y levanta el stack completo.
+   - Si `./zabbix-db-data` ya contiene una BD, el script se detiene. Para sobrescribirla, respaldar primero y añadir `--replace-db`.
+4. **Completar la preparación del host:**
+   ```sh
+   ./server_setup.sh
+   ```
+   No vuelve a pedir los secretos restaurados; crea las exclusiones de git, el cron y lm-sensors.
+5. **Certificado:** el restaurado sirve si no ha caducado. Si no, `sudo ./server_letsencrypt.sh issue` (o `selfsigned` sin acceso público).
+6. **Firewall** (sección 3) y comprobación: `zbx ps`, acceso web, disponibilidad de los hosts y llegada de traps.
+
+**Si no hay respaldo de la BD**, se recupera todo lo que está en git (stack, plantillas propias, UserParameters, scripts), pero **los hosts, macros de host, acciones, usuarios e historial se pierden**. Hay que importar `zabbix_templates/*.yaml` y volver a dar de alta los equipos según esta guía. Por eso los respaldos deben copiarse fuera del servidor.
+
 ## Operación
 
 - **Estado:** `zbx ps`. Todos deben estar `running`/`healthy` y `server-db-init` en `exited (0)`.
 - **Logs:** `zbx logs -f zabbix-server`.
+- **Antes de cualquier cambio en producción:** `sudo ./server_backup.sh` (ver `AGENTS.md`).
 - **Actualizar Zabbix:**
   1. `sudo ./server_backup.sh`
   2. `git pull`
