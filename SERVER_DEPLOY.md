@@ -117,6 +117,9 @@ sudo ufw allow from 172.16.238.0/24 to any port 10050 proto tcp
      - La plantilla oficial *Ubiquiti AirOS by SNMP* solo da datos del sistema: su firmware, modelo e interfaces no funcionan en airOS 8.
      - Añadir `zabbix_templates/ubiquiti_airos8_wireless.yaml`: clientes conectados, señal, ruido, radio, GPS, datos por cliente (señal, CCQ, distancia, CINR, capacidad) y tráfico de `eth0`/`ath0` con contadores de 32 bits.
      - Triggers: AP sin clientes, ruido alto (`{$UBNT.NOISE.MAX.WARN}`), GPS con pocos satélites y cliente con señal débil (`{$UBNT.STA.SIGNAL.MIN.WARN}`, ajustable por cliente con contexto).
+     - **Modelos AC sin GPS:** devuelven 0 satélites en lugar de "no existe". Poner `{$UBNT.GPS.SATS.MIN}=0` en el host para que no salte la alerta de GPS.
+     - **airMAX M con airOS 6** (Rocket M5, etc.): usar `zabbix_templates/ubiquiti_airmax_m_airos6_wireless.yaml`, sin GPS, CINR ni capacidad AC, y con airMAX quality/capacity por cliente. También solo responde a SNMPv1.
+     - **Limitación de SNMPv1:** si una lectura por tabla llega a la última columna del MIB, el equipo devuelve `noSuchName` y Zabbix descarta toda la lectura. Por eso la variante airOS 6 no lee la columna 15 (tiempo de conexión).
    - **Concentradores PPPoE:** añadir `|^<pppoe-` a la macro `{$NET.IF.IFNAME.NOT_MATCHES}` del host, para que no se descubra cada sesión de cliente como interfaz.
 
 ## 5. Tareas programadas
