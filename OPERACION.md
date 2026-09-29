@@ -458,3 +458,14 @@ No son errores. Se desactivaron porque no aplican a ese equipo y solo generaban 
 | NAS-01, NAS-03 | *SNMP walk wireless interfaces* | Routers sin radios. Leía cada minuto toda la tabla de interfaces (con las sesiones PPPoE) y sobrecargaba el router |
 | AP-Lk_Trunk_01_A, STA-Lk_Trunk_01_A | Trigger *Interface wifi0(): Ethernet has changed to lower speed* (plantilla *Network Generic Device*) | La velocidad de `wifi0` es la capacidad radio adaptativa y cambia continuamente. La capacidad se vigila con los triggers de velocidad PHY de *Mimosa C5C* |
 | server-04 | Discos `/etc/hosts`, `/etc/hostname`, `/etc/resolv.conf`, `/etc/zabbix/zabbix_agentd.d` | No descubiertos por las macros `{$VFS.FS.FSNAME.*}` (montajes del contenedor). Se borran solos a los 7 días |
+
+---
+
+## 7. Situaciones conocidas
+
+Avisos reales que se mantienen a propósito. No son falsos positivos.
+
+| Equipo | Situación | Decisión |
+|---|---|---|
+| NAS-03 (RB2011iL-RM) | CPU al 91–95 % cada noche (≈ 16:00–00:00, hora de México), con picos del 98 %. El trigger *High CPU utilization* de la plantilla se abre y cierra varias veces por noche (*Warning*, Gmail) | Se deja como está: indica que el RB2011 está saturado y necesita reemplazo. Al cambiar el equipo, revisar la plantilla de modelo y los ajustes de NAS (4.3) |
+| Zabbix server | El 2026-09-29 la tarjeta `enp2s0` perdió el enlace 2 min y volvió a **100 Mbps (downshifted)**: cable o conector que no soporta gigabit | Revisar o cambiar el cable. Mientras tanto, los equipos raíz dependen de su *Link down* (4.1) |
