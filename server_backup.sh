@@ -7,7 +7,7 @@
 # Copy ./backups to another machine, local copies do not protect against disk loss.
 #
 # Restore: server_restore.sh --config backups/zabbix-config-<date>.tar.gz --db backups/zabbix-db-<date>.dump
-# (see SERVER_DEPLOY.md, "Restauración").
+# (see docs/despliegue/restauracion-y-migracion.md).
 set -eu
 
 cd "$(dirname "$0")"

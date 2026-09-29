@@ -6,7 +6,7 @@ Usage (token on stdin, see README.md). Requires a recent backup (AGENTS.md, rule
 
 TEXT is contained in the item or trigger name (case insensitive). Works on inherited and discovered
 objects: the status set on a discovered item/trigger is kept when the discovery runs again.
-Always document in OPERACION.md why an object was disabled.
+Always document in docs/operacion/registro.md why an object was disabled.
 """
 import argparse
 

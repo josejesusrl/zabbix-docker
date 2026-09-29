@@ -1,0 +1,18 @@
+# Solución de problemas
+
+| Síntoma | Causa probable | Solución |
+|---|---|---|
+| Host SNMP no disponible (*timed out*) y el ping responde | Versión SNMP incorrecta (Ubiquiti solo v1), comunidad distinta, SNMP desactivado o firewall del equipo | Probar SNMPv1 en la interfaz. Revisar la comunidad y la regla de input del 161 |
+| Traps que no aparecen en el host | `src-address` distinto de la IP del host. Comunidad de traps incorrecta | Log del server (*unmatched trap from …*): configurar `src-address`. Si no llega nada al log de traps, revisar comunidad y destino |
+| NAS con cientos de interfaces `<pppoe-…>` | Falta la exclusión de PPPoE | [Añadir un router MikroTik](procedimientos/anadir-router-mikrotik.md), paso 3. Las sesiones se desactivan en ≤ 1 h y se borran a los 7 días |
+| Alerta de GPS en un AP sin GPS | Falta `{$UBNT.GPS.SATS.MIN}=0` | [Añadir un AP Ubiquiti](procedimientos/anadir-ap-ubiquiti.md) |
+| AP airOS 6 sin datos de clientes (*noSuchName*) | En SNMPv1, leer la última columna del MIB falla | Usar la plantilla airMAX M (no lee esa columna) |
+| Discos "fantasma" (`/etc/hosts`, `/var/lib/zabbix/…`) en un servidor | Agente en contenedor | Macros de sistemas de archivos ([Añadir un servidor Linux](procedimientos/anadir-servidor-linux.md)). Se aplican en ≤ 1 h |
+| *Firmware version* / *Hardware model name* no soportados en APs AC | airOS 8 no los publica | Normal, ignorar |
+| El cambio de una macro no se refleja en el descubrimiento | Las reglas de descubrimiento reprocesan como mucho 1 vez por hora si el resultado no cambia | Esperar hasta 1 h |
+| Aviso duplicado de desconexión en un switch | Falta `{$IFCONTROL}=0` con *Switch port changes* | [Añadir un switch con vigilancia de puertos](procedimientos/anadir-switch.md), paso 4 |
+| Muchos *timed out* SNMP en el log y datos con huecos en un MikroTik, sobre todo cuando su CPU está alta | La lectura de la tabla de interfaces (con todas las sesiones PPPoE) es grande y el router responde tarde | [Añadir un router MikroTik](procedimientos/anadir-router-mikrotik.md): *Max repetition count* = 50 y desactivar *SNMP walk wireless interfaces* si no tiene radios. Si persiste, el router está saturado (hardware) |
+| A la vez saltan *Unavailable* en EDGE 01, NAS-01… sin fallo real | Cayó la red del propio servidor Zabbix (log del kernel: `enp2s0: Link is Down`) | Dependencia de los equipos raíz sobre *Zabbix server: Interface enp2s0: Link down* ([Configurar las dependencias de un host](procedimientos/dependencias.md), paso 6). Revisar el cable del servidor si renegocia a 100 Mbps (*downshifted*) |
+| Un problema sigue abierto aunque su item o trigger ya no se descubre o está desactivado | Zabbix no cierra los problemas de triggers desactivados por el descubrimiento | *Monitoring → Problems → Update → Close problem* con un comentario. Por API: `zbx_close_problems.py` |
+| Alertas continuas "speed changed" en la interfaz de radio (`wifi0`, `ath0`) | La vigilancia de puertos incluía una interfaz inalámbrica, cuya velocidad es adaptativa | La plantilla ya las excluye por defecto. Si un host tiene su propio `{$PORT.IFNAME.NOT_MATCHES}`, incluir `wifi\|wlan\|ath`. Cerrar los problemas falsos (*Update → Close problem*) |
+| Al caer un equipo llegan varias alertas (ping, pérdida, latencia, SNMP) en vez de una | Se usó *Replace* al configurar dependencias y se borraron las internas de la plantilla | En cada trigger (*Dependencies*): *High ICMP ping loss* y *No SNMP data collection* → *Unavailable by ICMP ping* propio; *High ICMP ping response time* → *Unavailable by ICMP ping* y *High ICMP ping loss* propios |

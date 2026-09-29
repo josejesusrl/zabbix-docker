@@ -3,7 +3,8 @@
 Usage (token on stdin, see README.md):
   zbx_inventory.py [--group GROUP] [--tag TAG=VALUE] [--host NAME ...] [--markdown] [--dependencies]
 
---markdown prints a table ready for the inventory of OPERACION.md.
+--markdown prints the inventory table of docs/operacion/inventario.md: one row per host, grouped by
+host group; long macro values (regex) are shown by name only.
 --dependencies prints each availability trigger with its dependencies ('<self>' = same host),
 to check that template internal dependencies were kept.
 Secret macro values are never printed.
@@ -15,13 +16,21 @@ from zbx_api import api_from_stdin, availability_triggers, find_hosts, trigger_h
 INTERFACE_TYPES = {"1": "agent", "2": "snmp", "3": "ipmi", "4": "jmx"}
 
 
-def describe(api, host):
+def macro_text(m, short):
+    if m["type"] != "0":
+        return m["macro"] + "=<secret>"
+    if short and len(m["value"]) > 20:
+        return m["macro"] + " (regex)"
+    return m["macro"] + "=" + m["value"]
+
+
+def describe(api, host, short=False):
     interfaces = []
     for i in host["interfaces"]:
         kind = INTERFACE_TYPES.get(i["type"], i["type"])
         version = (i.get("details") or {}).get("version")
         interfaces.append(f"{kind}{'v' + version if version else ''} {i['ip']}")
-    macros = [m["macro"] + ("=" + m["value"] if m["type"] == "0" else "=<secret>") for m in host["macros"]]
+    macros = [macro_text(m, short) for m in host["macros"]]
     return {
         "name": host["name"],
         "interfaces": ", ".join(interfaces),
@@ -53,13 +62,17 @@ def main():
     hosts = find_hosts(api, args.host, args.group, args.tag, selectInterfaces=["type", "ip", "details"],
                        selectHostGroups=["name"], selectParentTemplates=["host"],
                        selectMacros=["macro", "value", "type"], selectTags=["tag", "value"])
-    rows = [describe(api, h) for h in hosts]
+    rows = [describe(api, h, short=args.markdown) for h in hosts]
     columns = ["name", "interfaces", "groups", "templates", "macros", "tags", "upstream"]
     if args.markdown:
-        print("| " + " | ".join(columns) + " |")
-        print("|" + "---|" * len(columns))
-        for row in rows:
-            print("| " + " | ".join(row[c].replace("|", "\\|") for c in columns) + " |")
+        titles = ["Host", "Interfaz", "Plantillas", "Macros de host", "Etiquetas", "Depende de"]
+        for group in sorted({r["groups"] for r in rows}):
+            print(f"\n#### {group}\n")
+            print("| " + " | ".join(titles) + " |")
+            print("|" + "---|" * len(titles))
+            for row in (r for r in rows if r["groups"] == group):
+                cells = [row[c] for c in ("name", "interfaces", "templates", "macros", "tags", "upstream")]
+                print("| " + " | ".join(c.replace("|", "\\|") for c in cells) + " |")
     else:
         for row in rows:
             print(f"== {row['name']}")

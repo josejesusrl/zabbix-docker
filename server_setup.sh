@@ -64,7 +64,7 @@ if [ "$(cat env_vars/.POSTGRES_PASSWORD)" = "zabbix" ]; then
 fi
 
 # Let's Encrypt account contact e-mail (account recovery and policy notices).
-# Let's Encrypt no longer sends expiry notices, expiry is monitored by Zabbix (SERVER_DEPLOY.md).
+# Let's Encrypt no longer sends expiry notices, expiry is monitored by Zabbix (docs/despliegue/instalacion.md).
 if grep -q '^LETSENCRYPT_EMAIL=$' server.env; then
     while :; do
         printf "E-mail for Let's Encrypt account: " >&2
@@ -156,6 +156,6 @@ if command -v sensors >/dev/null 2>&1 && ! ls /sys/class/hwmon/hwmon*/temp*_inpu
 fi
 
 echo
-echo "Preparation finished. Next steps (see SERVER_DEPLOY.md):"
+echo "Preparation finished. Next steps (see docs/despliegue/instalacion.md):"
 echo "  docker compose --env-file .env --env-file server.env up -d"
 echo "  sudo ./server_letsencrypt.sh issue"

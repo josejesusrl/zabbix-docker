@@ -7,7 +7,7 @@ Usage (token on stdin, see README.md). Requires a recent backup (AGENTS.md, rule
 
 --name is the technical name (letters, digits, spaces, '.', '-', '_'); use --visible-name when the
 device name has other characters (e.g. '[AP]-Link'). The SNMP community is always {$SNMP_COMMUNITY}. Ubiquiti airOS answers SNMPv1 only (--snmp-version 1).
-Examples in README.md and OPERACION.md (procedures 4.2 to 4.4).
+Examples in README.md and docs/operacion/procedimientos/.
 """
 import argparse
 

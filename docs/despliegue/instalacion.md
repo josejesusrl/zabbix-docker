@@ -1,4 +1,6 @@
-# Despliegue de Zabbix 7.4 en servidor (zabbix.likson.com)
+# Instalación de Zabbix 7.4 en el servidor (zabbix.likson.com)
+
+> **Cuándo:** para instalar desde cero. Para recuperar un servidor perdido o migrar otro Zabbix, ver [restauración y migración](restauracion-y-migracion.md). Para el día a día del servidor, [mantenimiento](mantenimiento.md).
 
 Stack: PostgreSQL + Zabbix server + frontend Nginx con HTTPS (Let's Encrypt) + Agent 2 (automonitoreo) + SNMP traps + web service (informes).
 
@@ -14,9 +16,12 @@ Stack: PostgreSQL + Zabbix server + frontend Nginx con HTTPS (Let's Encrypt) + A
 | `server_backup.sh` | Respaldo de la BD y de la configuración que no está en git |
 | `server_restore.sh` | Restauración desde un respaldo o migración de la BD de una implementación anterior |
 | `zabbix_agentd.d/sensors_hwmon.*` | UserParameters del Agent 2 para las temperaturas del host |
-| `zabbix_templates/*.yaml` | Plantillas propias: temperaturas, traps de enlace MikroTik, puertos de switch, Ubiquiti airOS 8/airOS 6 |
-| `AGENTS.md` | Reglas para modificar el proyecto y la producción (respaldo previo, qué debe estar en git) |
-| `OPERACION.md` | Uso diario de Zabbix: topología, plantillas, alertas y procedimientos para añadir equipos |
+| `zabbix_templates/*.yaml` | Plantillas propias (ver [catálogo](../operacion/plantillas.md)) |
+| `zabbix_media/` | Script del webhook de Telegram y plantillas de mensaje de Telegram y Gmail ([alertas](../operacion/alertas.md)) |
+| `zabbix_dashboards/*.json` | Definición del dashboard "Likson NOC" ([dashboard](../operacion/dashboard.md)) |
+| `agents/scripts/` | Scripts de la API de Zabbix para operar sin la interfaz ([README](../../agents/scripts/README.md)) |
+| `AGENTS.md`, `CLAUDE.md` | Reglas para agentes que modifican el proyecto o la producción |
+| `docs/` | Esta documentación ([índice](../README.md)) |
 
 ## Requisitos
 
@@ -30,9 +35,9 @@ Stack: PostgreSQL + Zabbix server + frontend Nginx con HTTPS (Let's Encrypt) + A
 
 | Situación | Camino |
 |---|---|
-| Servidor nuevo, sin datos previos que conservar | Secciones 1 a 5 |
-| Este despliegue se perdió (disco, servidor) y hay respaldos de `server_backup.sh` | [Restauración](#restauración) |
-| Ya existe **otra implementación de Zabbix** (en este servidor o en otro) y se quieren conservar sus datos | [Migración desde una implementación anterior](#migración-desde-una-implementación-anterior), luego secciones 2 a 5 |
+| Servidor nuevo, sin datos previos que conservar | Secciones 1 a 5 de este documento, y después la [configuración base](configuracion-base.md) |
+| Este despliegue se perdió (disco, servidor) y hay respaldos de `server_backup.sh` | [Restauración](restauracion-y-migracion.md#restauración) |
+| Ya existe **otra implementación de Zabbix** (en este servidor o en otro) y se quieren conservar sus datos | [Migración desde una implementación anterior](restauracion-y-migracion.md#migración-desde-una-implementación-anterior), luego secciones 2 a 5 |
 
 Antes de instalar en un servidor que ya tuvo Zabbix, revisar qué queda:
 
@@ -93,7 +98,9 @@ El Agent 2 usa la red del host, así que el firewall del host **sí** le afecta.
 sudo ufw allow from 172.16.238.0/24 to any port 10050 proto tcp
 ```
 
-## 4. Configuración en la interfaz web (`https://zabbix.likson.com`)
+## 4. Configuración en la interfaz web
+
+En `https://zabbix.likson.com` (en la LAN, `https://192.168.0.191`).
 
 1. Entrar con `Admin` / `zabbix` y **cambiar la contraseña** de inmediato.
 2. *Data collection → Hosts → Zabbix server*: cambiar la interfaz Agent a IP `172.16.238.1`, puerto `10050`.
@@ -119,7 +126,7 @@ sudo ufw allow from 172.16.238.0/24 to any port 10050 proto tcp
      {$CERT.EXPIRY.WARN}      = 14
      ```
      El agente se conecta a `127.0.0.1:443` usando el nombre `zabbix.likson.com`, sin depender del DNS público ni del NAT. Avisa si faltan menos de 14 días, es decir, si `renew` lleva más de 2 semanas fallando. Con el certificado autofirmado el resultado es `valid-but-self-signed` y no genera alerta. Cuando `issue` lo sustituya, cambiará la huella del certificado, algo esperado.
-4. **Equipos a monitorear** (routers, switches, APs, servidores), plantillas propias, dependencias, alertas y umbrales: ver **`OPERACION.md`**.
+4. **Equipos a monitorear** (routers, switches, APs, servidores), plantillas propias, dependencias, alertas y umbrales: ver la [documentación de operación](../README.md). La configuración que vive solo en la BD (medios, acciones, usuarios, ajustes) está en [configuración base](configuracion-base.md).
    - Los MIBs de fabricantes van en `./zbx_env/var/lib/zabbix/mibs/` (incluidos en el respaldo) y se aplican reiniciando `zabbix-server` y `zabbix-snmptraps`.
 
 ## 5. Tareas programadas
@@ -140,87 +147,4 @@ Verificación:
 - Tras la hora programada: `grep zabbix /var/log/syslog` muestra `CMD (... server_backup.sh ...)` y aparece un respaldo nuevo en `./backups`.
 - `/var/log/zabbix-backup.log` y `/var/log/zabbix-letsencrypt.log` no contienen errores. `renew` no escribe nada mientras no haya un certificado de Let's Encrypt.
 
-Copiar `./backups` fuera del servidor (rsync, almacenamiento externo). El procedimiento de restauración está en la cabecera de `server_backup.sh`.
-
-## Migración desde una implementación anterior
-
-Para conservar hosts, plantillas, historial y usuarios de un Zabbix existente.
-
-1. **Respaldar la base de datos anterior** mientras sigue en marcha. Con PostgreSQL:
-   ```sh
-   docker exec <contenedor-postgres-anterior> sh -c 'pg_dump -U <usuario> -d <bd> -Fc' > zabbix-anterior.dump
-   ls -lh zabbix-anterior.dump     # debe pesar más de unos pocos MB
-   ```
-   - Si la anterior usaba **MySQL/MariaDB**, su dump no se puede restaurar en PostgreSQL. Hay que exportar las plantillas y los hosts desde su interfaz (*Data collection → Hosts/Templates → Export*) e importarlos en la nueva; el historial no se migra.
-   - Copiar también lo que la instalación anterior tuviera fuera de la BD (scripts de alertas, scripts externos, MIBs, UserParameters). Según `AGENTS.md`, se incorpora a este repositorio.
-2. **Detener y eliminar la instalación anterior:** contenedores, redes y volúmenes, en su directorio con `docker compose down`, o uno a uno. Conservar su carpeta de datos hasta verificar la migración.
-3. **Clonar y preparar** este repositorio (sección 1). La contraseña de PostgreSQL que se introduzca será la de la nueva BD.
-4. **Restaurar el dump** en la nueva BD, que tiene que estar vacía:
-   ```sh
-   sudo ./server_restore.sh --db zabbix-anterior.dump
-   ```
-   Si el dump es de una versión anterior de Zabbix, el server migra el esquema al arrancar. Seguir el progreso con `zbx logs -f zabbix-server`: la actualización de la BD puede tardar varios minutos.
-5. **Revisar en la nueva interfaz** la interfaz del agente del host "Zabbix server" (`172.16.238.1`) y sus macros (sección 4). Importar las plantillas de `zabbix_templates/` que falten y comprobar los hosts.
-6. Continuar con las secciones 2 a 5 (certificado, firewall, tareas programadas).
-
-## Restauración
-
-Para reconstruir este despliegue en un disco o servidor nuevo a partir de los respaldos de `server_backup.sh`. Hacen falta los dos ficheros del mismo momento: `zabbix-db-<fecha>.dump` y `zabbix-config-<fecha>.tar.gz`, copiados fuera del servidor.
-
-1. **Preparar el host:** requisitos, Docker y clonar el repositorio (sección 1, **sin** ejecutar todavía `server_setup.sh`).
-2. **Copiar los respaldos** a `~/zabbix-docker/backups/`.
-3. **Restaurar configuración y base de datos:**
-   ```sh
-   cd ~/zabbix-docker
-   sudo ./server_restore.sh --config backups/zabbix-config-<fecha>.tar.gz --db backups/zabbix-db-<fecha>.dump
-   ```
-   - `--config` recupera lo que no está en git: la contraseña de PostgreSQL, `server.env`, los certificados, la cuenta de Let's Encrypt, los MIBs y la comunidad de traps. Los ficheros versionados salen de git.
-   - `--db` arranca PostgreSQL, restaura el dump y levanta el stack completo.
-   - Si `./zabbix-db-data` ya contiene una BD, el script se detiene. Para sobrescribirla, respaldar primero y añadir `--replace-db`.
-4. **Completar la preparación del host:**
-   ```sh
-   ./server_setup.sh
-   ```
-   No vuelve a pedir los secretos restaurados; crea las exclusiones de git, el cron y lm-sensors.
-5. **Certificado:** el restaurado sirve si no ha caducado. Si no, `sudo ./server_letsencrypt.sh issue` (o `selfsigned` sin acceso público).
-6. **Firewall** (sección 3) y comprobación: `zbx ps`, acceso web, disponibilidad de los hosts y llegada de traps.
-
-**Si no hay respaldo de la BD**, se recupera todo lo que está en git (stack, plantillas propias, UserParameters, scripts), pero **los hosts, macros de host, acciones, usuarios e historial se pierden**. Hay que importar `zabbix_templates/*.yaml` y volver a dar de alta los equipos según esta guía. Por eso los respaldos deben copiarse fuera del servidor.
-
-## Operación
-
-- **Estado:** `zbx ps`. Todos deben estar `running`/`healthy` y `server-db-init` en `exited (0)`.
-- **Logs:** `zbx logs -f zabbix-server`.
-- **Antes de cualquier cambio en producción:** `sudo ./server_backup.sh` (ver `AGENTS.md`).
-- **Actualizar Zabbix:**
-  1. `sudo ./server_backup.sh`
-  2. `git pull`
-  3. Subir `ZBX_IMAGE_TAG` en `server.env`.
-  4. `zbx pull && zbx up -d`. El esquema de la BD se migra automáticamente.
-- **Probar traps:** envía un trap de prueba con la comunidad configurada, sin mostrarla, y revisa el log. La IP de origen debe ser la del equipo emisor; desde el propio servidor aparece `172.16.238.1`.
-  ```sh
-  C="docker compose --env-file .env --env-file server.env"
-  export COM=$($C exec -T zabbix-snmptraps awk '/^authCommunity/{print $3}' /etc/snmp/snmptrapd.conf)
-  docker run --rm -e COM alpine:3.22 sh -c 'apk add -q --no-cache net-snmp-tools >/dev/null && snmptrap -v 2c -c "$COM" 192.168.0.191:162 "" 1.3.6.1.6.3.1.1.5.3 1.3.6.1.2.1.2.2.1.1.1 i 1'
-  unset COM
-  $C exec zabbix-snmptraps tail -5 /var/lib/zabbix/snmptraps/snmptraps.log
-  ```
-- **Cambiar la comunidad de traps:** borrar `snmptraps/snmptrapd.conf`, ejecutar `./server_setup.sh` y luego `zbx up -d --force-recreate zabbix-snmptraps`.
-- **Solo agente local:** poner `ZABBIX_SERVER_BIND_IP=127.0.0.1` en `server.env` y ejecutar `zbx up -d`.
-
-## Agentes remotos (agent / agent2)
-
-Configuración en cada servidor monitoreado (`zabbix_agentd.conf` o `zabbix_agent2.conf`):
-
-```ini
-# Checks pasivos: IP pública del servidor Zabbix (o la IP con la que sale hacia el agente)
-Server=<ip-servidor-zabbix>
-# Checks activos
-ServerActive=zabbix.likson.com
-Hostname=<nombre-unico-del-host>
-```
-
-- **Pasivos:** el server conecta al `10050/tcp` del agente. Abrir ese puerto en el equipo remoto solo para la IP del servidor Zabbix.
-- **Activos:** el agente conecta al `10051/tcp` de `zabbix.likson.com`.
-- **Cifrado recomendado:** el 10051 queda expuesto a Internet. Usar PSK en cada agente (`TLSConnect=psk`, `TLSAccept=psk`, `TLSPSKIdentity`, `TLSPSKFile`) y la misma PSK en *Host → Encryption*. Así los agentes sin PSK son rechazados.
-- **Alta automática:** con *Alerts → Actions → Autoregistration actions* y `HostMetadata` en el agente, los hosts nuevos se dan de alta solos. Configurar PSK para autoregistro en *Administration → General → Autoregistration*.
+Copiar `./backups` fuera del servidor (rsync, almacenamiento externo). Ver [mantenimiento](mantenimiento.md#copiar-los-respaldos-fuera-del-servidor). La restauración está en [restauración y migración](restauracion-y-migracion.md#restauración).

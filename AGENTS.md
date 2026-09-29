@@ -11,8 +11,24 @@ Estas reglas aplican a cualquier persona o agente (IA) que modifique el proyecto
 | Rama del despliegue | `server-deploy`. `7.4` se mantiene igual que la rama oficial |
 | Stack | `docker-compose.yml` + `compose_server.yaml`, variables en `.env` + `server.env` |
 | Comando base | `docker compose --env-file .env --env-file server.env <acción>` |
-| Guía de despliegue y restauración | `SERVER_DEPLOY.md` |
-| Guía de operación (equipos, plantillas, alertas, procedimientos) | `OPERACION.md` |
+| Documentación (índice para personas y agentes) | [`docs/README.md`](docs/README.md) |
+| Inventario y topología (qué hay y de quién depende) | [`docs/operacion/inventario.md`](docs/operacion/inventario.md) |
+| Particularidades por tipo de equipo | [`docs/operacion/plantillas.md`](docs/operacion/plantillas.md#particularidades-por-tipo-de-equipo) |
+| Decisiones, situaciones conocidas y pendientes | [`docs/operacion/registro.md`](docs/operacion/registro.md) |
+
+## Checklist de sesión
+
+Al empezar:
+1. Leer este fichero y el [índice de la documentación](docs/README.md). Revisar el [registro](docs/operacion/registro.md) antes de "corregir" algo que parezca un error.
+2. Pedir el token de la API a la persona (con caducidad) y no escribirlo en ningún fichero.
+
+Antes de cada cambio en producción: respaldo de menos de 60 min (regla 1).
+
+Al terminar:
+1. Documentación actualizada en el mismo commit que el cambio (regla 7): inventario, plantillas, procedimientos, configuración base o registro según corresponda.
+2. `python3 agents/scripts/docs_check.py` sin errores (y `--zabbix` si cambiaron hosts, regla 7).
+3. Commit de `agents/scripts/` y del resto (reglas 3 y 8), push y, con respaldo, `git pull` en el servidor.
+4. Recordar a la persona que revoque el token.
 
 ## Regla 1 — Respaldo antes de modificar producción
 
@@ -49,6 +65,7 @@ El respaldo de la base de datos (`pg_dump`) contiene hosts, plantillas importada
 | UserParameters del Agent 2 (temperaturas) | `zabbix_agentd.d/` | `git clone` |
 | Plantillas propias | `zabbix_templates/*.yaml` | Están también en la BD; si la BD se pierde, se importan desde aquí |
 | Scripts de alertas y externos | `alertscripts/`, `externalscripts/` | `git clone` |
+| Configuración que solo está en la BD (medios, acciones, usuarios, ajustes) | Documentada en [`docs/despliegue/configuracion-base.md`](docs/despliegue/configuracion-base.md) (sin secretos) | Respaldo de la BD; si se pierde, a mano según ese documento |
 | Preparación del host: directorios, cron, lm-sensors | `server_setup.sh` | `./server_setup.sh` |
 | Respaldo, restauración y certificados | `server_backup.sh`, `server_restore.sh`, `server_letsencrypt.sh` | `git clone` |
 | Scripts de agentes para la API | `agents/scripts/` | `git clone` |
@@ -61,7 +78,7 @@ El respaldo de la base de datos (`pg_dump`) contiene hosts, plantillas importada
 Al añadir cualquier configuración nueva fuera de la base de datos (un script, un MIB, un fichero montado en un contenedor, una tarea de cron, un paquete del host):
 
 1. Añadirla al repositorio. Si es un secreto, añadir la ruta a `server_backup.sh` y a `server_restore.sh`.
-2. Actualizar la tabla anterior y `SERVER_DEPLOY.md`.
+2. Actualizar la tabla anterior y [la guía de instalación](docs/despliegue/instalacion.md).
 3. Si hace falta en el host, que `server_setup.sh` la instale de forma idempotente.
 
 ## Regla 3 — Flujo de cambios
@@ -93,44 +110,33 @@ Al añadir cualquier configuración nueva fuera de la base de datos (un script, 
 - UUID en formato **v4**. El nombre técnico, sin paréntesis (el nombre visible sí puede llevarlos).
 - Los triggers de items normales van en la sección `triggers` de primer nivel del export. Los de prototipos van dentro del prototipo.
 - En `opdata` y `event_name` de una plantilla, las macros de expresión usan `/{HOST.HOST}/clave`.
-- Los ajustes de host hechos por la API (macros, dependencias, items desactivados) quedan en la base de datos. Si son un patrón repetible, se documentan en `SERVER_DEPLOY.md`.
+- Los ajustes de host hechos por la API (macros, dependencias, items desactivados) quedan en la base de datos. Si son un patrón repetible, se documentan en el procedimiento correspondiente de [`docs/operacion/procedimientos/`](docs/operacion/procedimientos/).
 - Cada equipo nuevo se da de alta con su dependencia topológica (quién le da conectividad). Las dependencias se **añaden** a las que ya existen, nunca se sustituyen: las plantillas oficiales traen dependencias internas (pérdida, latencia y SNMP dependen del ping del propio host) que evitan alertas duplicadas.
 
-Particularidades ya conocidas (detalle en `OPERACION.md`):
-
-| Equipo | Particularidad |
-|---|---|
-| Agent 2 en contenedor (Zabbix server, server-04) | Macros `{$VFS.FS.FSNAME.*}` para ver solo `/rootfs`. Desactivar el checksum de `/etc/passwd` y los usuarios conectados |
-| MikroTik | `/snmp src-address` igual a la IP del host en Zabbix, para que los traps se asocien |
-| MikroTik concentrador PPPoE | Añadir `\|^<pppoe-` a `{$NET.IF.IFNAME.NOT_MATCHES}` |
-| Ubiquiti airOS 8 / airOS 6 | Solo **SNMPv1**. AC sin GPS: `{$UBNT.GPS.SATS.MIN}=0`. airOS 6 usa la variante airMAX M |
-| TP-Link | `{$PORT.IFNAME.NOT_MATCHES}=^(<\|Vlan-interface)` y `{$IFCONTROL}=0` con la plantilla de puertos |
-| Mimosa C5C (PTP) | SNMPv2. `Network Generic Device by SNMP` + `Mimosa C5C by SNMP` + `Switch port changes by SNMP`. Umbrales de RX según la señal de diseño. El extremo lejano depende del cercano a Zabbix |
-| Ubiquiti en enlaces PTP | Umbrales propios de cada enlace como macros de host: `{$UBNT.STA.TXCAP.MIN}` en el AP y `{$UBNT.STA.RXCAP.MIN}` en la estación (Mbps, 0 = desactivado), y la señal. Nombres con `[ ]`: *Host name* sin ellos y `--visible-name` con el nombre exacto |
-| Equipos raíz de la topología | Su trigger de disponibilidad depende de *Zabbix server: Interface enp2s0: Link down*, para que una caída de red del servidor no se reporte como caída de toda la red |
-| MikroTik NAS con muchas sesiones PPPoE | *Max repetition count* 50 en la interfaz SNMP; desactivar *SNMP walk wireless interfaces* en routers sin radios |
-| Problemas de objetos ya no descubiertos o desactivados | Zabbix no los cierra: cerrarlos con comentario (`zbx_close_problems.py`). Cada objeto desactivado a propósito se registra en `OPERACION.md`, sección 7 |
-| Enlaces con problemas largos y conocidos (lluvia) | Etiqueta de host `escalation=off`: la acción de escalada no repite sus *High*. Señal crítica con `{$UBNT.STA.SIGNAL.MIN.CRIT}` y la histéresis `{$UBNT.STA.SIGNAL.HYST}` de la plantilla |
-| *Switch port changes* | Requiere SNMPv2 (`ifXTable`): no usar en airOS (SNMPv1), cuyas plantillas ya vigilan la velocidad de `eth0` |
-| Cualquier radio con *Switch port changes* | Nunca vigilar interfaces inalámbricas (`wifi*`, `wlan*`, `ath*`): su velocidad es adaptativa. La plantilla ya las excluye por defecto |
+Las particularidades ya conocidas de cada tipo de equipo están en [plantillas](docs/operacion/plantillas.md#particularidades-por-tipo-de-equipo). **Leerlas antes de dar de alta un equipo.**
 
 ## Regla 7 — Documentar para que una persona pueda hacerlo
 
-Todo lo que se configure o se haga en el proyecto debe poder repetirlo una persona sin ayuda y sin la API. Hay dos documentos, cada uno con su alcance:
+Todo lo que se configure o se haga en el proyecto debe poder repetirlo una persona sin ayuda y sin la API. La documentación está en [`docs/`](docs/README.md):
 
 | Documento | Contenido |
 |---|---|
-| `SERVER_DEPLOY.md` | Instalar, migrar, restaurar y actualizar el **servidor** |
-| `OPERACION.md` | Usar y ampliar **Zabbix** en el día a día: topología y dependencias, catálogo de plantillas (propias y oficiales) con sus macros y triggers, alertas, procedimientos paso a paso (añadir un AP, un router, un switch o un servidor; ajustar umbrales; mantenimientos; actualizar plantillas; dar de baja equipos) y solución de problemas |
+| `docs/despliegue/` | Instalar, restaurar, migrar y mantener el **servidor**, y la configuración que vive solo en la BD |
+| `docs/operacion/inventario.md` | Convenciones, topología e inventario de hosts (tabla generada con `zbx_inventory.py --markdown`) |
+| `docs/operacion/plantillas.md` | Catálogo de plantillas (propias y oficiales), macros, triggers y particularidades por tipo de equipo |
+| `docs/operacion/alertas.md`, `dashboard.md` | Notificaciones y dashboard |
+| `docs/operacion/procedimientos/` | Un fichero por procedimiento |
+| `docs/operacion/solucion-de-problemas.md` | Síntomas y soluciones |
+| `docs/operacion/registro.md` | Objetos desactivados, situaciones conocidas, decisiones y pendientes |
 
-Cada procedimiento de `OPERACION.md` indica:
+Cada procedimiento indica:
 
 1. **Cuándo** se usa y los requisitos previos (incluido el respaldo, regla 1).
-2. Los **pasos en la interfaz web** de Zabbix y en el equipo (airOS, RouterOS…), con los menús exactos. La API es opcional; la interfaz es obligatoria.
+2. Los **pasos en la interfaz web** de Zabbix y en el equipo (airOS, RouterOS…), con los menús exactos. La API es opcional (sección *Con scripts*); la interfaz es obligatoria.
 3. Qué **plantillas, macros, dependencias y etiquetas** aplicar y por qué.
 4. Cómo **verificar** que funciona.
 
-Cualquier cambio que añada o modifique una plantilla, un trigger, una macro, un tipo de equipo, una dependencia o un procedimiento se documenta en `OPERACION.md` **en el mismo commit**. Esto incluye el inventario de equipos y la topología.
+Cualquier cambio que añada o modifique una plantilla, un trigger, una macro, un tipo de equipo, una dependencia, un procedimiento o la configuración base se documenta **en el mismo commit**. Al dar de alta, mover o retirar equipos se regenera el inventario. Los enlaces entre documentos son relativos; `python3 agents/scripts/docs_check.py` comprueba enlaces, plantillas y scripts documentados, y con `--zabbix` que el inventario coincide con Zabbix.
 
 ## Regla 8 — Scripts reutilizables para la API
 

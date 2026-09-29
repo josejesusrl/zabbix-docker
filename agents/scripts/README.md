@@ -1,6 +1,6 @@
 # Scripts de agentes para la API de Zabbix
 
-Herramientas reutilizables para consultar y modificar el Zabbix de producción por la API. Las usan los agentes de IA (y cualquier persona) en lugar de escribir scripts de un solo uso. Las reglas de uso están en `AGENTS.md` (regla 8).
+Herramientas reutilizables para consultar y modificar el Zabbix de producción por la API. Las usan los agentes de IA (y cualquier persona) en lugar de escribir scripts de un solo uso. Las reglas de uso están en [AGENTS.md](../../AGENTS.md) (regla 8).
 
 ## Cómo se ejecutan
 
@@ -22,7 +22,7 @@ printf '%s\n' "$TOKEN" | agents/scripts/run_remote.sh -f zabbix_templates/X.yaml
 | Script | Tipo | Para qué |
 |---|---|---|
 | `zbx_api.py` | Librería | Cliente de la API y funciones compartidas (búsquedas, dependencias, macros, etiquetas, importación) |
-| `zbx_inventory.py` | Lectura | Inventario de hosts: interfaces, grupos, plantillas, macros, etiquetas y de quién depende. `--markdown` genera la tabla para `OPERACION.md`; `--dependencies` muestra las dependencias de cada trigger de disponibilidad |
+| `zbx_inventory.py` | Lectura | Inventario de hosts: interfaces, grupos, plantillas, macros, etiquetas y de quién depende. `--markdown` genera las tablas de [inventario](../../docs/operacion/inventario.md); `--dependencies` muestra las dependencias de cada trigger de disponibilidad |
 | `zbx_host_status.py` | Lectura | Estado tras un cambio: disponibilidad, items sin datos o no soportados (separa las limitaciones conocidas) y problemas |
 | `snmp_probe.py` | Lectura | Sondeo previo al alta: ping, SNMPv1/v2c, `sysName`, modelo/firmware airOS 6, clientes y GPS Ubiquiti |
 | `snmp_walk.py` | Lectura | Recorrido SNMP de un equipo para ver qué OIDs publica antes de diseñar una plantilla (`--hide` oculta valores sensibles) |
@@ -34,11 +34,12 @@ printf '%s\n' "$TOKEN" | agents/scripts/run_remote.sh -f zabbix_templates/X.yaml
 | `zbx_check_now.py` | Acción | Ejecuta ya los items y reglas de descubrimiento de unos hosts |
 | `zbx_events.py` | Lectura | Eventos de problema de las últimas horas agrupados por trigger: veces abierto, notificaciones, cierres manuales. Detecta falsos positivos y *flapping* |
 | `zbx_add_dependency.py` | Escritura | Añade una dependencia a cualquier trigger (p. ej. equipos raíz → enlace de red del Zabbix server), conservando las existentes |
-| `zbx_set_status.py` | Escritura | Activa o desactiva items o triggers por nombre (registrar el motivo en `OPERACION.md`, sección 7) |
+| `zbx_set_status.py` | Escritura | Activa o desactiva items o triggers por nombre (registrar el motivo en el [registro](../../docs/operacion/registro.md)) |
 | `zbx_mediatype_update.py` | Escritura | Aplica a un medio el script, las plantillas y parámetros concretos desde `zabbix_media/`, sin tocar ni mostrar el token |
 | `zbx_test_notification.py` | Escritura | Prueba real de extremo a extremo: host temporal que abre, actualiza y resuelve un problema, muestra el estado de entrega de cada notificación y se borra |
 | `zbx_dashboard_apply.py` | Escritura | Crea o actualiza un dashboard desde `zabbix_dashboards/*.json` (hosts, grupos e items por nombre) |
 | `zbx_close_problems.py` | Escritura | Cierra problemas abiertos por nombre con un comentario (falsos positivos, problemas de objetos desactivados) |
+| `docs_check.py` | Local | Comprueba la documentación: enlaces relativos y anclas, referencias a documentos antiguos, plantillas y scripts documentados. `--zabbix` (en el servidor, con token) compara el inventario con los hosts de Zabbix |
 | `run_remote.sh` | Envoltorio | Ejecuta un script en el servidor con el token por la entrada estándar |
 
 Selección de hosts común (`zbx_inventory`, `zbx_host_status`, `zbx_set_uplink`, `zbx_check_now`): `--host NOMBRE ...`, `--group GRUPO` o `--tag uplink=EQUIPO`.
@@ -49,7 +50,7 @@ Selección de hosts común (`zbx_inventory`, `zbx_host_status`, `zbx_set_uplink`
 S=agents/scripts/run_remote.sh
 # Estado de todos los APs
 printf '%s\n' "$TOKEN" | $S zbx_host_status.py --group "Access Points PPPoE Clients"
-# Inventario en Markdown para OPERACION.md
+# Inventario en Markdown para docs/operacion/inventario.md
 printf '%s\n' "$TOKEN" | $S zbx_inventory.py --markdown
 # Sondear APs antes de darlos de alta (solo las IPs indicadas por el propietario)
 printf '%s\n' "$TOKEN" | $S snmp_probe.py 172.16.1.20 172.16.1.21
