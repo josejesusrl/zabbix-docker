@@ -1,528 +1,594 @@
+---
 zabbix_export:
   version: '7.0'
   template_groups:
-    - uuid: b63902620d2744a58a740c6154270229
-      name: Templates/Network devices
+  - uuid: b63902620d2744a58a740c6154270229
+    name: Templates/Network devices
   templates:
-    - uuid: efabfad040544a18b74330d0c4f69801
-      template: 'Ubiquiti AirOS 8 wireless by SNMPv1'
-      name: 'Ubiquiti AirOS 8 wireless by SNMPv1'
-      description: |
-        Wireless, GPS, per-client and 32-bit interface traffic metrics for Ubiquiti airOS 8 (airMAX AC, e.g. LAP-GPS),
-        which answers SNMPv1 only and does not publish IF-MIB ifXTable. Use with SNMPv1 host interface,
-        together with or instead of "Ubiquiti AirOS by SNMP" (its firmware, model and interface discovery do not work on airOS 8).
-        UBNT-AirMAX-MIB 1.3.6.1.4.1.41112.1.4. 32-bit counters are safe with 1m polling up to ~500 Mbps.
-      groups:
-        - name: Templates/Network devices
-      items:
-        - uuid: b71532a50bc34bdd991b23b57370d995
-          name: 'Wireless: SSID'
-          type: SNMP_AGENT
-          snmp_oid: 'get[1.3.6.1.4.1.41112.1.4.5.1.2.1]'
-          key: ubnt.wl.ssid
-          value_type: CHAR
-          delay: 1h
-          history: 7d
-          trends: '0'
-          tags:
-            - tag: component
-              value: wireless
-        - uuid: b7358c7c88de47228b9a0657ad6de933
-          name: 'Wireless: Connected clients'
-          type: SNMP_AGENT
-          snmp_oid: 'get[1.3.6.1.4.1.41112.1.4.5.1.15.1]'
-          key: ubnt.wl.stations
-          description: 'Number of connected stations.'
-          tags:
-            - tag: component
-              value: wireless
-        - uuid: 6d855cb326554de094e2b2aec0b54880
-          name: 'Wireless: Signal'
-          type: SNMP_AGENT
-          snmp_oid: 'get[1.3.6.1.4.1.41112.1.4.5.1.5.1]'
-          key: ubnt.wl.signal
-          value_type: FLOAT
-          units: 'dBm'
-          tags:
-            - tag: component
-              value: wireless
-        - uuid: 4f93adbf0500424e99e268fffb9b4321
-          name: 'Wireless: Noise floor'
-          type: SNMP_AGENT
-          snmp_oid: 'get[1.3.6.1.4.1.41112.1.4.5.1.8.1]'
-          key: ubnt.wl.noisefloor
-          value_type: FLOAT
-          units: 'dBm'
-          tags:
-            - tag: component
-              value: wireless
-        - uuid: 1c4523284771440f823ff19810f7c5ed
-          name: 'Wireless: CCQ'
-          type: SNMP_AGENT
-          snmp_oid: 'get[1.3.6.1.4.1.41112.1.4.5.1.7.1]'
-          key: ubnt.wl.ccq
-          units: '%'
-          description: 'Client connection quality. On airMAX AC devices capacity per client is more representative.'
-          tags:
-            - tag: component
-              value: wireless
-        - uuid: 182068b5607e4153b06e0915405d10f4
-          name: 'Wireless: TX rate'
-          type: SNMP_AGENT
-          snmp_oid: 'get[1.3.6.1.4.1.41112.1.4.5.1.9.1]'
-          key: ubnt.wl.txrate
-          units: 'bps'
-          tags:
-            - tag: component
-              value: wireless
-        - uuid: 2a4b7cb45dfd4f17a698cf508efe9989
-          name: 'Wireless: RX rate'
-          type: SNMP_AGENT
-          snmp_oid: 'get[1.3.6.1.4.1.41112.1.4.5.1.10.1]'
-          key: ubnt.wl.rxrate
-          units: 'bps'
-          tags:
-            - tag: component
-              value: wireless
-        - uuid: 9437f4fc7c7f4ef1b9f89d602ef656cd
-          name: 'Wireless: Channel width'
-          type: SNMP_AGENT
-          snmp_oid: 'get[1.3.6.1.4.1.41112.1.4.5.1.14.1]'
-          key: ubnt.wl.chanwidth
-          units: 'MHz'
-          delay: 5m
-          tags:
-            - tag: component
-              value: wireless
-        - uuid: f0815046dd8147bf83fbe74321f60801
-          name: 'Radio: Frequency'
-          type: SNMP_AGENT
-          snmp_oid: 'get[1.3.6.1.4.1.41112.1.4.1.1.4.1]'
-          key: ubnt.radio.freq
-          units: 'MHz'
-          delay: 5m
-          tags:
-            - tag: component
-              value: wireless
-        - uuid: d43a7fd3b0804fce891b49e2e80ef188
-          name: 'Radio: TX power'
-          type: SNMP_AGENT
-          snmp_oid: 'get[1.3.6.1.4.1.41112.1.4.1.1.6.1]'
-          key: ubnt.radio.txpower
-          units: 'dBm'
-          delay: 5m
-          tags:
-            - tag: component
-              value: wireless
-        - uuid: 70e24f0040294c548a43749be11736d6
-          name: 'Radio: Distance'
-          type: SNMP_AGENT
-          snmp_oid: 'get[1.3.6.1.4.1.41112.1.4.1.1.7.1]'
-          key: ubnt.radio.distance
-          units: 'm'
-          delay: 5m
-          tags:
-            - tag: component
-              value: wireless
-        - uuid: 571b3a757e00486aad95653e3bfd5c4e
-          name: 'airMAX: Enabled'
-          type: SNMP_AGENT
-          snmp_oid: 'get[1.3.6.1.4.1.41112.1.4.6.1.2.1]'
-          key: ubnt.airmax.enabled
-          description: '1 = enabled.'
-          delay: 5m
-          tags:
-            - tag: component
-              value: wireless
-        - uuid: 1dc832cbc9e4485aa7032cacd7564e3f
-          name: 'GPS: Satellites used'
-          type: SNMP_AGENT
-          snmp_oid: 'get[1.3.6.1.4.1.41112.1.4.9.8.0]'
-          key: ubnt.gps.sats.used
-          description: 'GPS satellites used for the fix (GPS models only).'
-          tags:
-            - tag: component
-              value: gps
-        - uuid: 0f217c7d22b74316a42539925a946e49
-          name: 'GPS: Satellites in view'
-          type: SNMP_AGENT
-          snmp_oid: 'get[1.3.6.1.4.1.41112.1.4.9.7.0]'
-          key: ubnt.gps.sats.view
-          tags:
-            - tag: component
-              value: gps
-        - uuid: ace27c571e1d4cd3879f53df233d7fda
-          name: 'GPS: Fix'
-          type: SNMP_AGENT
-          snmp_oid: 'get[1.3.6.1.4.1.41112.1.4.9.2.0]'
-          key: ubnt.gps.fix
-          description: 'GPS fix type reported by airOS (3 = 3D fix).'
-          tags:
-            - tag: component
-              value: gps
-        - uuid: 8bbd2bfb35404dd1933329240ed1d718
-          name: 'GPS: HDOP'
-          type: SNMP_AGENT
-          snmp_oid: 'get[1.3.6.1.4.1.41112.1.4.9.9.0]'
-          key: ubnt.gps.hdop
-          value_type: FLOAT
-          description: 'Horizontal dilution of precision, lower is better.'
-          tags:
-            - tag: component
-              value: gps
-        - uuid: 291d094213484b70af1d7d42fa9f4a5e
-          name: 'Clients: statistics walk'
-          type: SNMP_AGENT
-          snmp_oid: 'walk[1.3.6.1.4.1.41112.1.4.7.1.3,1.3.6.1.4.1.41112.1.4.7.1.5,1.3.6.1.4.1.41112.1.4.7.1.6,1.3.6.1.4.1.41112.1.4.7.1.11,1.3.6.1.4.1.41112.1.4.7.1.12,1.3.6.1.4.1.41112.1.4.7.1.15,1.3.6.1.4.1.41112.1.4.7.1.16,1.3.6.1.4.1.41112.1.4.7.1.17,1.3.6.1.4.1.41112.1.4.7.1.18]'
+  - uuid: efabfad040544a18b74330d0c4f69801
+    template: Ubiquiti AirOS 8 wireless by SNMPv1
+    name: Ubiquiti AirOS 8 wireless by SNMPv1
+    description: |
+      Wireless, GPS, per-client and 32-bit interface traffic metrics for Ubiquiti airOS 8 (airMAX AC, e.g. LAP-GPS),
+      which answers SNMPv1 only and does not publish IF-MIB ifXTable. Use with SNMPv1 host interface,
+      together with or instead of "Ubiquiti AirOS by SNMP" (its firmware, model and interface discovery do not work on airOS 8).
+      UBNT-AirMAX-MIB 1.3.6.1.4.1.41112.1.4. 32-bit counters are safe with 1m polling up to ~500 Mbps.
+    groups:
+    - name: Templates/Network devices
+    items:
+    - uuid: b71532a50bc34bdd991b23b57370d995
+      name: 'Wireless: SSID'
+      type: SNMP_AGENT
+      snmp_oid: get[1.3.6.1.4.1.41112.1.4.5.1.2.1]
+      key: ubnt.wl.ssid
+      value_type: CHAR
+      delay: 1h
+      history: 7d
+      trends: '0'
+      tags:
+      - tag: component
+        value: wireless
+    - uuid: b7358c7c88de47228b9a0657ad6de933
+      name: 'Wireless: Connected clients'
+      type: SNMP_AGENT
+      snmp_oid: get[1.3.6.1.4.1.41112.1.4.5.1.15.1]
+      key: ubnt.wl.stations
+      description: Number of connected stations.
+      tags:
+      - tag: component
+        value: wireless
+    - uuid: 6d855cb326554de094e2b2aec0b54880
+      name: 'Wireless: Signal'
+      type: SNMP_AGENT
+      snmp_oid: get[1.3.6.1.4.1.41112.1.4.5.1.5.1]
+      key: ubnt.wl.signal
+      value_type: FLOAT
+      units: dBm
+      tags:
+      - tag: component
+        value: wireless
+    - uuid: 4f93adbf0500424e99e268fffb9b4321
+      name: 'Wireless: Noise floor'
+      type: SNMP_AGENT
+      snmp_oid: get[1.3.6.1.4.1.41112.1.4.5.1.8.1]
+      key: ubnt.wl.noisefloor
+      value_type: FLOAT
+      units: dBm
+      tags:
+      - tag: component
+        value: wireless
+    - uuid: 1c4523284771440f823ff19810f7c5ed
+      name: 'Wireless: CCQ'
+      type: SNMP_AGENT
+      snmp_oid: get[1.3.6.1.4.1.41112.1.4.5.1.7.1]
+      key: ubnt.wl.ccq
+      units: "%"
+      description: Client connection quality. On airMAX AC devices capacity per client
+        is more representative.
+      tags:
+      - tag: component
+        value: wireless
+    - uuid: 182068b5607e4153b06e0915405d10f4
+      name: 'Wireless: TX rate'
+      type: SNMP_AGENT
+      snmp_oid: get[1.3.6.1.4.1.41112.1.4.5.1.9.1]
+      key: ubnt.wl.txrate
+      units: bps
+      tags:
+      - tag: component
+        value: wireless
+    - uuid: 2a4b7cb45dfd4f17a698cf508efe9989
+      name: 'Wireless: RX rate'
+      type: SNMP_AGENT
+      snmp_oid: get[1.3.6.1.4.1.41112.1.4.5.1.10.1]
+      key: ubnt.wl.rxrate
+      units: bps
+      tags:
+      - tag: component
+        value: wireless
+    - uuid: 9437f4fc7c7f4ef1b9f89d602ef656cd
+      name: 'Wireless: Channel width'
+      type: SNMP_AGENT
+      snmp_oid: get[1.3.6.1.4.1.41112.1.4.5.1.14.1]
+      key: ubnt.wl.chanwidth
+      units: MHz
+      delay: 5m
+      tags:
+      - tag: component
+        value: wireless
+    - uuid: f0815046dd8147bf83fbe74321f60801
+      name: 'Radio: Frequency'
+      type: SNMP_AGENT
+      snmp_oid: get[1.3.6.1.4.1.41112.1.4.1.1.4.1]
+      key: ubnt.radio.freq
+      units: MHz
+      delay: 5m
+      tags:
+      - tag: component
+        value: wireless
+    - uuid: d43a7fd3b0804fce891b49e2e80ef188
+      name: 'Radio: TX power'
+      type: SNMP_AGENT
+      snmp_oid: get[1.3.6.1.4.1.41112.1.4.1.1.6.1]
+      key: ubnt.radio.txpower
+      units: dBm
+      delay: 5m
+      tags:
+      - tag: component
+        value: wireless
+    - uuid: 70e24f0040294c548a43749be11736d6
+      name: 'Radio: Distance'
+      type: SNMP_AGENT
+      snmp_oid: get[1.3.6.1.4.1.41112.1.4.1.1.7.1]
+      key: ubnt.radio.distance
+      units: m
+      delay: 5m
+      tags:
+      - tag: component
+        value: wireless
+    - uuid: 571b3a757e00486aad95653e3bfd5c4e
+      name: 'airMAX: Enabled'
+      type: SNMP_AGENT
+      snmp_oid: get[1.3.6.1.4.1.41112.1.4.6.1.2.1]
+      key: ubnt.airmax.enabled
+      description: 1 = enabled.
+      delay: 5m
+      tags:
+      - tag: component
+        value: wireless
+    - uuid: 1dc832cbc9e4485aa7032cacd7564e3f
+      name: 'GPS: Satellites used'
+      type: SNMP_AGENT
+      snmp_oid: get[1.3.6.1.4.1.41112.1.4.9.8.0]
+      key: ubnt.gps.sats.used
+      description: GPS satellites used for the fix (GPS models only).
+      tags:
+      - tag: component
+        value: gps
+    - uuid: 0f217c7d22b74316a42539925a946e49
+      name: 'GPS: Satellites in view'
+      type: SNMP_AGENT
+      snmp_oid: get[1.3.6.1.4.1.41112.1.4.9.7.0]
+      key: ubnt.gps.sats.view
+      tags:
+      - tag: component
+        value: gps
+    - uuid: ace27c571e1d4cd3879f53df233d7fda
+      name: 'GPS: Fix'
+      type: SNMP_AGENT
+      snmp_oid: get[1.3.6.1.4.1.41112.1.4.9.2.0]
+      key: ubnt.gps.fix
+      description: GPS fix type reported by airOS (3 = 3D fix).
+      tags:
+      - tag: component
+        value: gps
+    - uuid: 8bbd2bfb35404dd1933329240ed1d718
+      name: 'GPS: HDOP'
+      type: SNMP_AGENT
+      snmp_oid: get[1.3.6.1.4.1.41112.1.4.9.9.0]
+      key: ubnt.gps.hdop
+      value_type: FLOAT
+      description: Horizontal dilution of precision, lower is better.
+      tags:
+      - tag: component
+        value: gps
+    - uuid: 291d094213484b70af1d7d42fa9f4a5e
+      name: 'Clients: statistics walk'
+      type: SNMP_AGENT
+      snmp_oid: walk[1.3.6.1.4.1.41112.1.4.7.1.3,1.3.6.1.4.1.41112.1.4.7.1.5,1.3.6.1.4.1.41112.1.4.7.1.6,1.3.6.1.4.1.41112.1.4.7.1.11,1.3.6.1.4.1.41112.1.4.7.1.12,1.3.6.1.4.1.41112.1.4.7.1.15,1.3.6.1.4.1.41112.1.4.7.1.16,1.3.6.1.4.1.41112.1.4.7.1.17,1.3.6.1.4.1.41112.1.4.7.1.18]
+      key: ubnt.sta.walk
+      history: '0'
+      value_type: TEXT
+      tags:
+      - tag: component
+        value: raw
+    discovery_rules:
+    - uuid: 1d602c562caa4cce8f2d0690582ae39b
+      name: Wireless clients discovery
+      type: SNMP_AGENT
+      snmp_oid: walk[1.3.6.1.4.1.41112.1.4.7.1.1,1.3.6.1.4.1.41112.1.4.7.1.2,1.3.6.1.4.1.41112.1.4.7.1.10]
+      key: ubnt.sta.discovery
+      delay: 10m
+      lifetime: 3d
+      description: Connected stations. Index = interface + client MAC.
+      item_prototypes:
+      - uuid: bdf15aa7137a4153b7e3aef7f0ca9720
+        name: 'Client {#STANAME} ({#STAMAC}): Signal'
+        type: DEPENDENT
+        key: ubnt.sta.signal[{#SNMPINDEX}]
+        value_type: FLOAT
+        delay: '0'
+        units: dBm
+        preprocessing:
+        - type: SNMP_WALK_VALUE
+          parameters:
+          - 1.3.6.1.4.1.41112.1.4.7.1.3.{#SNMPINDEX}
+          - '0'
+        master_item:
           key: ubnt.sta.walk
-          history: '0'
-          value_type: TEXT
+        tags:
+        - tag: component
+          value: client
+        - tag: client
+          value: "{#STANAME}"
+        trigger_prototypes:
+        - uuid: 6cf3875702664247b09baa32107f8cbe
+          expression: max(/Ubiquiti AirOS 8 wireless by SNMPv1/ubnt.sta.signal[{#SNMPINDEX}],15m)<{$UBNT.STA.SIGNAL.MIN.WARN:"{#STANAME}"}
+          name: 'Client {#STANAME} ({#STAMAC}): Weak signal (below {$UBNT.STA.SIGNAL.MIN.WARN:"{#STANAME}"}
+            dBm for 15m)'
+          opdata: 'Signal: {ITEM.LASTVALUE1}'
+          priority: WARNING
+          description: Check CPE alignment, obstructions or distance. Threshold per
+            client with macro context.
           tags:
-            - tag: component
-              value: raw
-      discovery_rules:
-        - uuid: 1d602c562caa4cce8f2d0690582ae39b
-          name: 'Wireless clients discovery'
-          type: SNMP_AGENT
-          snmp_oid: 'walk[1.3.6.1.4.1.41112.1.4.7.1.1,1.3.6.1.4.1.41112.1.4.7.1.2,1.3.6.1.4.1.41112.1.4.7.1.10]'
-          key: ubnt.sta.discovery
-          delay: 10m
-          lifetime: 3d
-          description: 'Connected stations. Index = interface + client MAC.'
-          item_prototypes:
-            - uuid: bdf15aa7137a4153b7e3aef7f0ca9720
-              name: 'Client {#STANAME} ({#STAMAC}): Signal'
-              type: DEPENDENT
-              key: 'ubnt.sta.signal[{#SNMPINDEX}]'
-              value_type: FLOAT
-              delay: '0'
-              units: 'dBm'
-              preprocessing:
-                - type: SNMP_WALK_VALUE
-                  parameters:
-                    - '1.3.6.1.4.1.41112.1.4.7.1.3.{#SNMPINDEX}'
-                    - '0'
-              master_item:
-                key: ubnt.sta.walk
-              tags:
-                - tag: component
-                  value: client
-                - tag: client
-                  value: '{#STANAME}'
-              trigger_prototypes:
-                - uuid: 6cf3875702664247b09baa32107f8cbe
-                  expression: 'max(/Ubiquiti AirOS 8 wireless by SNMPv1/ubnt.sta.signal[{#SNMPINDEX}],15m)<{$UBNT.STA.SIGNAL.MIN.WARN:"{#STANAME}"}'
-                  name: 'Client {#STANAME} ({#STAMAC}): Weak signal (below {$UBNT.STA.SIGNAL.MIN.WARN:"{#STANAME}"} dBm for 15m)'
-                  opdata: 'Signal: {ITEM.LASTVALUE1}'
-                  priority: WARNING
-                  description: 'Check CPE alignment, obstructions or distance. Threshold per client with macro context.'
-                  tags:
-                    - tag: scope
-                      value: performance
-            - uuid: bc09f33683464aaf85642508cf86a526
-              name: 'Client {#STANAME} ({#STAMAC}): Distance'
-              type: DEPENDENT
-              key: 'ubnt.sta.distance[{#SNMPINDEX}]'
-              delay: '0'
-              units: 'm'
-              preprocessing:
-                - type: SNMP_WALK_VALUE
-                  parameters:
-                    - '1.3.6.1.4.1.41112.1.4.7.1.5.{#SNMPINDEX}'
-                    - '0'
-              master_item:
-                key: ubnt.sta.walk
-              tags:
-                - tag: component
-                  value: client
-                - tag: client
-                  value: '{#STANAME}'
-            - uuid: 90cb8bb31cee4210bbada33daa77e7c1
-              name: 'Client {#STANAME} ({#STAMAC}): CCQ'
-              type: DEPENDENT
-              key: 'ubnt.sta.ccq[{#SNMPINDEX}]'
-              delay: '0'
-              value_type: FLOAT
-              units: '%'
-              preprocessing:
-                - type: SNMP_WALK_VALUE
-                  parameters:
-                    - '1.3.6.1.4.1.41112.1.4.7.1.6.{#SNMPINDEX}'
-                    - '0'
-                - type: MULTIPLIER
-                  parameters:
-                    - '0.1'
-              master_item:
-                key: ubnt.sta.walk
-              tags:
-                - tag: component
-                  value: client
-                - tag: client
-                  value: '{#STANAME}'
-            - uuid: 3756ba60703d4109a8e83d43a3583876
-              name: 'Client {#STANAME} ({#STAMAC}): TX rate'
-              type: DEPENDENT
-              key: 'ubnt.sta.txrate[{#SNMPINDEX}]'
-              delay: '0'
-              units: 'bps'
-              preprocessing:
-                - type: SNMP_WALK_VALUE
-                  parameters:
-                    - '1.3.6.1.4.1.41112.1.4.7.1.11.{#SNMPINDEX}'
-                    - '0'
-              master_item:
-                key: ubnt.sta.walk
-              tags:
-                - tag: component
-                  value: client
-                - tag: client
-                  value: '{#STANAME}'
-            - uuid: a5d5124537d34345a7087d3e3e1cd43e
-              name: 'Client {#STANAME} ({#STAMAC}): RX rate'
-              type: DEPENDENT
-              key: 'ubnt.sta.rxrate[{#SNMPINDEX}]'
-              delay: '0'
-              units: 'bps'
-              preprocessing:
-                - type: SNMP_WALK_VALUE
-                  parameters:
-                    - '1.3.6.1.4.1.41112.1.4.7.1.12.{#SNMPINDEX}'
-                    - '0'
-              master_item:
-                key: ubnt.sta.walk
-              tags:
-                - tag: component
-                  value: client
-                - tag: client
-                  value: '{#STANAME}'
-            - uuid: 41acd14d69154677816a767937d9fa73
-              name: 'Client {#STANAME} ({#STAMAC}): Connection time'
-              type: DEPENDENT
-              key: 'ubnt.sta.conntime[{#SNMPINDEX}]'
-              delay: '0'
-              units: 'uptime'
-              preprocessing:
-                - type: SNMP_WALK_VALUE
-                  parameters:
-                    - '1.3.6.1.4.1.41112.1.4.7.1.15.{#SNMPINDEX}'
-                    - '0'
-                - type: MULTIPLIER
-                  parameters:
-                    - '0.01'
-              master_item:
-                key: ubnt.sta.walk
-              tags:
-                - tag: component
-                  value: client
-                - tag: client
-                  value: '{#STANAME}'
-            - uuid: 795370f0addf40b1ae0a8a9fba08906e
-              name: 'Client {#STANAME} ({#STAMAC}): Local CINR'
-              type: DEPENDENT
-              key: 'ubnt.sta.cinr[{#SNMPINDEX}]'
-              delay: '0'
-              units: 'dB'
-              preprocessing:
-                - type: SNMP_WALK_VALUE
-                  parameters:
-                    - '1.3.6.1.4.1.41112.1.4.7.1.16.{#SNMPINDEX}'
-                    - '0'
-              master_item:
-                key: ubnt.sta.walk
-              tags:
-                - tag: component
-                  value: client
-                - tag: client
-                  value: '{#STANAME}'
-            - uuid: 8fe43e70e2e24337b6f49d5c2dc28c2f
-              name: 'Client {#STANAME} ({#STAMAC}): TX capacity'
-              type: DEPENDENT
-              key: 'ubnt.sta.txcap[{#SNMPINDEX}]'
-              delay: '0'
-              units: 'bps'
-              preprocessing:
-                - type: SNMP_WALK_VALUE
-                  parameters:
-                    - '1.3.6.1.4.1.41112.1.4.7.1.17.{#SNMPINDEX}'
-                    - '0'
-                - type: MULTIPLIER
-                  parameters:
-                    - '1000'
-              master_item:
-                key: ubnt.sta.walk
-              tags:
-                - tag: component
-                  value: client
-                - tag: client
-                  value: '{#STANAME}'
-            - uuid: 160df0561486438fa2e29bb0989cda65
-              name: 'Client {#STANAME} ({#STAMAC}): RX capacity'
-              type: DEPENDENT
-              key: 'ubnt.sta.rxcap[{#SNMPINDEX}]'
-              delay: '0'
-              units: 'bps'
-              preprocessing:
-                - type: SNMP_WALK_VALUE
-                  parameters:
-                    - '1.3.6.1.4.1.41112.1.4.7.1.18.{#SNMPINDEX}'
-                    - '0'
-                - type: MULTIPLIER
-                  parameters:
-                    - '1000'
-              master_item:
-                key: ubnt.sta.walk
-              tags:
-                - tag: component
-                  value: client
-                - tag: client
-                  value: '{#STANAME}'
-          preprocessing:
-            - type: SNMP_WALK_TO_JSON
-              parameters:
-                - '{#STAMAC}'
-                - 1.3.6.1.4.1.41112.1.4.7.1.1
-                - '2'
-                - '{#STANAME}'
-                - 1.3.6.1.4.1.41112.1.4.7.1.2
-                - '0'
-                - '{#STAIP}'
-                - 1.3.6.1.4.1.41112.1.4.7.1.10
-                - '0'
-        - uuid: 68688c86dc534fb881f9ddaae504c9c0
-          name: 'Network interfaces discovery (32-bit)'
-          type: SNMP_AGENT
-          snmp_oid: 'walk[1.3.6.1.2.1.2.2.1.2]'
-          key: ubnt.if.discovery
-          delay: 1h
-          lifetime: 7d
-          filter:
-            conditions:
-              - macro: '{#IFDESCR}'
-                value: '{$UBNT.IF.MATCHES}'
-                formulaid: A
-          item_prototypes:
-            - uuid: a77f60d2343d496aa1da4a81e18c54d7
-              name: 'Interface {#IFDESCR}: Bits received'
-              type: SNMP_AGENT
-              snmp_oid: 'get[1.3.6.1.2.1.2.2.1.10.{#SNMPINDEX}]'
-              key: 'ubnt.if.in[{#SNMPINDEX}]'
-              units: 'bps'
-              value_type: FLOAT
-              preprocessing:
-                - type: CHANGE_PER_SECOND
-                  parameters:
-                    - ''
-                - type: MULTIPLIER
-                  parameters:
-                    - '8'
-              tags:
-                - tag: component
-                  value: network
-                - tag: interface
-                  value: '{#IFDESCR}'
-            - uuid: 3cf40121ede64a91a402f7620edbe279
-              name: 'Interface {#IFDESCR}: Bits sent'
-              type: SNMP_AGENT
-              snmp_oid: 'get[1.3.6.1.2.1.2.2.1.16.{#SNMPINDEX}]'
-              key: 'ubnt.if.out[{#SNMPINDEX}]'
-              units: 'bps'
-              value_type: FLOAT
-              preprocessing:
-                - type: CHANGE_PER_SECOND
-                  parameters:
-                    - ''
-                - type: MULTIPLIER
-                  parameters:
-                    - '8'
-              tags:
-                - tag: component
-                  value: network
-                - tag: interface
-                  value: '{#IFDESCR}'
-            - uuid: 11b467b754484938a868f5f45e9c282c
-              name: 'Interface {#IFDESCR}: Operational status'
-              type: SNMP_AGENT
-              snmp_oid: 'get[1.3.6.1.2.1.2.2.1.8.{#SNMPINDEX}]'
-              key: 'ubnt.if.oper[{#SNMPINDEX}]'
-              valuemap:
-                name: 'IF-MIB::ifOperStatus'
-              tags:
-                - tag: component
-                  value: network
-                - tag: interface
-                  value: '{#IFDESCR}'
-            - uuid: 321b0661939f4650906e18d780264c80
-              name: 'Interface {#IFDESCR}: Speed'
-              type: SNMP_AGENT
-              snmp_oid: 'get[1.3.6.1.2.1.2.2.1.5.{#SNMPINDEX}]'
-              key: 'ubnt.if.speed[{#SNMPINDEX}]'
-              units: 'bps'
-              delay: 5m
-              tags:
-                - tag: component
-                  value: network
-                - tag: interface
-                  value: '{#IFDESCR}'
-          preprocessing:
-            - type: SNMP_WALK_TO_JSON
-              parameters:
-                - '{#IFDESCR}'
-                - 1.3.6.1.2.1.2.2.1.2
-                - '0'
-      tags:
-        - tag: class
+          - tag: scope
+            value: performance
+      - uuid: bc09f33683464aaf85642508cf86a526
+        name: 'Client {#STANAME} ({#STAMAC}): Distance'
+        type: DEPENDENT
+        key: ubnt.sta.distance[{#SNMPINDEX}]
+        delay: '0'
+        units: m
+        preprocessing:
+        - type: SNMP_WALK_VALUE
+          parameters:
+          - 1.3.6.1.4.1.41112.1.4.7.1.5.{#SNMPINDEX}
+          - '0'
+        master_item:
+          key: ubnt.sta.walk
+        tags:
+        - tag: component
+          value: client
+        - tag: client
+          value: "{#STANAME}"
+      - uuid: 90cb8bb31cee4210bbada33daa77e7c1
+        name: 'Client {#STANAME} ({#STAMAC}): CCQ'
+        type: DEPENDENT
+        key: ubnt.sta.ccq[{#SNMPINDEX}]
+        delay: '0'
+        value_type: FLOAT
+        units: "%"
+        preprocessing:
+        - type: SNMP_WALK_VALUE
+          parameters:
+          - 1.3.6.1.4.1.41112.1.4.7.1.6.{#SNMPINDEX}
+          - '0'
+        - type: MULTIPLIER
+          parameters:
+          - '0.1'
+        master_item:
+          key: ubnt.sta.walk
+        tags:
+        - tag: component
+          value: client
+        - tag: client
+          value: "{#STANAME}"
+      - uuid: 3756ba60703d4109a8e83d43a3583876
+        name: 'Client {#STANAME} ({#STAMAC}): TX rate'
+        type: DEPENDENT
+        key: ubnt.sta.txrate[{#SNMPINDEX}]
+        delay: '0'
+        units: bps
+        preprocessing:
+        - type: SNMP_WALK_VALUE
+          parameters:
+          - 1.3.6.1.4.1.41112.1.4.7.1.11.{#SNMPINDEX}
+          - '0'
+        master_item:
+          key: ubnt.sta.walk
+        tags:
+        - tag: component
+          value: client
+        - tag: client
+          value: "{#STANAME}"
+      - uuid: a5d5124537d34345a7087d3e3e1cd43e
+        name: 'Client {#STANAME} ({#STAMAC}): RX rate'
+        type: DEPENDENT
+        key: ubnt.sta.rxrate[{#SNMPINDEX}]
+        delay: '0'
+        units: bps
+        preprocessing:
+        - type: SNMP_WALK_VALUE
+          parameters:
+          - 1.3.6.1.4.1.41112.1.4.7.1.12.{#SNMPINDEX}
+          - '0'
+        master_item:
+          key: ubnt.sta.walk
+        tags:
+        - tag: component
+          value: client
+        - tag: client
+          value: "{#STANAME}"
+      - uuid: 41acd14d69154677816a767937d9fa73
+        name: 'Client {#STANAME} ({#STAMAC}): Connection time'
+        type: DEPENDENT
+        key: ubnt.sta.conntime[{#SNMPINDEX}]
+        delay: '0'
+        units: uptime
+        preprocessing:
+        - type: SNMP_WALK_VALUE
+          parameters:
+          - 1.3.6.1.4.1.41112.1.4.7.1.15.{#SNMPINDEX}
+          - '0'
+        - type: MULTIPLIER
+          parameters:
+          - '0.01'
+        master_item:
+          key: ubnt.sta.walk
+        tags:
+        - tag: component
+          value: client
+        - tag: client
+          value: "{#STANAME}"
+      - uuid: 795370f0addf40b1ae0a8a9fba08906e
+        name: 'Client {#STANAME} ({#STAMAC}): Local CINR'
+        type: DEPENDENT
+        key: ubnt.sta.cinr[{#SNMPINDEX}]
+        delay: '0'
+        units: dB
+        preprocessing:
+        - type: SNMP_WALK_VALUE
+          parameters:
+          - 1.3.6.1.4.1.41112.1.4.7.1.16.{#SNMPINDEX}
+          - '0'
+        master_item:
+          key: ubnt.sta.walk
+        tags:
+        - tag: component
+          value: client
+        - tag: client
+          value: "{#STANAME}"
+      - uuid: 8fe43e70e2e24337b6f49d5c2dc28c2f
+        name: 'Client {#STANAME} ({#STAMAC}): TX capacity'
+        type: DEPENDENT
+        key: ubnt.sta.txcap[{#SNMPINDEX}]
+        delay: '0'
+        units: bps
+        preprocessing:
+        - type: SNMP_WALK_VALUE
+          parameters:
+          - 1.3.6.1.4.1.41112.1.4.7.1.17.{#SNMPINDEX}
+          - '0'
+        - type: MULTIPLIER
+          parameters:
+          - '1000'
+        master_item:
+          key: ubnt.sta.walk
+        tags:
+        - tag: component
+          value: client
+        - tag: client
+          value: "{#STANAME}"
+        trigger_prototypes:
+        - uuid: 6a38c8679a0a440c97d29bebbe415fcc
+          expression: '{$UBNT.STA.TXCAP.MIN:"{#STANAME}"}>0 and max(/Ubiquiti AirOS
+            8 wireless by SNMPv1/ubnt.sta.txcap[{#SNMPINDEX}],10m)<{$UBNT.STA.TXCAP.MIN:"{#STANAME}"}*1000000'
+          name: 'Client {#STANAME} ({#STAMAC}): Low TX capacity (below {$UBNT.STA.TXCAP.MIN:"{#STANAME}"}
+            Mbps for 10m)'
+          opdata: 'TX capacity: {ITEM.LASTVALUE1}'
+          priority: HIGH
+          description: airMAX TX capacity of the link with this client stayed below
+            the minimum for 10 minutes. Disabled while {$UBNT.STA.TXCAP.MIN} is 0
+            (default); set it per host or per client (macro context = client name),
+            typically on PTP backhaul links.
+          tags:
+          - tag: scope
+            value: performance
+      - uuid: 160df0561486438fa2e29bb0989cda65
+        name: 'Client {#STANAME} ({#STAMAC}): RX capacity'
+        type: DEPENDENT
+        key: ubnt.sta.rxcap[{#SNMPINDEX}]
+        delay: '0'
+        units: bps
+        preprocessing:
+        - type: SNMP_WALK_VALUE
+          parameters:
+          - 1.3.6.1.4.1.41112.1.4.7.1.18.{#SNMPINDEX}
+          - '0'
+        - type: MULTIPLIER
+          parameters:
+          - '1000'
+        master_item:
+          key: ubnt.sta.walk
+        tags:
+        - tag: component
+          value: client
+        - tag: client
+          value: "{#STANAME}"
+        trigger_prototypes:
+        - uuid: 192b6f20395d4e77a2c491f4e4eda533
+          expression: '{$UBNT.STA.RXCAP.MIN:"{#STANAME}"}>0 and max(/Ubiquiti AirOS
+            8 wireless by SNMPv1/ubnt.sta.rxcap[{#SNMPINDEX}],10m)<{$UBNT.STA.RXCAP.MIN:"{#STANAME}"}*1000000'
+          name: 'Client {#STANAME} ({#STAMAC}): Low RX capacity (below {$UBNT.STA.RXCAP.MIN:"{#STANAME}"}
+            Mbps for 10m)'
+          opdata: 'RX capacity: {ITEM.LASTVALUE1}'
+          priority: HIGH
+          description: airMAX RX capacity of the link with this client stayed below
+            the minimum for 10 minutes. Disabled while {$UBNT.STA.RXCAP.MIN} is 0
+            (default); set it per host or per client (macro context = client name),
+            typically on PTP backhaul links.
+          tags:
+          - tag: scope
+            value: performance
+      preprocessing:
+      - type: SNMP_WALK_TO_JSON
+        parameters:
+        - "{#STAMAC}"
+        - 1.3.6.1.4.1.41112.1.4.7.1.1
+        - '2'
+        - "{#STANAME}"
+        - 1.3.6.1.4.1.41112.1.4.7.1.2
+        - '0'
+        - "{#STAIP}"
+        - 1.3.6.1.4.1.41112.1.4.7.1.10
+        - '0'
+    - uuid: 68688c86dc534fb881f9ddaae504c9c0
+      name: Network interfaces discovery (32-bit)
+      type: SNMP_AGENT
+      snmp_oid: walk[1.3.6.1.2.1.2.2.1.2]
+      key: ubnt.if.discovery
+      delay: 1h
+      lifetime: 7d
+      filter:
+        conditions:
+        - macro: "{#IFDESCR}"
+          value: "{$UBNT.IF.MATCHES}"
+          formulaid: A
+      item_prototypes:
+      - uuid: a77f60d2343d496aa1da4a81e18c54d7
+        name: 'Interface {#IFDESCR}: Bits received'
+        type: SNMP_AGENT
+        snmp_oid: get[1.3.6.1.2.1.2.2.1.10.{#SNMPINDEX}]
+        key: ubnt.if.in[{#SNMPINDEX}]
+        units: bps
+        value_type: FLOAT
+        preprocessing:
+        - type: CHANGE_PER_SECOND
+          parameters:
+          - ''
+        - type: MULTIPLIER
+          parameters:
+          - '8'
+        tags:
+        - tag: component
           value: network
-        - tag: target
-          value: ubiquiti
-      macros:
-        - macro: '{$UBNT.NOISE.MAX.WARN}'
-          value: '-80'
-          description: 'Noise floor warning threshold, dBm.'
-        - macro: '{$UBNT.STA.SIGNAL.MIN.WARN}'
-          value: '-75'
-          description: 'Client signal warning threshold, dBm. Per client: {$UBNT.STA.SIGNAL.MIN.WARN:"<client name>"}.'
-        - macro: '{$UBNT.GPS.SATS.MIN}'
-          value: '4'
-          description: 'Minimum GPS satellites used.'
-        - macro: '{$UBNT.IF.MATCHES}'
-          value: '^(eth0|ath0)$'
-          description: 'Interfaces with traffic monitoring (ifDescr).'
-      valuemaps:
-        - uuid: f2cb377f077245dc84d43d2f79e9431a
-          name: 'IF-MIB::ifOperStatus'
-          mappings:
-            - value: '1'
-              newvalue: up
-            - value: '2'
-              newvalue: down
-            - value: '7'
-              newvalue: lowerLayerDown
+        - tag: interface
+          value: "{#IFDESCR}"
+      - uuid: 3cf40121ede64a91a402f7620edbe279
+        name: 'Interface {#IFDESCR}: Bits sent'
+        type: SNMP_AGENT
+        snmp_oid: get[1.3.6.1.2.1.2.2.1.16.{#SNMPINDEX}]
+        key: ubnt.if.out[{#SNMPINDEX}]
+        units: bps
+        value_type: FLOAT
+        preprocessing:
+        - type: CHANGE_PER_SECOND
+          parameters:
+          - ''
+        - type: MULTIPLIER
+          parameters:
+          - '8'
+        tags:
+        - tag: component
+          value: network
+        - tag: interface
+          value: "{#IFDESCR}"
+      - uuid: 11b467b754484938a868f5f45e9c282c
+        name: 'Interface {#IFDESCR}: Operational status'
+        type: SNMP_AGENT
+        snmp_oid: get[1.3.6.1.2.1.2.2.1.8.{#SNMPINDEX}]
+        key: ubnt.if.oper[{#SNMPINDEX}]
+        valuemap:
+          name: IF-MIB::ifOperStatus
+        tags:
+        - tag: component
+          value: network
+        - tag: interface
+          value: "{#IFDESCR}"
+      - uuid: 321b0661939f4650906e18d780264c80
+        name: 'Interface {#IFDESCR}: Speed'
+        type: SNMP_AGENT
+        snmp_oid: get[1.3.6.1.2.1.2.2.1.5.{#SNMPINDEX}]
+        key: ubnt.if.speed[{#SNMPINDEX}]
+        units: bps
+        delay: 5m
+        tags:
+        - tag: component
+          value: network
+        - tag: interface
+          value: "{#IFDESCR}"
+        trigger_prototypes:
+        - uuid: 9ecc8453d1864b72a33a96586b351fb5
+          expression: last(/Ubiquiti AirOS 8 wireless by SNMPv1/ubnt.if.speed[{#SNMPINDEX}])>0
+            and last(/Ubiquiti AirOS 8 wireless by SNMPv1/ubnt.if.speed[{#SNMPINDEX}],#2)>0
+            and last(/Ubiquiti AirOS 8 wireless by SNMPv1/ubnt.if.speed[{#SNMPINDEX}])<>last(/Ubiquiti
+            AirOS 8 wireless by SNMPv1/ubnt.if.speed[{#SNMPINDEX}],#2)
+          type: MULTIPLE
+          recovery_mode: NONE
+          manual_close: 'YES'
+          name: 'Interface {#IFDESCR}: Speed changed'
+          event_name: 'Interface {#IFDESCR}: speed changed from {?last(/{HOST.HOST}/ubnt.if.speed[{#SNMPINDEX}],#2)}
+            to {?last(/{HOST.HOST}/ubnt.if.speed[{#SNMPINDEX}])} bps'
+          priority: HIGH
+          description: Negotiated Ethernet speed changed while the link is up (cable,
+            connector or PoE problem, e.g. 1000 -> 100 Mbps). Interfaces reporting
+            speed 0 (radio) never trigger. Close manually after review.
+          tags:
+          - tag: scope
+            value: performance
+      preprocessing:
+      - type: SNMP_WALK_TO_JSON
+        parameters:
+        - "{#IFDESCR}"
+        - 1.3.6.1.2.1.2.2.1.2
+        - '0'
+    tags:
+    - tag: class
+      value: network
+    - tag: target
+      value: ubiquiti
+    macros:
+    - macro: "{$UBNT.NOISE.MAX.WARN}"
+      value: "-80"
+      description: Noise floor warning threshold, dBm.
+    - macro: "{$UBNT.STA.SIGNAL.MIN.WARN}"
+      value: "-75"
+      description: 'Client signal warning threshold, dBm. Per client: {$UBNT.STA.SIGNAL.MIN.WARN:"<client
+        name>"}.'
+    - macro: "{$UBNT.GPS.SATS.MIN}"
+      value: '4'
+      description: Minimum GPS satellites used.
+    - macro: "{$UBNT.IF.MATCHES}"
+      value: "^(eth0|ath0)$"
+      description: Interfaces with traffic monitoring (ifDescr).
+    - macro: "{$UBNT.STA.TXCAP.MIN}"
+      value: '0'
+      description: 'Minimum airMAX TX capacity per client, Mbps, sustained 10 minutes.
+        0 = disabled. Context: client name.'
+    - macro: "{$UBNT.STA.RXCAP.MIN}"
+      value: '0'
+      description: 'Minimum airMAX RX capacity per client, Mbps, sustained 10 minutes.
+        0 = disabled. Context: client name.'
+    valuemaps:
+    - uuid: f2cb377f077245dc84d43d2f79e9431a
+      name: IF-MIB::ifOperStatus
+      mappings:
+      - value: '1'
+        newvalue: up
+      - value: '2'
+        newvalue: down
+      - value: '7'
+        newvalue: lowerLayerDown
   triggers:
-    - uuid: 7222aa78c5c14731bae34785561bffab
-      expression: 'max(/Ubiquiti AirOS 8 wireless by SNMPv1/ubnt.wl.stations,1h)>0 and last(/Ubiquiti AirOS 8 wireless by SNMPv1/ubnt.wl.stations)=0'
-      recovery_mode: RECOVERY_EXPRESSION
-      recovery_expression: 'last(/Ubiquiti AirOS 8 wireless by SNMPv1/ubnt.wl.stations)>0'
-      name: 'Wireless: AP has no connected clients'
-      priority: AVERAGE
-      description: 'All clients disconnected (they were connected during the last hour).'
-      tags:
-        - tag: scope
-          value: availability
-    - uuid: 3e5742d0aee24821b53787dd494967c4
-      expression: 'min(/Ubiquiti AirOS 8 wireless by SNMPv1/ubnt.wl.noisefloor,15m)>{$UBNT.NOISE.MAX.WARN}'
-      name: 'Wireless: High noise floor (over {$UBNT.NOISE.MAX.WARN} dBm for 15m)'
-      opdata: 'Noise: {ITEM.LASTVALUE1}'
-      priority: WARNING
-      description: 'Interference on the channel, consider changing frequency or channel width.'
-      tags:
-        - tag: scope
-          value: performance
-    - uuid: f4393a2faa224eed8390147ddfd154b2
-      expression: 'max(/Ubiquiti AirOS 8 wireless by SNMPv1/ubnt.gps.sats.used,10m)<{$UBNT.GPS.SATS.MIN}'
-      name: 'GPS: Weak or lost signal (less than {$UBNT.GPS.SATS.MIN} satellites for 10m)'
-      opdata: 'Satellites used: {ITEM.LASTVALUE1}'
-      priority: WARNING
-      description: 'GPS synchronization of the airMAX radio may be lost, check the GPS antenna.'
-      tags:
-        - tag: scope
-          value: availability
+  - uuid: 7222aa78c5c14731bae34785561bffab
+    expression: max(/Ubiquiti AirOS 8 wireless by SNMPv1/ubnt.wl.stations,1h)>0 and
+      last(/Ubiquiti AirOS 8 wireless by SNMPv1/ubnt.wl.stations)=0
+    recovery_mode: RECOVERY_EXPRESSION
+    recovery_expression: last(/Ubiquiti AirOS 8 wireless by SNMPv1/ubnt.wl.stations)>0
+    name: 'Wireless: AP has no connected clients'
+    priority: AVERAGE
+    description: All clients disconnected (they were connected during the last hour).
+    tags:
+    - tag: scope
+      value: availability
+  - uuid: 3e5742d0aee24821b53787dd494967c4
+    expression: min(/Ubiquiti AirOS 8 wireless by SNMPv1/ubnt.wl.noisefloor,15m)>{$UBNT.NOISE.MAX.WARN}
+    name: 'Wireless: High noise floor (over {$UBNT.NOISE.MAX.WARN} dBm for 15m)'
+    opdata: 'Noise: {ITEM.LASTVALUE1}'
+    priority: WARNING
+    description: Interference on the channel, consider changing frequency or channel
+      width.
+    tags:
+    - tag: scope
+      value: performance
+  - uuid: f4393a2faa224eed8390147ddfd154b2
+    expression: max(/Ubiquiti AirOS 8 wireless by SNMPv1/ubnt.gps.sats.used,10m)<{$UBNT.GPS.SATS.MIN}
+    name: 'GPS: Weak or lost signal (less than {$UBNT.GPS.SATS.MIN} satellites for
+      10m)'
+    opdata: 'Satellites used: {ITEM.LASTVALUE1}'
+    priority: WARNING
+    description: GPS synchronization of the airMAX radio may be lost, check the GPS
+      antenna.
+    tags:
+    - tag: scope
+      value: availability

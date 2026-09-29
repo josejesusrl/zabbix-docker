@@ -403,6 +403,25 @@ zabbix_export:
           value: network
         - tag: interface
           value: "{#IFDESCR}"
+        trigger_prototypes:
+        - uuid: 162c8c4eb231492593d781c5fdf041d6
+          expression: last(/Ubiquiti airMAX M airOS6 wireless by SNMPv1/ubnt.if.speed[{#SNMPINDEX}])>0
+            and last(/Ubiquiti airMAX M airOS6 wireless by SNMPv1/ubnt.if.speed[{#SNMPINDEX}],#2)>0
+            and last(/Ubiquiti airMAX M airOS6 wireless by SNMPv1/ubnt.if.speed[{#SNMPINDEX}])<>last(/Ubiquiti
+            airMAX M airOS6 wireless by SNMPv1/ubnt.if.speed[{#SNMPINDEX}],#2)
+          type: MULTIPLE
+          recovery_mode: NONE
+          manual_close: 'YES'
+          name: 'Interface {#IFDESCR}: Speed changed'
+          event_name: 'Interface {#IFDESCR}: speed changed from {?last(/{HOST.HOST}/ubnt.if.speed[{#SNMPINDEX}],#2)}
+            to {?last(/{HOST.HOST}/ubnt.if.speed[{#SNMPINDEX}])} bps'
+          priority: HIGH
+          description: Negotiated Ethernet speed changed while the link is up (cable,
+            connector or PoE problem, e.g. 1000 -> 100 Mbps). Interfaces reporting
+            speed 0 (radio) never trigger. Close manually after review.
+          tags:
+          - tag: scope
+            value: performance
       preprocessing:
       - type: SNMP_WALK_TO_JSON
         parameters:

@@ -15,8 +15,8 @@ Todos los procedimientos se pueden hacer desde la interfaz web (`https://zabbix.
 
 | Elemento | Convención |
 |---|---|
-| Nombre del host | El nombre de sistema del equipo (`sysName` o *Device Name*), idéntico en *Host name* y *Visible name*. Si el equipo no tiene nombre, se le pone primero en el propio equipo |
-| Grupos de hosts | `Routers & Switches Likson` (MikroTik, switches), `Access Points PPPoE Clients` (APs Ubiquiti), `Enlaces PTP Troncales` (radios PTP), `Linux servers`, `Zabbix servers` |
+| Nombre del host | El nombre de sistema del equipo (`sysName` o *Device Name*), idéntico en *Host name* y *Visible name*. Si el equipo no tiene nombre, se le pone primero en el propio equipo. El *Host name* solo admite letras, dígitos, espacios, `.`, `-` y `_`: si el nombre lleva otros caracteres (p. ej. `[AP]-…`), el *Host name* los omite y el *Visible name* conserva el nombre exacto |
+| Grupos de hosts | `Routers & Switches Likson` (MikroTik, switches), `Access Points PPPoE Clients` (APs Ubiquiti), `Enlaces PTP Troncales` y `Enlaces PTP Backhaul` (radios PTP), `Linux servers`, `Zabbix servers` |
 | Etiqueta `uplink` | Nombre del equipo del que depende (p. ej. `uplink = EDGE 01`). Sirve para filtrar y como documentación de la dependencia |
 | Interfaz SNMP | Comunidad `{$SNMP_COMMUNITY}` (macro global de tipo secreto). MikroTik, TP-Link y Mimosa: SNMPv2. **Ubiquiti: SNMPv1** |
 | Dependencias | Cada equipo depende del que le da conectividad hacia Zabbix (sección 4.1) |
@@ -31,7 +31,9 @@ EDGE 01 (192.168.200.1)  MikroTik CCR2004
 │   └── AP-Lk_Trunk_01_A (10.100.0.2)  Mimosa C5C, extremo lejano (solo se alcanza a través del enlace)
 ├── NAS-01 (192.168.200.2)  CCR2004, concentrador PPPoE
 │   ├── Switch Main Site #01 (172.16.100.2)  TP-Link
-│   │   └── APs Ubiquiti 172.16.1.2 – 172.16.1.19 (16 APs, uplink = Switch Main Site #01)
+│   │   ├── APs Ubiquiti 172.16.1.2 – 172.16.1.19 (16 APs, uplink = Switch Main Site #01)
+│   │   └── [CPE]-Lk_Hq_Pintores_1 (10.155.0.3)  LiteBeam 5AC, extremo cercano del backhaul
+│   │       └── [AP]-Lk_Hq_Pintores_1 (10.155.0.2)  LiteBeam 5AC, extremo lejano
 │   └── Sector_3, Sector_4, Sector_5 (172.16.2.x, uplink = NAS-01)
 └── NAS-03 (192.168.200.10)  RB2011iL-RM, concentrador PPPoE
     └── LIKSON_CANADAS_A/B/C/D_01 (172.16.3.10 – .13, uplink = NAS-03)
@@ -59,6 +61,8 @@ Los sectores `172.16.2.x` están conectados físicamente a NAS-02, que se va a r
 | LIKSON_CANADAS_A_01, LIKSON_CANADAS_B_01 (airOS 8, con GPS) | 172.16.3.12, .13 | Access Points PPPoE Clients | Ubiquiti AirOS by SNMP, Ubiquiti AirOS 8 wireless by SNMPv1 | — | NAS-03 |
 | LIKSON_CANADAS_C_01, LIKSON_CANADAS_D_01 (airOS 8, sin GPS) | 172.16.3.10, .11 | Access Points PPPoE Clients | Ubiquiti AirOS by SNMP, Ubiquiti AirOS 8 wireless by SNMPv1 | `{$UBNT.GPS.SATS.MIN}=0` | NAS-03 |
 | STA-Lk_Trunk_01_A (Mimosa C5C, estación) | 10.100.0.3 | Enlaces PTP Troncales | Network Generic Device by SNMP, Mimosa C5C by SNMP, Switch port changes by SNMP | `{$IFCONTROL}=0`, `{$MIMOSA.RX.POWER.MIN.WARN}=-71`, `{$MIMOSA.RX.POWER.MIN.CRIT}=-76` | EDGE 01 |
+| [CPE]-Lk_Hq_Pintores_1 (LiteBeam 5AC, estación) | 10.155.0.3 | Enlaces PTP Backhaul | Ubiquiti AirOS by SNMP, Ubiquiti AirOS 8 wireless by SNMPv1 | `{$UBNT.GPS.SATS.MIN}=0`, `{$UBNT.STA.SIGNAL.MIN.WARN}=-57`, `{$UBNT.STA.RXCAP.MIN}=30` | Switch Main Site #01 |
+| [AP]-Lk_Hq_Pintores_1 (LiteBeam 5AC, AP) | 10.155.0.2 | Enlaces PTP Backhaul | Ubiquiti AirOS by SNMP, Ubiquiti AirOS 8 wireless by SNMPv1 | `{$UBNT.GPS.SATS.MIN}=0`, `{$UBNT.STA.SIGNAL.MIN.WARN}=-57`, `{$UBNT.STA.TXCAP.MIN}=50` | [CPE]-Lk_Hq_Pintores_1 |
 | AP-Lk_Trunk_01_A (Mimosa C5C, AP) | 10.100.0.2 | Enlaces PTP Troncales | Network Generic Device by SNMP, Mimosa C5C by SNMP, Switch port changes by SNMP | `{$IFCONTROL}=0`, `{$MIMOSA.RX.POWER.MIN.WARN}=-71`, `{$MIMOSA.RX.POWER.MIN.CRIT}=-76` | STA-Lk_Trunk_01_A |
 
 IPs de APs: `172.16.1.x` (las `.12` y `.13` no responden y no están dadas de alta), `172.16.2.x` y `172.16.3.x` (la `.14` no responde y no está dada de alta). Las IPs pueden cambiar: ver 4.10.
@@ -131,6 +135,8 @@ Los triggers de potencia, SNR, ruido, desequilibrio, PER y velocidad PHY se sile
 | High noise floor | Warning | Ruido > `{$UBNT.NOISE.MAX.WARN}` (-80 dBm) durante 15 min | Solo |
 | GPS: Weak or lost signal | Warning | < `{$UBNT.GPS.SATS.MIN}` (4) satélites durante 10 min | Solo |
 | Client …: Weak signal | Warning | Señal del cliente < `{$UBNT.STA.SIGNAL.MIN.WARN}` (-75 dBm) durante 15 min | Solo |
+| Client …: Low TX / RX capacity | High | Capacidad airMAX de TX o RX con ese cliente < `{$UBNT.STA.TXCAP.MIN}` / `{$UBNT.STA.RXCAP.MIN}` (Mbps) durante 10 min. **Desactivado con 0** (defecto); se activa por host o por cliente, normalmente en enlaces PTP | Solo |
+| Interface …: Speed changed | High | Cambia la velocidad Ethernet negociada de `eth0` (p. ej. 1000 → 100 Mbps: cable, conector o PoE). Las interfaces radio (velocidad 0) no disparan | Manualmente |
 
 | Macro | Defecto | Uso |
 |---|---|---|
@@ -138,10 +144,11 @@ Los triggers de potencia, SNR, ruido, desequilibrio, PER y velocidad PHY se sile
 | `{$UBNT.STA.SIGNAL.MIN.WARN}` | -75 | Umbral de señal de cliente. Por cliente: `{$UBNT.STA.SIGNAL.MIN.WARN:"<nombre del cliente>"}` |
 | `{$UBNT.GPS.SATS.MIN}` | 4 | **Poner `0` en APs sin GPS**: devuelven 0 satélites y la alerta saltaría siempre |
 | `{$UBNT.IF.MATCHES}` | `^(eth0\|ath0)$` | Interfaces con tráfico |
+| `{$UBNT.STA.TXCAP.MIN}` / `{$UBNT.STA.RXCAP.MIN}` | 0 | Capacidad mínima en Mbps (0 = desactivado). Contexto por cliente: `{$UBNT.STA.TXCAP.MIN:"<nombre del cliente>"}` |
 
 #### Ubiquiti airMAX M (airOS 6) wireless by SNMPv1 — `ubiquiti_airmax_m_airos6_wireless.yaml`
 **Para:** equipos airMAX M con airOS 6 (Rocket M5, NanoStation M…). Es la misma plantilla que la de airOS 8, pero **sin** GPS, CINR ni capacidad de cliente, que son exclusivos de AC. Añade **airMAX quality y capacity** del AP y por cliente, que en airMAX M son las mejores medidas de calidad.
-Mismos triggers y macros, salvo los de GPS. El CCQ viene en porcentaje directo. No recoge el tiempo de conexión del cliente (limitación de SNMPv1 en airOS 6).
+Mismos triggers y macros, salvo los de GPS y capacidad (airOS 6 no la publica); incluye el de cambio de velocidad de `eth0`. El CCQ viene en porcentaje directo. No recoge el tiempo de conexión del cliente (limitación de SNMPv1 en airOS 6).
 
 #### MikroTik link traps by SNMP — `mikrotik_link_traps.yaml`
 **Para:** routers MikroTik, junto con su plantilla oficial de modelo. Alerta **al instante** cuando cae un enlace, a partir del trap `linkDown`.
@@ -172,9 +179,9 @@ Complementa, no sustituye, el *Link down* por consulta de la plantilla oficial (
 | `{$PORT.POLL.INTERVAL}` | 30s | Frecuencia de consulta |
 | `{$PORT.FLAP.COUNT}` / `{$PORT.FLAP.PERIOD}` | 4 / 10m | Sensibilidad del flapping |
 | `{$PORT.IFTYPE.MATCHES}` | `^6$` | Solo puertos Ethernet |
-| `{$PORT.IFNAME.NOT_MATCHES}` | `^(<\|wifi\|wlan\|ath)` | Puertos excluidos: interfaces dinámicas y de radio (su velocidad es la capacidad inalámbrica, que cambia continuamente). En TP-Link: `^(<\|Vlan-interface)` |
+| `{$PORT.IFNAME.NOT_MATCHES}` | `^(<\|wifi\|wlan\|ath\|br[0-9])` | Puertos excluidos: interfaces dinámicas, de radio (su velocidad es la capacidad inalámbrica, que cambia continuamente) y bridges virtuales. En TP-Link: `^(<\|Vlan-interface)` |
 
-Al usarla, poner `{$IFCONTROL}=0` en el host para que el *Link down* de la plantilla del fabricante no duplique los avisos de desconexión. Los cortes de menos de 30 s pueden no detectarse; los repetidos, sí (flapping).
+Requiere **SNMPv2** (lee `ifXTable`): no sirve para Ubiquiti airOS, que solo responde a SNMPv1. En airOS, el cambio de velocidad de `eth0` lo vigilan sus propias plantillas. Al usarla, poner `{$IFCONTROL}=0` en el host para que el *Link down* de la plantilla del fabricante no duplique los avisos de desconexión. Los cortes de menos de 30 s pueden no detectarse; los repetidos, sí (flapping).
 
 #### Linux hwmon temperature by Zabbix agent 2 — `linux_hwmon_temperature.yaml`
 **Para:** servidores Linux físicos con Agent 2. Descubre cada sensor de temperatura del kernel (CPU, GPU, NVMe…).
@@ -358,6 +365,23 @@ Las dependencias, el historial y las alertas van ligados al **host**, no a su IP
    - **Macros:** `{$IFCONTROL}` = `0`, `{$MIMOSA.RX.POWER.MIN.WARN}` = diseño − 6 y `{$MIMOSA.RX.POWER.MIN.CRIT}` = diseño − 11.
 3. **Dependencias (4.1):** el extremo lejano depende del cercano (si no hay conexión con el cercano, tampoco con el lejano), y el cercano depende del equipo que le da conectividad hacia Zabbix.
 4. **Verificar:** SNMP en verde, *Link: Status = connected*, potencias y SNR con valores reales en *Latest data*, y en *Switch port changes* solo el puerto Ethernet (`eth1_emac1`), no `wifi0`.
+
+### 4.12 Añadir un enlace PTP Ubiquiti (airOS)
+
+Para enlaces punto a punto con equipos airMAX AC (LiteBeam, PowerBeam, Rocket…). Cada enlace tiene **sus propios umbrales**, que se ponen como macros en sus hosts, no en la plantilla.
+
+1. **En los radios:** SNMP activado (4.2) y anotar la **capacidad mínima aceptable** en cada sentido y la señal normal.
+2. **Crear primero el extremo más cercano a Zabbix**, y después el lejano (4.2):
+   - Grupo `Enlaces PTP Backhaul` (o `Troncales`), **SNMPv1**, plantillas `Ubiquiti AirOS by SNMP` + `Ubiquiti AirOS 8 wireless by SNMPv1`.
+   - Si el nombre lleva caracteres no válidos (`[AP]`), *Host name* sin ellos y *Visible name* exacto.
+3. **Macros de cada host:**
+   - `{$UBNT.GPS.SATS.MIN}` = `0` si no tiene GPS.
+   - `{$UBNT.STA.SIGNAL.MIN.WARN}` ≈ señal normal − 7 dB.
+   - Capacidad: en ambos radios SNMP reporta el mismo par de valores, **TX = capacidad AP→estación** y **RX = estación→AP**. Para no duplicar alertas, cada sentido se vigila en un solo host: en el **AP** `{$UBNT.STA.TXCAP.MIN}` (capacidad del AP) y en la **estación** `{$UBNT.STA.RXCAP.MIN}` (capacidad de la estación).
+4. **Dependencias (4.1):** extremo lejano → extremo cercano → equipo que da conectividad al cercano. Si el enlace cae, avisa el lejano por ping (*High*).
+5. **Verificar** en *Latest data*: *Client …: TX/RX capacity* con los valores de la interfaz de airOS, y en *Triggers* los de capacidad con el umbral correcto en el nombre.
+
+Ejemplo `Lk_Hq_Pintores_1`: AP `{$UBNT.STA.TXCAP.MIN}=50`, estación `{$UBNT.STA.RXCAP.MIN}=30`, señal normal -50 → aviso -57.
 
 ---
 

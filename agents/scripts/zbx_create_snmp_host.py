@@ -2,10 +2,11 @@
 
 Usage (token on stdin, see README.md). Requires a recent backup (AGENTS.md, rule 1):
   zbx_create_snmp_host.py --name NAME --ip IP --group GROUP --template TPL [TPL ...]
-                          [--snmp-version 1|2] [--macro '{$M}=VALUE' ...] [--tag TAG=VALUE ...]
+                          [--visible-name TEXT] [--snmp-version 1|2] [--macro '{$M}=VALUE' ...] [--tag TAG=VALUE ...]
                           [--uplink PARENT] [--self-dependency TEXT ...] [--dry-run]
 
-The SNMP community is always {$SNMP_COMMUNITY}. Ubiquiti airOS answers SNMPv1 only (--snmp-version 1).
+--name is the technical name (letters, digits, spaces, '.', '-', '_'); use --visible-name when the
+device name has other characters (e.g. '[AP]-Link'). The SNMP community is always {$SNMP_COMMUNITY}. Ubiquiti airOS answers SNMPv1 only (--snmp-version 1).
 Examples in README.md and OPERACION.md (procedures 4.2 to 4.4).
 """
 import argparse
@@ -31,6 +32,7 @@ def lookup_ids(api, method, field, names, id_field):
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--name", required=True, help="Host name (sysName / device name)")
+    parser.add_argument("--visible-name", help="Visible name, defaults to --name")
     parser.add_argument("--ip", required=True)
     parser.add_argument("--group", required=True)
     parser.add_argument("--template", nargs="+", required=True)
@@ -49,12 +51,12 @@ def main():
     templates = lookup_ids(api, "template.get", "host", args.template, "templateid")
     parent = get_host(api, args.uplink) if args.uplink else None
     if args.dry_run:
-        print(f"Se crearía {args.name} ({args.ip}, SNMPv{args.snmp_version}) en {args.group} con {args.template}, "
+        print(f"Se crearía {args.name} [{args.visible_name or args.name}] ({args.ip}, SNMPv{args.snmp_version}) en {args.group} con {args.template}, "
               f"macros {dict(args.macro)}, tags {dict(args.tag)}, uplink {args.uplink or '—'}")
         return
 
     hostid = api.call("host.create", {
-        "host": args.name, "name": args.name, "groups": groups, "templates": templates,
+        "host": args.name, "name": args.visible_name or args.name, "groups": groups, "templates": templates,
         "interfaces": [{"type": 2, "main": 1, "useip": 1, "ip": args.ip, "dns": "", "port": "161",
                         "details": {"version": int(args.snmp_version), "community": "{$SNMP_COMMUNITY}", "bulk": 1}}],
         "macros": [{"macro": m, "value": v} for m, v in args.macro],
