@@ -105,6 +105,7 @@ Particularidades ya conocidas (detalle en `OPERACION.md`):
 | TP-Link | `{$PORT.IFNAME.NOT_MATCHES}=^(<\|Vlan-interface)` y `{$IFCONTROL}=0` con la plantilla de puertos |
 | Mimosa C5C (PTP) | SNMPv2. `Network Generic Device by SNMP` + `Mimosa C5C by SNMP` + `Switch port changes by SNMP`. Umbrales de RX según la señal de diseño. El extremo lejano depende del cercano a Zabbix |
 | Ubiquiti en enlaces PTP | Umbrales propios de cada enlace como macros de host: `{$UBNT.STA.TXCAP.MIN}` en el AP y `{$UBNT.STA.RXCAP.MIN}` en la estación (Mbps, 0 = desactivado), y la señal. Nombres con `[ ]`: *Host name* sin ellos y `--visible-name` con el nombre exacto |
+| Enlaces con problemas largos y conocidos (lluvia) | Etiqueta de host `escalation=off`: la acción de escalada no repite sus *High*. Señal crítica con `{$UBNT.STA.SIGNAL.MIN.CRIT}` y la histéresis `{$UBNT.STA.SIGNAL.HYST}` de la plantilla |
 | *Switch port changes* | Requiere SNMPv2 (`ifXTable`): no usar en airOS (SNMPv1), cuyas plantillas ya vigilan la velocidad de `eth0` |
 | Cualquier radio con *Switch port changes* | Nunca vigilar interfaces inalámbricas (`wifi*`, `wlan*`, `ath*`): su velocidad es adaptativa. La plantilla ya las excluye por defecto |
 

@@ -32,6 +32,8 @@ EDGE 01 (192.168.200.1)  MikroTik CCR2004
 ├── NAS-01 (192.168.200.2)  CCR2004, concentrador PPPoE
 │   ├── Switch Main Site #01 (172.16.100.2)  TP-Link
 │   │   ├── APs Ubiquiti 172.16.1.2 – 172.16.1.19 (16 APs, uplink = Switch Main Site #01)
+│   │   ├── [STA]Lk_Hq_Caribe_1 (10.155.3.3)  LiteBeam 5AC, backhaul sensible a lluvia (escalation=off)
+│   │   │   └── [AP]Lk_Hq_Caribe_1 (10.155.3.2)  LiteBeam 5AC, extremo lejano
 │   │   └── [CPE]-Lk_Hq_Pintores_1 (10.155.0.3)  LiteBeam 5AC, extremo cercano del backhaul
 │   │       └── [AP]-Lk_Hq_Pintores_1 (10.155.0.2)  LiteBeam 5AC, extremo lejano
 │   │           └── [CPE]Lk_Pintores_Canadas_1 (10.155.2.3)  LiteBeam 5AC, backhaul Pintores → Cañadas
@@ -67,6 +69,8 @@ Los sectores `172.16.2.x` están conectados físicamente a NAS-02, que se va a r
 | [AP]-Lk_Hq_Pintores_1 (LiteBeam 5AC, AP) | 10.155.0.2 | Enlaces PTP Backhaul | Ubiquiti AirOS by SNMP, Ubiquiti AirOS 8 wireless by SNMPv1 | `{$UBNT.GPS.SATS.MIN}=0`, `{$UBNT.STA.SIGNAL.MIN.WARN}=-57`, `{$UBNT.STA.TXCAP.MIN}=50` | [CPE]-Lk_Hq_Pintores_1 |
 | [CPE]Lk_Pintores_Canadas_1 (LiteBeam 5AC, estación) | 10.155.2.3 | Enlaces PTP Backhaul | Ubiquiti AirOS by SNMP, Ubiquiti AirOS 8 wireless by SNMPv1 | `{$UBNT.GPS.SATS.MIN}=0`, `{$UBNT.STA.SIGNAL.MIN.WARN}=-60`, `{$UBNT.STA.RXCAP.MIN}=50` | [AP]-Lk_Hq_Pintores_1 |
 | [AP]-Lk_Pintores_Canadas_1 (LiteBeam 5AC, AP) | 10.155.2.2 | Enlaces PTP Backhaul | Ubiquiti AirOS by SNMP, Ubiquiti AirOS 8 wireless by SNMPv1 | `{$UBNT.GPS.SATS.MIN}=0`, `{$UBNT.STA.SIGNAL.MIN.WARN}=-59`, `{$UBNT.STA.TXCAP.MIN}=50` | [CPE]Lk_Pintores_Canadas_1 |
+| [STA]Lk_Hq_Caribe_1 (LiteBeam 5AC, estación) | 10.155.3.3 | Enlaces PTP Backhaul | Ubiquiti AirOS by SNMP, Ubiquiti AirOS 8 wireless by SNMPv1 | `{$UBNT.GPS.SATS.MIN}=0`, `{$UBNT.STA.SIGNAL.MIN.WARN}=-67`, `{$UBNT.STA.SIGNAL.MIN.CRIT}=-73`, `{$UBNT.STA.RXCAP.MIN}=13`. Etiqueta `escalation=off` | Switch Main Site #01 |
+| [AP]Lk_Hq_Caribe_1 (LiteBeam 5AC, AP) | 10.155.3.2 | Enlaces PTP Backhaul | Ubiquiti AirOS by SNMP, Ubiquiti AirOS 8 wireless by SNMPv1 | `{$UBNT.GPS.SATS.MIN}=0`, `{$UBNT.STA.SIGNAL.MIN.WARN}=-64`, `{$UBNT.STA.SIGNAL.MIN.CRIT}=-70`, `{$UBNT.STA.TXCAP.MIN}=37`. Etiqueta `escalation=off` | [STA]Lk_Hq_Caribe_1 |
 | AP-Lk_Trunk_01_A (Mimosa C5C, AP) | 10.100.0.2 | Enlaces PTP Troncales | Network Generic Device by SNMP, Mimosa C5C by SNMP, Switch port changes by SNMP | `{$IFCONTROL}=0`, `{$MIMOSA.RX.POWER.MIN.WARN}=-71`, `{$MIMOSA.RX.POWER.MIN.CRIT}=-76` | STA-Lk_Trunk_01_A |
 
 IPs de APs: `172.16.1.x` (las `.12` y `.13` no responden y no están dadas de alta), `172.16.2.x` y `172.16.3.x` (la `.14` no responde y no está dada de alta). Las IPs pueden cambiar: ver 4.10.
@@ -86,10 +90,14 @@ IPs de APs: `172.16.1.x` (las `.12` y `.13` no responden y no están dadas de al
 Acciones (*Alerts → Actions → Trigger actions*):
 
 - **Alert by severity:** severidad ≥ Warning. Primer aviso, aviso de "Resuelto" y avisos de reconocimientos y comentarios.
-- **Escalate unacknowledged High/Disaster:** repite los *High/Disaster* no reconocidos cada 30 min.
+- **Escalate unacknowledged High/Disaster:** repite los *High/Disaster* no reconocidos cada 30 min, **excepto** los problemas con la etiqueta `escalation` (condición *Tag name does not equal escalation*).
 - *Report problems to Zabbix administrators:* **desactivada** a propósito (duplicaba los avisos).
 
 El reparto por canal se hace en el usuario: *User settings → Profile → Media*, severidades de cada medio.
+
+### Avisar una sola vez: etiqueta `escalation=off`
+
+En equipos cuyos problemas duran horas por causas conocidas (p. ej. un enlace que se degrada con la lluvia), añadir al host la etiqueta **`escalation` = `off`** (*Host → Tags*). Sus problemas *High* avisan al empezar y al resolverse, pero no se repiten cada 30 min. Las etiquetas del host se heredan en todos sus problemas.
 
 ### Qué hacer con un problema
 
@@ -138,8 +146,9 @@ Los triggers de potencia, SNR, ruido, desequilibrio, PER y velocidad PHY se sile
 | AP has no connected clients | Average | Tenía clientes en la última hora y ahora tiene 0 | Al volver a tener clientes |
 | High noise floor | Warning | Ruido > `{$UBNT.NOISE.MAX.WARN}` (-80 dBm) durante 15 min | Solo |
 | GPS: Weak or lost signal | Warning | < `{$UBNT.GPS.SATS.MIN}` (4) satélites durante 10 min | Solo |
-| Client …: Weak signal | Warning | Señal del cliente < `{$UBNT.STA.SIGNAL.MIN.WARN}` (-75 dBm) durante 15 min | Solo |
-| Client …: Low TX / RX capacity | High | Capacidad airMAX de TX o RX con ese cliente < `{$UBNT.STA.TXCAP.MIN}` / `{$UBNT.STA.RXCAP.MIN}` (Mbps) durante 10 min. **Desactivado con 0** (defecto); se activa por host o por cliente, normalmente en enlaces PTP | Solo |
+| Client …: Very weak signal | High | Señal del cliente < `{$UBNT.STA.SIGNAL.MIN.CRIT}` durante 5 min (p. ej. lluvia). **Desactivado con 0** (defecto) | Cuando la señal se mantiene 30 min al menos `{$UBNT.STA.SIGNAL.HYST}` (3 dB) por encima del umbral |
+| Client …: Weak signal | Warning | Señal del cliente < `{$UBNT.STA.SIGNAL.MIN.WARN}` (-75 dBm) durante 15 min. Silenciado si hay *Very weak signal* | Cuando la señal se mantiene 15 min 3 dB por encima del umbral |
+| Client …: Low TX / RX capacity | High | Capacidad airMAX de TX o RX con ese cliente < `{$UBNT.STA.TXCAP.MIN}` / `{$UBNT.STA.RXCAP.MIN}` (Mbps) durante 10 min. **Desactivado con 0** (defecto); se activa por host o por cliente, normalmente en enlaces PTP | Cuando la capacidad se mantiene 10 min por encima del mínimo |
 | Interface …: Speed changed | High | Cambia la velocidad Ethernet negociada de `eth0` (p. ej. 1000 → 100 Mbps: cable, conector o PoE). Las interfaces radio (velocidad 0) no disparan | Manualmente |
 
 | Macro | Defecto | Uso |
@@ -149,6 +158,8 @@ Los triggers de potencia, SNR, ruido, desequilibrio, PER y velocidad PHY se sile
 | `{$UBNT.GPS.SATS.MIN}` | 4 | **Poner `0` en APs sin GPS**: devuelven 0 satélites y la alerta saltaría siempre |
 | `{$UBNT.IF.MATCHES}` | `^(eth0\|ath0)$` | Interfaces con tráfico |
 | `{$UBNT.STA.TXCAP.MIN}` / `{$UBNT.STA.RXCAP.MIN}` | 0 | Capacidad mínima en Mbps (0 = desactivado). Contexto por cliente: `{$UBNT.STA.TXCAP.MIN:"<nombre del cliente>"}` |
+| `{$UBNT.STA.SIGNAL.MIN.CRIT}` | 0 | Señal crítica en dBm (0 = desactivado) |
+| `{$UBNT.STA.SIGNAL.HYST}` | 3 | dB que la señal debe recuperar por encima del umbral para cerrar el problema. Evita avisos repetidos cuando la señal oscila (lluvia) |
 
 #### Ubiquiti airMAX M (airOS 6) wireless by SNMPv1 — `ubiquiti_airmax_m_airos6_wireless.yaml`
 **Para:** equipos airMAX M con airOS 6 (Rocket M5, NanoStation M…). Es la misma plantilla que la de airOS 8, pero **sin** GPS, CINR ni capacidad de cliente, que son exclusivos de AC. Añade **airMAX quality y capacity** del AP y por cliente, que en airMAX M son las mejores medidas de calidad.
@@ -386,6 +397,12 @@ Para enlaces punto a punto con equipos airMAX AC (LiteBeam, PowerBeam, Rocket…
 5. **Verificar** en *Latest data*: *Client …: TX/RX capacity* con los valores de la interfaz de airOS, y en *Triggers* los de capacidad con el umbral correcto en el nombre.
 
 Ejemplo `Lk_Hq_Pintores_1`: AP `{$UBNT.STA.TXCAP.MIN}=50`, estación `{$UBNT.STA.RXCAP.MIN}=30`, señal normal -50 → aviso -57.
+
+**Enlaces sensibles a la lluvia** (ej. `Lk_Hq_Caribe_1`):
+- Activar además `{$UBNT.STA.SIGNAL.MIN.CRIT}` ≈ señal normal − 13 dB (*High*), dejando el aviso ≈ normal − 7 dB (*Warning*).
+- Añadir la etiqueta `escalation=off` a los dos hosts.
+- Con la histéresis de la plantilla, una lluvia de ~2 h produce **un aviso al empezar y otro al terminar**, sin repeticiones ni avisos por cada oscilación.
+- Capacidades de Caribe: 20 % de la capacidad medida al darlo de alta (AP 183.6 → 37 Mbps; estación 63.7 → 13 Mbps).
 
 ---
 

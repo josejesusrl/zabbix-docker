@@ -219,7 +219,33 @@ zabbix_export:
           opdata: 'Signal: {ITEM.LASTVALUE1}'
           priority: WARNING
           description: Check CPE alignment, obstructions or distance. Threshold per
-            client with macro context.
+            client with macro context. Resolves after the signal stays {$UBNT.STA.SIGNAL.HYST}
+            dB above the threshold for 15 minutes (hysteresis). Suppressed while the
+            critical signal problem is open.
+          tags:
+          - tag: scope
+            value: performance
+          recovery_mode: RECOVERY_EXPRESSION
+          recovery_expression: min(/Ubiquiti AirOS 8 wireless by SNMPv1/ubnt.sta.signal[{#SNMPINDEX}],15m)>={$UBNT.STA.SIGNAL.MIN.WARN:"{#STANAME}"}+{$UBNT.STA.SIGNAL.HYST}
+          dependencies:
+          - name: 'Client {#STANAME} ({#STAMAC}): Very weak signal (below {$UBNT.STA.SIGNAL.MIN.CRIT:"{#STANAME}"}
+              dBm for 5m)'
+            expression: '{$UBNT.STA.SIGNAL.MIN.CRIT:"{#STANAME}"}<0 and max(/Ubiquiti
+              AirOS 8 wireless by SNMPv1/ubnt.sta.signal[{#SNMPINDEX}],5m)<{$UBNT.STA.SIGNAL.MIN.CRIT:"{#STANAME}"}'
+            recovery_expression: min(/Ubiquiti AirOS 8 wireless by SNMPv1/ubnt.sta.signal[{#SNMPINDEX}],30m)>={$UBNT.STA.SIGNAL.MIN.CRIT:"{#STANAME}"}+{$UBNT.STA.SIGNAL.HYST}
+        - uuid: 034f8cceaa1d490e929a8150897ade9a
+          expression: '{$UBNT.STA.SIGNAL.MIN.CRIT:"{#STANAME}"}<0 and max(/Ubiquiti
+            AirOS 8 wireless by SNMPv1/ubnt.sta.signal[{#SNMPINDEX}],5m)<{$UBNT.STA.SIGNAL.MIN.CRIT:"{#STANAME}"}'
+          recovery_mode: RECOVERY_EXPRESSION
+          recovery_expression: min(/Ubiquiti AirOS 8 wireless by SNMPv1/ubnt.sta.signal[{#SNMPINDEX}],30m)>={$UBNT.STA.SIGNAL.MIN.CRIT:"{#STANAME}"}+{$UBNT.STA.SIGNAL.HYST}
+          name: 'Client {#STANAME} ({#STAMAC}): Very weak signal (below {$UBNT.STA.SIGNAL.MIN.CRIT:"{#STANAME}"}
+            dBm for 5m)'
+          opdata: 'Signal: {ITEM.LASTVALUE1}'
+          priority: HIGH
+          description: Signal far below normal (e.g. rain fade). Disabled while {$UBNT.STA.SIGNAL.MIN.CRIT}
+            is 0 (default). Resolves only after the signal stays {$UBNT.STA.SIGNAL.HYST}
+            dB above the threshold for 30 minutes, so an oscillating signal during
+            rain produces one problem, not many.
           tags:
           - tag: scope
             value: performance
@@ -374,6 +400,8 @@ zabbix_export:
           tags:
           - tag: scope
             value: performance
+          recovery_mode: RECOVERY_EXPRESSION
+          recovery_expression: min(/Ubiquiti AirOS 8 wireless by SNMPv1/ubnt.sta.txcap[{#SNMPINDEX}],10m)>={$UBNT.STA.TXCAP.MIN:"{#STANAME}"}*1000000
       - uuid: 160df0561486438fa2e29bb0989cda65
         name: 'Client {#STANAME} ({#STAMAC}): RX capacity'
         type: DEPENDENT
@@ -410,6 +438,8 @@ zabbix_export:
           tags:
           - tag: scope
             value: performance
+          recovery_mode: RECOVERY_EXPRESSION
+          recovery_expression: min(/Ubiquiti AirOS 8 wireless by SNMPv1/ubnt.sta.rxcap[{#SNMPINDEX}],10m)>={$UBNT.STA.RXCAP.MIN:"{#STANAME}"}*1000000
       preprocessing:
       - type: SNMP_WALK_TO_JSON
         parameters:
@@ -549,6 +579,14 @@ zabbix_export:
       value: '0'
       description: 'Minimum airMAX RX capacity per client, Mbps, sustained 10 minutes.
         0 = disabled. Context: client name.'
+    - macro: "{$UBNT.STA.SIGNAL.MIN.CRIT}"
+      value: '0'
+      description: 'Critical client signal, dBm, 5 minutes (High). 0 = disabled. Context:
+        client name.'
+    - macro: "{$UBNT.STA.SIGNAL.HYST}"
+      value: '3'
+      description: Signal must recover this many dB above the threshold to resolve
+        (avoids flapping during rain).
     valuemaps:
     - uuid: f2cb377f077245dc84d43d2f79e9431a
       name: IF-MIB::ifOperStatus
