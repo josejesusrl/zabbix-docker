@@ -358,6 +358,28 @@ zabbix_export:
           tags:
             - tag: component
               value: wireless
+        - uuid: 1ff93d7150164b40a1ecde9219d38b68
+          name: 'Performance: Total TX PHY rate'
+          type: CALCULATED
+          key: mimosa.phy.tx.total
+          value_type: FLOAT
+          units: '!Mbps'
+          params: 'last(//mimosa.stream.txphy[1])+last(//mimosa.stream.txphy[2])'
+          description: 'Sum of the TX PHY rate of both streams. Drops when the adaptive modulation falls (interference, fading, alignment).'
+          tags:
+            - tag: component
+              value: wireless
+        - uuid: c5d6757e4412474498098a644e1e89d2
+          name: 'Performance: Total RX PHY rate'
+          type: CALCULATED
+          key: mimosa.phy.rx.total
+          value_type: FLOAT
+          units: '!Mbps'
+          params: 'last(//mimosa.stream.rxphy[1])+last(//mimosa.stream.rxphy[2])'
+          description: 'Sum of the RX PHY rate of both streams. Drops when the adaptive modulation falls (interference, fading, alignment).'
+          tags:
+            - tag: component
+              value: wireless
       tags:
         - tag: class
           value: network
@@ -382,6 +404,9 @@ zabbix_export:
         - macro: '{$MIMOSA.PER.MAX.WARN}'
           value: '10'
           description: 'Maximum packet error rate, %.'
+        - macro: '{$MIMOSA.PHY.MIN.WARN}'
+          value: '200'
+          description: 'Minimum total PHY rate per direction (TX and RX), Mbps, sustained for 10 minutes.'
         - macro: '{$MIMOSA.LINK.UPTIME.MIN}'
           value: '600'
           description: 'Link uptime below this (seconds) reports a recent reconnection.'
@@ -536,3 +561,29 @@ zabbix_export:
       tags:
         - tag: scope
           value: notice
+    - uuid: fee5d92802fa4270b40bab1a72c49429
+      expression: 'max(/Mimosa C5C by SNMP/mimosa.phy.tx.total,10m)<{$MIMOSA.PHY.MIN.WARN}'
+      name: 'Mimosa: Low TX PHY rate (below {$MIMOSA.PHY.MIN.WARN} Mbps for 10m)'
+      opdata: 'TX PHY: {ITEM.LASTVALUE1}'
+      priority: HIGH
+      description: 'The TX modulation stayed low for 10 minutes: trunk capacity reduced. Check interference, noise, SNR, alignment and weather.'
+      dependencies:
+        - name: 'Mimosa: Wireless link is disconnected'
+          expression: 'last(/Mimosa C5C by SNMP/mimosa.link.status)=2'
+          recovery_expression: 'last(/Mimosa C5C by SNMP/mimosa.link.status)=1'
+      tags:
+        - tag: scope
+          value: performance
+    - uuid: 95c8c24368174796bf7ce7ffbc4191d8
+      expression: 'max(/Mimosa C5C by SNMP/mimosa.phy.rx.total,10m)<{$MIMOSA.PHY.MIN.WARN}'
+      name: 'Mimosa: Low RX PHY rate (below {$MIMOSA.PHY.MIN.WARN} Mbps for 10m)'
+      opdata: 'RX PHY: {ITEM.LASTVALUE1}'
+      priority: HIGH
+      description: 'The RX modulation stayed low for 10 minutes: trunk capacity reduced. Check interference, noise, SNR, alignment and weather.'
+      dependencies:
+        - name: 'Mimosa: Wireless link is disconnected'
+          expression: 'last(/Mimosa C5C by SNMP/mimosa.link.status)=2'
+          recovery_expression: 'last(/Mimosa C5C by SNMP/mimosa.link.status)=1'
+      tags:
+        - tag: scope
+          value: performance

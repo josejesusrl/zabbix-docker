@@ -26,9 +26,9 @@ Todos los procedimientos se pueden hacer desde la interfaz web (`https://zabbix.
 ```
 Zabbix server (192.168.0.191)                 sin dependencia
 server-04 (192.168.50.254)                    sin dependencia
-STA-Lk_Trunk_01_A (10.100.0.3)  Mimosa C5C    extremo del enlace troncal más cercano a Zabbix
-└── AP-Lk_Trunk_01_A (10.100.0.2)  Mimosa C5C  extremo lejano (solo se alcanza a través del enlace)
 EDGE 01 (192.168.200.1)  MikroTik CCR2004
+├── STA-Lk_Trunk_01_A (10.100.0.3)  Mimosa C5C, extremo del troncal conectado a EDGE 01
+│   └── AP-Lk_Trunk_01_A (10.100.0.2)  Mimosa C5C, extremo lejano (solo se alcanza a través del enlace)
 ├── NAS-01 (192.168.200.2)  CCR2004, concentrador PPPoE
 │   ├── Switch Main Site #01 (172.16.100.2)  TP-Link
 │   │   └── APs Ubiquiti 172.16.1.2 – 172.16.1.19 (16 APs, uplink = Switch Main Site #01)
@@ -58,7 +58,7 @@ Los sectores `172.16.2.x` están conectados físicamente a NAS-02, que se va a r
 | Sector_5 (NanoStation loco M, airOS 6) | 172.16.2.4 | Access Points PPPoE Clients | Ubiquiti AirOS by SNMP, Ubiquiti airMAX M (airOS 6) wireless by SNMPv1 | — | NAS-01 |
 | LIKSON_CANADAS_A_01, LIKSON_CANADAS_B_01 (airOS 8, con GPS) | 172.16.3.12, .13 | Access Points PPPoE Clients | Ubiquiti AirOS by SNMP, Ubiquiti AirOS 8 wireless by SNMPv1 | — | NAS-03 |
 | LIKSON_CANADAS_C_01, LIKSON_CANADAS_D_01 (airOS 8, sin GPS) | 172.16.3.10, .11 | Access Points PPPoE Clients | Ubiquiti AirOS by SNMP, Ubiquiti AirOS 8 wireless by SNMPv1 | `{$UBNT.GPS.SATS.MIN}=0` | NAS-03 |
-| STA-Lk_Trunk_01_A (Mimosa C5C, estación) | 10.100.0.3 | Enlaces PTP Troncales | Network Generic Device by SNMP, Mimosa C5C by SNMP, Switch port changes by SNMP | `{$IFCONTROL}=0`, `{$MIMOSA.RX.POWER.MIN.WARN}=-71`, `{$MIMOSA.RX.POWER.MIN.CRIT}=-76` | — (pendiente) |
+| STA-Lk_Trunk_01_A (Mimosa C5C, estación) | 10.100.0.3 | Enlaces PTP Troncales | Network Generic Device by SNMP, Mimosa C5C by SNMP, Switch port changes by SNMP | `{$IFCONTROL}=0`, `{$MIMOSA.RX.POWER.MIN.WARN}=-71`, `{$MIMOSA.RX.POWER.MIN.CRIT}=-76` | EDGE 01 |
 | AP-Lk_Trunk_01_A (Mimosa C5C, AP) | 10.100.0.2 | Enlaces PTP Troncales | Network Generic Device by SNMP, Mimosa C5C by SNMP, Switch port changes by SNMP | `{$IFCONTROL}=0`, `{$MIMOSA.RX.POWER.MIN.WARN}=-71`, `{$MIMOSA.RX.POWER.MIN.CRIT}=-76` | STA-Lk_Trunk_01_A |
 
 IPs de APs: `172.16.1.x` (las `.12` y `.13` no responden y no están dadas de alta), `172.16.2.x` y `172.16.3.x` (la `.14` no responde y no está dada de alta). Las IPs pueden cambiar: ver 4.10.
@@ -114,10 +114,11 @@ En *Monitoring → Problems* → *Update* sobre el problema:
 | Low SNR | Warning | SNR de alguna cadena < `{$MIMOSA.SNR.MIN.WARN}` (12 dB) durante 15 min | Solo |
 | High noise | Warning | Ruido > `{$MIMOSA.NOISE.MAX.WARN}` (-85 dBm) durante 15 min: interferencia | Solo |
 | High packet error rate | Warning | PER TX o RX > `{$MIMOSA.PER.MAX.WARN}` (10 %) durante 15 min | Solo |
+| Low TX PHY rate / Low RX PHY rate | High | Velocidad PHY total (suma de los 2 streams) de ese sentido < `{$MIMOSA.PHY.MIN.WARN}` (200 Mbps) durante 10 min: la modulación cayó y el troncal perdió capacidad | Solo, al recuperarse |
 | Temperature is high / critical | Warning / High | > `{$MIMOSA.TEMP.MAX.WARN}` (70 °C) / `{$MIMOSA.TEMP.MAX.CRIT}` (80 °C) durante 5 min | Solo |
 | Firmware version has changed | Information | Cambio de firmware (solo registro, no notifica) | Sola |
 
-Los triggers de potencia, SNR, ruido, desequilibrio y PER se silencian mientras el enlace está caído.
+Los triggers de potencia, SNR, ruido, desequilibrio, PER y velocidad PHY se silencian mientras el enlace está caído. Cada extremo vigila su TX y su RX, así que con los dos hosts se cubren ambos sentidos del enlace desde el emisor y desde el receptor. Se usa la velocidad PHY por sentido y no la velocidad de `wifi0`, que es una sola cifra sin dirección.
 **Umbrales de potencia por enlace:** `{$MIMOSA.RX.POWER.MIN.WARN}` ≈ señal de diseño − 6 dB y `CRIT` ≈ diseño − 11 dB. Para `Lk_Trunk_01_A` (diseño -65 dBm): -71 / -76.
 
 #### Ubiquiti AirOS 8 wireless by SNMPv1 — `ubiquiti_airos8_wireless.yaml`
