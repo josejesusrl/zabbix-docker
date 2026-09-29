@@ -26,7 +26,9 @@ Stack: PostgreSQL + Zabbix server + frontend Nginx con HTTPS + Agent 2 (automoni
 ## Requisitos
 
 - Linux con Docker Engine y `docker compose` >= 2.24, `openssl` y `sudo`.
-- Dominio `likson.com` gestionado en Cloudflare y un túnel creado en Zero Trust con su token ([acceso externo](acceso-externo.md)). El registro DNS de `zabbix.likson.com` lo crea el túnel.
+- Dominio `likson.com` gestionado en Cloudflare y el **token del túnel** a mano, antes de ejecutar `server_setup.sh`:
+  - Si el túnel `zabbix-likson` ya existe en Cloudflare (servidor reinstalado), **no se crea otro**: se reutiliza su token ([acceso externo, servidor nuevo](acceso-externo.md#servidor-nuevo-o-reinstalado)).
+  - Si no existe, crearlo con Access y la ruta ([acceso externo](acceso-externo.md#1-crear-el-túnel), secciones 1 a 3).
 - **Ningún puerto redirigido en el NAT.** El servidor solo necesita salida a Internet (`443/tcp` y `7844/tcp+udp` hacia Cloudflare).
 - En la LAN: `80/tcp` y `443/tcp` (web directa), `162/udp` (traps de los equipos) y `10051/tcp` (agentes activos de la LAN).
 - Salida desde el servidor hacia `10050/tcp` de los agentes remotos (checks pasivos) y `161/udp` de los equipos SNMP.
@@ -37,6 +39,7 @@ Stack: PostgreSQL + Zabbix server + frontend Nginx con HTTPS + Agent 2 (automoni
 | Situación | Camino |
 |---|---|
 | Servidor nuevo, sin datos previos que conservar | Secciones 1 a 5 de este documento, y después la [configuración base](configuracion-base.md) |
+| El servidor se borró por completo y **no** hay respaldo de la BD | Secciones 1 a 5 (el túnel se reutiliza), y reconstruir según [sin respaldo de la BD](restauracion-y-migracion.md#sin-respaldo-de-la-bd) |
 | Este despliegue se perdió (disco, servidor) y hay respaldos de `server_backup.sh` | [Restauración](restauracion-y-migracion.md#restauración) |
 | Ya existe **otra implementación de Zabbix** (en este servidor o en otro) y se quieren conservar sus datos | [Migración desde una implementación anterior](restauracion-y-migracion.md#migración-desde-una-implementación-anterior), luego secciones 2 a 5 |
 
@@ -62,7 +65,7 @@ cd zabbix-docker
 
 El script pide, sin mostrarlos en pantalla:
 - **Contraseña de PostgreSQL.** Si se deja vacía, se genera una aleatoria. Solo se aplica antes de que se cree la base de datos.
-- **Token del túnel de Cloudflare** ([acceso externo](acceso-externo.md#1-crear-el-túnel)). Si se deja vacío, `cloudflared` no arranca; se añade volviendo a ejecutar el script.
+- **Token del túnel de Cloudflare** ([cómo obtenerlo](acceso-externo.md#servidor-nuevo-o-reinstalado)). Es necesario antes del `up` de la sección 2: sin él `cloudflared` no puede arrancar. Si se dejó vacío, se añade volviendo a ejecutar el script.
 - **Comunidad SNMP de traps.** Si se deja vacía, se genera una y se muestra **una sola vez**. Solo se aceptan caracteres `A-Z a-z 0-9 . _ -`.
 
 También ofrece instalar **lm-sensors** (apt, dnf o yum) y ejecuta `sensors-detect --auto`. Si los módulos de sensores recién detectados no aparecen en `sensors`, reiniciar el host. En una máquina virtual normalmente no hay sensores.
@@ -73,6 +76,10 @@ También ofrece instalar **lm-sensors** (apt, dnf o yum) y ejecuta `sensors-dete
 docker compose --env-file .env --env-file server.env up -d
 sudo ./server_certificate.sh selfsigned
 ```
+
+Si la IP de la LAN del servidor nuevo no es `192.168.0.191`, cambiar antes `CERT_LAN_IP` en `server.env` (y después el destino de traps de los equipos y `Server=` de los agentes).
+
+Hasta crear el certificado, `cloudflared` no llega al contenedor web (502 desde Internet). Es normal.
 
 El certificado autofirmado (10 años, para `CERT_DOMAIN` y `CERT_LAN_IP` de `server.env`) solo se ve al entrar directamente por la LAN (`https://192.168.0.191`), con un aviso del navegador. Desde Internet se entra por `https://zabbix.likson.com`: Cloudflare presenta su propio certificado válido y `cloudflared` llega al contenedor web por la red interna de Docker. La configuración del túnel y de Cloudflare Access está en [acceso externo](acceso-externo.md).
 
@@ -93,7 +100,7 @@ sudo ufw allow from 172.16.238.0/24 to any port 10050 proto tcp
 
 ## 4. Configuración en la interfaz web
 
-En `https://zabbix.likson.com` (en la LAN, `https://192.168.0.191`).
+En la LAN, `https://192.168.0.191` (o `https://zabbix.likson.com`, que pasa por Cloudflare Access).
 
 1. Entrar con `Admin` / `zabbix` y **cambiar la contraseña** de inmediato.
 2. *Data collection → Hosts → Zabbix server*: cambiar la interfaz Agent a IP `172.16.238.1`, puerto `10050`.

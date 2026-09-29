@@ -72,6 +72,19 @@ Cloudflare crea o sustituye el registro DNS `zabbix.likson.com` por un CNAME al 
 - En Zabbix, host *Zabbix server* → *Latest data*: `Cloudflared: Tunnel connections` = 4 ([plantilla](../operacion/plantillas.md#cloudflare-tunnel-by-http--cloudflared_tunnelyaml)).
 - En el router, **ninguna** redirección de los puertos 80 ni 443 hacia el servidor.
 
+## Servidor nuevo o reinstalado
+
+Si el servidor se borró y se instala uno nuevo, la configuración de Cloudflare (túnel, ruta y Access) **sigue en Cloudflare y se reutiliza tal cual**. No crear un túnel nuevo: habría que rehacer la ruta y el DNS. Solo hace falta el token en el servidor nuevo:
+
+1. **Con respaldo** (`zabbix-config-*.tar.gz`): `server_restore.sh --config` restaura `env_vars/.CLOUDFLARE_TUNNEL_TOKEN`. No hay que hacer nada más.
+2. **Sin respaldo:** en Zero Trust → *Networks → Tunnels* → `zabbix-likson` → *Configure* (o *Edit*). En *Install and run connectors*, elegir **Docker** y copiar el token que aparece tras `--token`. Es el mismo token de siempre. `./server_setup.sh` lo pide.
+3. Seguir la [instalación](instalacion.md) o la [restauración](restauracion-y-migracion.md#restauración). Al arrancar `cloudflared`, el túnel pasa de *Down* a *Healthy* en el panel.
+4. Si en el panel aparece todavía un **conector del servidor viejo** (*Connectors* del túnel), eliminarlo: no volverá a conectar.
+5. La ruta sigue apuntando a `https://zabbix-web-nginx-pgsql:8443`, un nombre interno de Docker que no depende de la IP del servidor. Si cambió la IP de la LAN, solo hay que actualizar `CERT_LAN_IP` ([instalación, sección 2](instalacion.md#2-arrancar-y-crear-el-certificado)).
+6. [Verificar](#4-verificar).
+
+Si alguien borró también el túnel o la aplicación de Access en Cloudflare, rehacerlos con las secciones 1 a 3, **primero Access** y después la ruta.
+
 ## Rotar el token o mover el túnel a otro servidor
 
 - **Rotar el token** (si se ha expuesto): en el túnel, renovar el token desde el panel. En el servidor, borrar `env_vars/.CLOUDFLARE_TUNNEL_TOKEN` (con `sudo`, el propietario es el usuario del contenedor), ejecutar `./server_setup.sh` para introducir el nuevo y después `zbx up -d --force-recreate cloudflared`.
