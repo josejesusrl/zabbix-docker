@@ -118,7 +118,13 @@ Mensajes en español con formato HTML y emoji según el tipo: 🔥 Disaster, �
 
 Si se edita en la interfaz (*Alerts → Media types → Telegram → Message templates*), copiar el cambio al JSON del repositorio: la próxima aplicación desde el repositorio lo sobrescribiría.
 
-**Actualizaciones:** la acción las envía a los usuarios involucrados **excepto a quien hace la actualización**. Con un solo usuario, los reconocimientos y comentarios propios no generan mensaje.
+### Formato de los correos (Gmail)
+
+Mismo contenido que Telegram, en un correo HTML: cabecera con el **color de la severidad** (colores estándar de Zabbix, clase `sev{EVENT.NSEVERITY}`), verde para las resoluciones y azul para las actualizaciones, más el botón **Ver en Zabbix**. El asunto empieza por 🚨 / ✅ / 💬, seguido de la severidad, el problema y el host.
+- **Origen:** `zabbix_media/gmail/message_templates.json`. Se aplica y se prueba igual que Telegram. El email no tiene script, así que no hay `{SEV.EMOJI}` ni se omiten líneas vacías.
+- Zabbix **no escapa** los valores en el cuerpo HTML de un correo: un texto como `<test>` desaparecería. Por eso los valores que pueden llevar `< > &` usan la función de macro `htmlencode()`, p. ej. `{{EVENT.NAME}.htmlencode()}`. Hay que mantenerla al añadir campos al cuerpo. El asunto es texto plano y no la necesita.
+
+**Actualizaciones (reconocimientos y comentarios):** Zabbix solo ejecuta las operaciones de actualización para usuarios **distintos del que hizo el cambio**. Con un solo usuario, los reconocimientos y comentarios propios no generan mensaje.
 
 Los medios (Gmail y Telegram) reintentan **10 veces cada 30 s** (*Alerts → Media types → Options*): un corte de red del servidor de hasta 5 min no pierde notificaciones.
 
