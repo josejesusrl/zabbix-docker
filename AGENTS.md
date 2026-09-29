@@ -91,7 +91,7 @@ Al añadir cualquier configuración nueva fuera de la base de datos (un script, 
 - Los triggers de items normales van en la sección `triggers` de primer nivel del export. Los de prototipos van dentro del prototipo.
 - En `opdata` y `event_name` de una plantilla, las macros de expresión usan `/{HOST.HOST}/clave`.
 - Los ajustes de host hechos por la API (macros, dependencias, items desactivados) quedan en la base de datos. Si son un patrón repetible, se documentan en `SERVER_DEPLOY.md`.
-- Cada equipo nuevo se da de alta con su dependencia topológica (quién le da conectividad).
+- Cada equipo nuevo se da de alta con su dependencia topológica (quién le da conectividad). Las dependencias se **añaden** a las que ya existen, nunca se sustituyen: las plantillas oficiales traen dependencias internas (pérdida, latencia y SNMP dependen del ping del propio host) que evitan alertas duplicadas.
 
 Particularidades ya conocidas (detalle en `OPERACION.md`):
 

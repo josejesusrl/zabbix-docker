@@ -27,9 +27,8 @@ server-04 (192.168.50.254)                    sin dependencia
 EDGE 01 (192.168.200.1)  MikroTik CCR2004
 ├── NAS-01 (192.168.200.2)  CCR2004, concentrador PPPoE
 │   └── Switch Main Site #01 (172.16.100.2)  TP-Link
-│       └── LIKSON_HQ_EPSILON_01 (172.16.1.19)  airOS 8 + GPS
-├── NAS-03 (192.168.200.10)  RB2011iL-RM, concentrador PPPoE
-└── APs Ubiquiti 172.16.1.2 – 172.16.1.18 (uplink = EDGE 01)
+│       └── APs Ubiquiti 172.16.1.2 – 172.16.1.19 (16 APs, uplink = Switch Main Site #01)
+└── NAS-03 (192.168.200.10)  RB2011iL-RM, concentrador PPPoE
 ```
 
 ### Inventario
@@ -43,9 +42,9 @@ EDGE 01 (192.168.200.1)  MikroTik CCR2004
 | NAS-03 | 192.168.200.10 | Routers & Switches Likson | MikroTik RB2011iL-RM by SNMP, MikroTik link traps by SNMP | `{$NET.IF.IFNAME.NOT_MATCHES}` (+PPPoE) | EDGE 01 |
 | Switch Main Site #01 | 172.16.100.2 | Routers & Switches Likson | TP-LINK by SNMP, Switch port changes by SNMP | `{$IFCONTROL}=0`, `{$PORT.IFNAME.NOT_MATCHES}` | NAS-01 |
 | LIKSON_HQ_EPSILON_01 | 172.16.1.19 | Access Points PPPoE Clients | Ubiquiti AirOS by SNMP, Ubiquiti AirOS 8 wireless by SNMPv1 | — (tiene GPS) | Switch Main Site #01 |
-| LIKSON_PDV_3, LK_C3, LIKSON_BETA01, LIKSON_PDV_7, LIKSON_HQ_DELTA_01 | .4, .11, .14, .15, .18 | Access Points PPPoE Clients | Ubiquiti AirOS by SNMP, Ubiquiti AirOS 8 wireless by SNMPv1 | — (tienen GPS) | EDGE 01 |
-| LIKSON_PDV_1, _2, _4, _6, _9, _10, LKON_SGAMMA01, LK_C2, LK_C4 | .2, .3, .5, .7, .8, .9, .10, .16, .17 | Access Points PPPoE Clients | Ubiquiti AirOS by SNMP, Ubiquiti AirOS 8 wireless by SNMPv1 | `{$UBNT.GPS.SATS.MIN}=0` (sin GPS) | EDGE 01 |
-| LIKSON_PDV_5 (Rocket M5) | 172.16.1.6 | Access Points PPPoE Clients | Ubiquiti AirOS by SNMP, Ubiquiti airMAX M (airOS 6) wireless by SNMPv1 | — | EDGE 01 |
+| LIKSON_PDV_3, LK_C3, LIKSON_BETA01, LIKSON_PDV_7, LIKSON_HQ_DELTA_01 | .4, .11, .14, .15, .18 | Access Points PPPoE Clients | Ubiquiti AirOS by SNMP, Ubiquiti AirOS 8 wireless by SNMPv1 | — (tienen GPS) | Switch Main Site #01 |
+| LIKSON_PDV_1, _2, _4, _6, _9, _10, LKON_SGAMMA01, LK_C2, LK_C4 | .2, .3, .5, .7, .8, .9, .10, .16, .17 | Access Points PPPoE Clients | Ubiquiti AirOS by SNMP, Ubiquiti AirOS 8 wireless by SNMPv1 | `{$UBNT.GPS.SATS.MIN}=0` (sin GPS) | Switch Main Site #01 |
+| LIKSON_PDV_5 (Rocket M5) | 172.16.1.6 | Access Points PPPoE Clients | Ubiquiti AirOS by SNMP, Ubiquiti airMAX M (airOS 6) wireless by SNMPv1 | — | Switch Main Site #01 |
 
 Todas las IPs de APs son `172.16.1.x`. Las IPs `.12` y `.13` no responden y no están dadas de alta.
 
@@ -178,7 +177,9 @@ Las dependencias evitan recibir decenas de alertas cuando cae un equipo del que 
    - `High ICMP ping loss`
    - `High ICMP ping response time`
    - `No SNMP data collection` (en equipos SNMP)
-3. **Mass update** → pestaña **Dependencies** → *Replace* → **Add** → elegir el host padre y su trigger *Unavailable by ICMP ping* → **Update**.
+3. **Mass update** → pestaña **Dependencies** → opción **Add** (no *Replace*) → **Add** → elegir el host padre y su trigger *Unavailable by ICMP ping* → **Update**.
+   - ⚠️ **Nunca usar *Replace*.** Las plantillas oficiales traen dependencias internas que evitan alertas duplicadas cuando cae el equipo: *High ICMP ping loss*, *High ICMP ping response time* y *No SNMP data collection* dependen del *Unavailable by ICMP ping* del propio host. *Replace* las borra, y al caer el equipo llegarían 3–4 alertas en lugar de una.
+   - Para **cambiar** de padre: *Mass update* → **Remove** con el trigger del padre anterior, y después **Add** con el nuevo.
 4. En APs Ubiquiti, además: el trigger **"Wireless: AP has no connected clients"** depende del *Unavailable by ICMP ping* **del propio AP**, para que un AP caído no avise también por "sin clientes".
 5. Añadir la etiqueta `uplink = <host padre>` en la pestaña *Tags* del host.
 
@@ -313,3 +314,4 @@ No editar las plantillas propias desde la interfaz: el cambio se perdería al re
 | *Firmware version* / *Hardware model name* no soportados en APs AC | airOS 8 no los publica | Normal, ignorar |
 | El cambio de una macro no se refleja en el descubrimiento | Las reglas de descubrimiento reprocesan como mucho 1 vez por hora si el resultado no cambia | Esperar hasta 1 h |
 | Aviso duplicado de desconexión en un switch | Falta `{$IFCONTROL}=0` con *Switch port changes* | 4.4, paso 4 |
+| Al caer un equipo llegan varias alertas (ping, pérdida, latencia, SNMP) en vez de una | Se usó *Replace* al configurar dependencias y se borraron las internas de la plantilla | En cada trigger (*Dependencies*): *High ICMP ping loss* y *No SNMP data collection* → *Unavailable by ICMP ping* propio; *High ICMP ping response time* → *Unavailable by ICMP ping* y *High ICMP ping loss* propios |
