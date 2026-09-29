@@ -16,9 +16,9 @@ Todos los procedimientos se pueden hacer desde la interfaz web (`https://zabbix.
 | Elemento | Convención |
 |---|---|
 | Nombre del host | El nombre de sistema del equipo (`sysName` o *Device Name*), idéntico en *Host name* y *Visible name*. Si el equipo no tiene nombre, se le pone primero en el propio equipo |
-| Grupos de hosts | `Routers & Switches Likson` (MikroTik, switches), `Access Points PPPoE Clients` (APs Ubiquiti), `Linux servers`, `Zabbix servers` |
+| Grupos de hosts | `Routers & Switches Likson` (MikroTik, switches), `Access Points PPPoE Clients` (APs Ubiquiti), `Enlaces PTP Troncales` (radios PTP), `Linux servers`, `Zabbix servers` |
 | Etiqueta `uplink` | Nombre del equipo del que depende (p. ej. `uplink = EDGE 01`). Sirve para filtrar y como documentación de la dependencia |
-| Interfaz SNMP | Comunidad `{$SNMP_COMMUNITY}` (macro global de tipo secreto). MikroTik y TP-Link: SNMPv2. **Ubiquiti: SNMPv1** |
+| Interfaz SNMP | Comunidad `{$SNMP_COMMUNITY}` (macro global de tipo secreto). MikroTik, TP-Link y Mimosa: SNMPv2. **Ubiquiti: SNMPv1** |
 | Dependencias | Cada equipo depende del que le da conectividad hacia Zabbix (sección 4.1) |
 
 ### Topología y dependencias actuales
@@ -26,6 +26,8 @@ Todos los procedimientos se pueden hacer desde la interfaz web (`https://zabbix.
 ```
 Zabbix server (192.168.0.191)                 sin dependencia
 server-04 (192.168.50.254)                    sin dependencia
+STA-Lk_Trunk_01_A (10.100.0.3)  Mimosa C5C    extremo del enlace troncal más cercano a Zabbix
+└── AP-Lk_Trunk_01_A (10.100.0.2)  Mimosa C5C  extremo lejano (solo se alcanza a través del enlace)
 EDGE 01 (192.168.200.1)  MikroTik CCR2004
 ├── NAS-01 (192.168.200.2)  CCR2004, concentrador PPPoE
 │   ├── Switch Main Site #01 (172.16.100.2)  TP-Link
@@ -56,6 +58,8 @@ Los sectores `172.16.2.x` están conectados físicamente a NAS-02, que se va a r
 | Sector_5 (NanoStation loco M, airOS 6) | 172.16.2.4 | Access Points PPPoE Clients | Ubiquiti AirOS by SNMP, Ubiquiti airMAX M (airOS 6) wireless by SNMPv1 | — | NAS-01 |
 | LIKSON_CANADAS_A_01, LIKSON_CANADAS_B_01 (airOS 8, con GPS) | 172.16.3.12, .13 | Access Points PPPoE Clients | Ubiquiti AirOS by SNMP, Ubiquiti AirOS 8 wireless by SNMPv1 | — | NAS-03 |
 | LIKSON_CANADAS_C_01, LIKSON_CANADAS_D_01 (airOS 8, sin GPS) | 172.16.3.10, .11 | Access Points PPPoE Clients | Ubiquiti AirOS by SNMP, Ubiquiti AirOS 8 wireless by SNMPv1 | `{$UBNT.GPS.SATS.MIN}=0` | NAS-03 |
+| STA-Lk_Trunk_01_A (Mimosa C5C, estación) | 10.100.0.3 | Enlaces PTP Troncales | Network Generic Device by SNMP, Mimosa C5C by SNMP, Switch port changes by SNMP | `{$IFCONTROL}=0`, `{$MIMOSA.RX.POWER.MIN.WARN}=-71`, `{$MIMOSA.RX.POWER.MIN.CRIT}=-76` | — (pendiente) |
+| AP-Lk_Trunk_01_A (Mimosa C5C, AP) | 10.100.0.2 | Enlaces PTP Troncales | Network Generic Device by SNMP, Mimosa C5C by SNMP, Switch port changes by SNMP | `{$IFCONTROL}=0`, `{$MIMOSA.RX.POWER.MIN.WARN}=-71`, `{$MIMOSA.RX.POWER.MIN.CRIT}=-76` | STA-Lk_Trunk_01_A |
 
 IPs de APs: `172.16.1.x` (las `.12` y `.13` no responden y no están dadas de alta), `172.16.2.x` y `172.16.3.x` (la `.14` no responde y no está dada de alta). Las IPs pueden cambiar: ver 4.10.
 
@@ -95,6 +99,26 @@ En *Monitoring → Problems* → *Update* sobre el problema:
 ## 3. Catálogo de plantillas
 
 ### 3.1 Plantillas propias (en `zabbix_templates/`)
+
+#### Mimosa C5C by SNMP — `mimosa_c5c.yaml`
+**Para:** radios Mimosa C5C (y familia B5/C5) en enlaces PTP, con SNMPv2. Se usa **junto con** la oficial *Network Generic Device by SNMP*, que aporta interfaces con tráfico de 64 bits, ping, disponibilidad SNMP y reinicios, y con *Switch port changes by SNMP* para el puerto Ethernet del radio.
+**Recoge:** estado y uptime del enlace, modo (AP/estación), potencia RX/TX total, potencia RX, ruido y SNR por polarización (H/V), velocidad PHY, MCS y EVM por stream, tasa de errores de paquete (PER) TX/RX, frecuencia, ancho de canal, temperatura, firmware y número de serie.
+
+| Trigger | Severidad | Cuándo | Se resuelve |
+|---|---|---|---|
+| Wireless link is disconnected | High | El enlace radio cae | Al reconectar |
+| Wireless link was re-established | Warning | El enlace lleva menos de `{$MIMOSA.LINK.UPTIME.MIN}` s (600) conectado: hubo un corte | Solo, pasados 10 min |
+| Very low RX power | High | Potencia RX total < `{$MIMOSA.RX.POWER.MIN.CRIT}` durante 10 min | Solo |
+| Low RX power | Warning | < `{$MIMOSA.RX.POWER.MIN.WARN}` durante 10 min. Silenciado si hay crítico | Solo |
+| RX chain imbalance | Warning | Diferencia H/V > `{$MIMOSA.CHAIN.DIFF.MAX}` (6 dB) durante 30 min: cable, conector o alineación | Solo |
+| Low SNR | Warning | SNR de alguna cadena < `{$MIMOSA.SNR.MIN.WARN}` (12 dB) durante 15 min | Solo |
+| High noise | Warning | Ruido > `{$MIMOSA.NOISE.MAX.WARN}` (-85 dBm) durante 15 min: interferencia | Solo |
+| High packet error rate | Warning | PER TX o RX > `{$MIMOSA.PER.MAX.WARN}` (10 %) durante 15 min | Solo |
+| Temperature is high / critical | Warning / High | > `{$MIMOSA.TEMP.MAX.WARN}` (70 °C) / `{$MIMOSA.TEMP.MAX.CRIT}` (80 °C) durante 5 min | Solo |
+| Firmware version has changed | Information | Cambio de firmware (solo registro, no notifica) | Sola |
+
+Los triggers de potencia, SNR, ruido, desequilibrio y PER se silencian mientras el enlace está caído.
+**Umbrales de potencia por enlace:** `{$MIMOSA.RX.POWER.MIN.WARN}` ≈ señal de diseño − 6 dB y `CRIT` ≈ diseño − 11 dB. Para `Lk_Trunk_01_A` (diseño -65 dBm): -71 / -76.
 
 #### Ubiquiti AirOS 8 wireless by SNMPv1 — `ubiquiti_airos8_wireless.yaml`
 **Para:** APs Ubiquiti airMAX AC con airOS 8 (LAP-GPS, LiteAP, Rocket AC, Prism…). Se usa **junto con** la oficial *Ubiquiti AirOS by SNMP*, que aporta CPU, memoria, uptime y ping.
@@ -147,7 +171,7 @@ Complementa, no sustituye, el *Link down* por consulta de la plantilla oficial (
 | `{$PORT.POLL.INTERVAL}` | 30s | Frecuencia de consulta |
 | `{$PORT.FLAP.COUNT}` / `{$PORT.FLAP.PERIOD}` | 4 / 10m | Sensibilidad del flapping |
 | `{$PORT.IFTYPE.MATCHES}` | `^6$` | Solo puertos Ethernet |
-| `{$PORT.IFNAME.NOT_MATCHES}` | `^<` | Puertos excluidos. En TP-Link: `^(<\|Vlan-interface)` |
+| `{$PORT.IFNAME.NOT_MATCHES}` | `^(<\|wifi\|wlan\|ath)` | Puertos excluidos: interfaces dinámicas y de radio (su velocidad es la capacidad inalámbrica, que cambia continuamente). En TP-Link: `^(<\|Vlan-interface)` |
 
 Al usarla, poner `{$IFCONTROL}=0` en el host para que el *Link down* de la plantilla del fabricante no duplique los avisos de desconexión. Los cortes de menos de 30 s pueden no detectarse; los repetidos, sí (flapping).
 
@@ -320,6 +344,20 @@ Las dependencias, el historial y las alertas van ligados al **host**, no a su IP
 4. Si otros equipos filtran por IP la comunicación con Zabbix (comunidades SNMP con `addresses`, `Server=` de agentes), revisar que sigan apuntando a `192.168.0.191`. Solo cambia la IP del equipo monitoreado, no la de Zabbix.
 5. Actualizar el inventario de esta guía y **verificar** que el icono SNMP/ZBX vuelve a verde.
 
+### 4.11 Añadir un enlace PTP Mimosa
+
+**En los radios** (los dos extremos): activar SNMP v2c con la comunidad de lectura, en la sección de gestión SNMP del radio (firmware 2.x: *Preferences → Management*). Anotar la **señal de diseño** (RSL) del enlace.
+
+**En Zabbix** (respaldo antes):
+1. Crear **primero el extremo más cercano a Zabbix**: los dependientes necesitan que su padre exista.
+2. *Create host* para cada extremo:
+   - Nombre = *Device Name* del radio. Grupo `Enlaces PTP Troncales`.
+   - Interfaz **SNMP** (IP, 161, **SNMPv2**, `{$SNMP_COMMUNITY}`).
+   - **Templates:** `Network Generic Device by SNMP` + `Mimosa C5C by SNMP` + `Switch port changes by SNMP`.
+   - **Macros:** `{$IFCONTROL}` = `0`, `{$MIMOSA.RX.POWER.MIN.WARN}` = diseño − 6 y `{$MIMOSA.RX.POWER.MIN.CRIT}` = diseño − 11.
+3. **Dependencias (4.1):** el extremo lejano depende del cercano (si no hay conexión con el cercano, tampoco con el lejano), y el cercano depende del equipo que le da conectividad hacia Zabbix.
+4. **Verificar:** SNMP en verde, *Link: Status = connected*, potencias y SNR con valores reales en *Latest data*, y en *Switch port changes* solo el puerto Ethernet (`eth1_emac1`), no `wifi0`.
+
 ---
 
 ## 5. Solución de problemas
@@ -335,4 +373,5 @@ Las dependencias, el historial y las alertas van ligados al **host**, no a su IP
 | *Firmware version* / *Hardware model name* no soportados en APs AC | airOS 8 no los publica | Normal, ignorar |
 | El cambio de una macro no se refleja en el descubrimiento | Las reglas de descubrimiento reprocesan como mucho 1 vez por hora si el resultado no cambia | Esperar hasta 1 h |
 | Aviso duplicado de desconexión en un switch | Falta `{$IFCONTROL}=0` con *Switch port changes* | 4.4, paso 4 |
+| Alertas continuas "speed changed" en la interfaz de radio (`wifi0`, `ath0`) | La vigilancia de puertos incluía una interfaz inalámbrica, cuya velocidad es adaptativa | La plantilla ya las excluye por defecto. Si un host tiene su propio `{$PORT.IFNAME.NOT_MATCHES}`, incluir `wifi\|wlan\|ath`. Cerrar los problemas falsos (*Update → Close problem*) |
 | Al caer un equipo llegan varias alertas (ping, pérdida, latencia, SNMP) en vez de una | Se usó *Replace* al configurar dependencias y se borraron las internas de la plantilla | En cada trigger (*Dependencies*): *High ICMP ping loss* y *No SNMP data collection* → *Unavailable by ICMP ping* propio; *High ICMP ping response time* → *Unavailable by ICMP ping* y *High ICMP ping loss* propios |

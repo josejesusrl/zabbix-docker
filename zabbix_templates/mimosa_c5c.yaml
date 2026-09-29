@@ -1,0 +1,538 @@
+zabbix_export:
+  version: '7.0'
+  template_groups:
+    - uuid: 7c8113bcd4a9489d9f986d9e6dbdf3e3
+      name: Templates/Network devices
+  templates:
+    - uuid: 7ec6be4d2f6b45a993eb4a6af0b8b92f
+      template: 'Mimosa C5C by SNMP'
+      name: 'Mimosa C5C by SNMP'
+      description: |
+        Mimosa C5C (and B5/C5 family) point to point radios, MIMOSA-NETWORKS-BFIVE-MIB (1.3.6.1.4.1.43356.2.1.2), SNMPv2c.
+        Link status and uptime, RX/TX power, per chain (H/V) RX power, noise and SNR, PHY rate, MCS and EVM per stream,
+        packet error rate, temperature and firmware. Use together with "Network Generic Device by SNMP"
+        (interfaces, traffic, ICMP, SNMP availability, reboots). Tune RX thresholds per link with host macros.
+      groups:
+        - name: Templates/Network devices
+      items:
+        - uuid: 67527d8662004bd9be62ff989d4cb3a8
+          name: 'Firmware version'
+          type: SNMP_AGENT
+          snmp_oid: 'get[1.3.6.1.4.1.43356.2.1.2.1.3.0]'
+          key: mimosa.fw
+          delay: 1h
+          history: 7d
+          trends: '0'
+          value_type: CHAR
+          tags:
+            - tag: component
+              value: system
+        - uuid: a9790e0705de468a8ecf9d202d6b0a5c
+          name: 'Serial number'
+          type: SNMP_AGENT
+          snmp_oid: 'get[1.3.6.1.4.1.43356.2.1.2.1.2.0]'
+          key: mimosa.serial
+          delay: 1d
+          history: 7d
+          trends: '0'
+          value_type: CHAR
+          tags:
+            - tag: component
+              value: system
+        - uuid: 50190e156c78444092d56d9f282adf33
+          name: 'Temperature'
+          type: SNMP_AGENT
+          snmp_oid: 'get[1.3.6.1.4.1.43356.2.1.2.1.8.0]'
+          key: mimosa.temp
+          value_type: FLOAT
+          units: '°C'
+          preprocessing:
+            - type: MULTIPLIER
+              parameters:
+                - '0.1'
+          tags:
+            - tag: component
+              value: system
+        - uuid: 1eb0d280f098464e99d1d81d6169c450
+          name: 'Link: Status'
+          type: SNMP_AGENT
+          snmp_oid: 'get[1.3.6.1.4.1.43356.2.1.2.3.3.0]'
+          key: mimosa.link.status
+          description: '1 = connected, 2 = disconnected.'
+          valuemap:
+            name: 'Mimosa link status'
+          tags:
+            - tag: component
+              value: wireless
+        - uuid: 4ef3cd8aae3f46db962b104fe80f9149
+          name: 'Link: Uptime'
+          type: SNMP_AGENT
+          snmp_oid: 'get[1.3.6.1.4.1.43356.2.1.2.3.4.0]'
+          key: mimosa.link.uptime
+          units: 'uptime'
+          description: 'Time since the wireless link was established.'
+          preprocessing:
+            - type: MULTIPLIER
+              parameters:
+                - '0.01'
+          tags:
+            - tag: component
+              value: wireless
+        - uuid: d6fafe6a1a5044949ee63354d5b0b8e1
+          name: 'Link: SSID'
+          type: SNMP_AGENT
+          snmp_oid: 'get[1.3.6.1.4.1.43356.2.1.2.3.1.0]'
+          key: mimosa.link.ssid
+          delay: 1h
+          history: 7d
+          trends: '0'
+          value_type: CHAR
+          tags:
+            - tag: component
+              value: system
+        - uuid: 9c30d43441b948b2ba21e79d41191c93
+          name: 'Link: Wireless mode'
+          type: SNMP_AGENT
+          snmp_oid: 'get[1.3.6.1.4.1.43356.2.1.2.4.1.0]'
+          key: mimosa.mode
+          delay: 1h
+          valuemap:
+            name: 'Mimosa wireless mode'
+          tags:
+            - tag: component
+              value: wireless
+        - uuid: 870398b813744dfeb070cbf1c0035a01
+          name: 'RF: Total RX power'
+          type: SNMP_AGENT
+          snmp_oid: 'get[1.3.6.1.4.1.43356.2.1.2.6.6.0]'
+          key: mimosa.rx.power
+          value_type: FLOAT
+          units: 'dBm'
+          preprocessing:
+            - type: MULTIPLIER
+              parameters:
+                - '0.1'
+          tags:
+            - tag: component
+              value: wireless
+        - uuid: 1732f0cbe27d4d02bb5ff9fc1c52a7a6
+          name: 'RF: Total TX power'
+          type: SNMP_AGENT
+          snmp_oid: 'get[1.3.6.1.4.1.43356.2.1.2.6.5.0]'
+          key: mimosa.tx.power
+          delay: 5m
+          value_type: FLOAT
+          units: 'dBm'
+          preprocessing:
+            - type: MULTIPLIER
+              parameters:
+                - '0.1'
+          tags:
+            - tag: component
+              value: wireless
+        - uuid: 67672542daec436ebfb36745b1543a80
+          name: 'RF: Channel width'
+          type: SNMP_AGENT
+          snmp_oid: 'get[1.3.6.1.4.1.43356.2.1.2.6.3.1.3.1]'
+          key: mimosa.width
+          delay: 5m
+          units: 'MHz'
+          tags:
+            - tag: component
+              value: wireless
+        - uuid: 6642666ca8f4491387bc75d7427b3a1e
+          name: 'RF: Center frequency'
+          type: SNMP_AGENT
+          snmp_oid: 'get[1.3.6.1.4.1.43356.2.1.2.6.1.1.6.1]'
+          key: mimosa.freq
+          delay: 5m
+          units: 'MHz'
+          tags:
+            - tag: component
+              value: wireless
+        - uuid: b58ec11b29a24f3f97c5289e0fadb360
+          name: 'RF chain 1 (H): RX power'
+          type: SNMP_AGENT
+          snmp_oid: 'get[1.3.6.1.4.1.43356.2.1.2.6.1.1.3.1]'
+          key: mimosa.chain.rx[1]
+          value_type: FLOAT
+          units: 'dBm'
+          preprocessing:
+            - type: MULTIPLIER
+              parameters:
+                - '0.1'
+          tags:
+            - tag: component
+              value: wireless
+        - uuid: c2e12a62470241a9b6eba91bef443dae
+          name: 'RF chain 1 (H): Noise'
+          type: SNMP_AGENT
+          snmp_oid: 'get[1.3.6.1.4.1.43356.2.1.2.6.1.1.4.1]'
+          key: mimosa.chain.noise[1]
+          value_type: FLOAT
+          units: 'dBm'
+          preprocessing:
+            - type: MULTIPLIER
+              parameters:
+                - '0.1'
+          tags:
+            - tag: component
+              value: wireless
+        - uuid: 252d449e365b41f694e88f7dc2b2a848
+          name: 'RF chain 1 (H): SNR'
+          type: SNMP_AGENT
+          snmp_oid: 'get[1.3.6.1.4.1.43356.2.1.2.6.1.1.5.1]'
+          key: mimosa.chain.snr[1]
+          value_type: FLOAT
+          units: 'dB'
+          preprocessing:
+            - type: MULTIPLIER
+              parameters:
+                - '0.1'
+          tags:
+            - tag: component
+              value: wireless
+        - uuid: 6b70f4c1023241d8a46e5220c51a8586
+          name: 'RF chain 2 (V): RX power'
+          type: SNMP_AGENT
+          snmp_oid: 'get[1.3.6.1.4.1.43356.2.1.2.6.1.1.3.2]'
+          key: mimosa.chain.rx[2]
+          value_type: FLOAT
+          units: 'dBm'
+          preprocessing:
+            - type: MULTIPLIER
+              parameters:
+                - '0.1'
+          tags:
+            - tag: component
+              value: wireless
+        - uuid: 64b43a10f466432a96b79304b1ccde5c
+          name: 'RF chain 2 (V): Noise'
+          type: SNMP_AGENT
+          snmp_oid: 'get[1.3.6.1.4.1.43356.2.1.2.6.1.1.4.2]'
+          key: mimosa.chain.noise[2]
+          value_type: FLOAT
+          units: 'dBm'
+          preprocessing:
+            - type: MULTIPLIER
+              parameters:
+                - '0.1'
+          tags:
+            - tag: component
+              value: wireless
+        - uuid: 8734a239c3504db199bbe7dcd70c8674
+          name: 'RF chain 2 (V): SNR'
+          type: SNMP_AGENT
+          snmp_oid: 'get[1.3.6.1.4.1.43356.2.1.2.6.1.1.5.2]'
+          key: mimosa.chain.snr[2]
+          value_type: FLOAT
+          units: 'dB'
+          preprocessing:
+            - type: MULTIPLIER
+              parameters:
+                - '0.1'
+          tags:
+            - tag: component
+              value: wireless
+        - uuid: 67a1c832a2e344478f7e4171120f32a1
+          name: 'Stream 1: TX PHY rate'
+          type: SNMP_AGENT
+          snmp_oid: 'get[1.3.6.1.4.1.43356.2.1.2.6.2.1.2.1]'
+          key: mimosa.stream.txphy[1]
+          units: '!Mbps'
+          tags:
+            - tag: component
+              value: wireless
+        - uuid: 7e2c3217cd944c67b3c2e9e611652e0e
+          name: 'Stream 1: RX PHY rate'
+          type: SNMP_AGENT
+          snmp_oid: 'get[1.3.6.1.4.1.43356.2.1.2.6.2.1.5.1]'
+          key: mimosa.stream.rxphy[1]
+          units: '!Mbps'
+          tags:
+            - tag: component
+              value: wireless
+        - uuid: 84cc30279ba74d42a144a3c95b5215b0
+          name: 'Stream 1: TX MCS'
+          type: SNMP_AGENT
+          snmp_oid: 'get[1.3.6.1.4.1.43356.2.1.2.6.2.1.3.1]'
+          key: mimosa.stream.txmcs[1]
+          tags:
+            - tag: component
+              value: wireless
+        - uuid: 602598f422ef4a6e9e3e5db777b89547
+          name: 'Stream 1: RX MCS'
+          type: SNMP_AGENT
+          snmp_oid: 'get[1.3.6.1.4.1.43356.2.1.2.6.2.1.6.1]'
+          key: mimosa.stream.rxmcs[1]
+          tags:
+            - tag: component
+              value: wireless
+        - uuid: 03a31b4c30cf4b858d4cbda18a9ca142
+          name: 'Stream 1: RX EVM'
+          type: SNMP_AGENT
+          snmp_oid: 'get[1.3.6.1.4.1.43356.2.1.2.6.2.1.8.1]'
+          key: mimosa.stream.evm[1]
+          value_type: FLOAT
+          units: 'dB'
+          preprocessing:
+            - type: MULTIPLIER
+              parameters:
+                - '0.1'
+          tags:
+            - tag: component
+              value: wireless
+        - uuid: 53a3d9fe1c454adbb553eb21cdb2215c
+          name: 'Stream 2: TX PHY rate'
+          type: SNMP_AGENT
+          snmp_oid: 'get[1.3.6.1.4.1.43356.2.1.2.6.2.1.2.2]'
+          key: mimosa.stream.txphy[2]
+          units: '!Mbps'
+          tags:
+            - tag: component
+              value: wireless
+        - uuid: 0532692c3ae74e5a92aaaf8c5ac6f318
+          name: 'Stream 2: RX PHY rate'
+          type: SNMP_AGENT
+          snmp_oid: 'get[1.3.6.1.4.1.43356.2.1.2.6.2.1.5.2]'
+          key: mimosa.stream.rxphy[2]
+          units: '!Mbps'
+          tags:
+            - tag: component
+              value: wireless
+        - uuid: b9275f024e7b48528714483e902f7bcf
+          name: 'Stream 2: TX MCS'
+          type: SNMP_AGENT
+          snmp_oid: 'get[1.3.6.1.4.1.43356.2.1.2.6.2.1.3.2]'
+          key: mimosa.stream.txmcs[2]
+          tags:
+            - tag: component
+              value: wireless
+        - uuid: ce661f79d8de42fa9f85845c092c88dd
+          name: 'Stream 2: RX MCS'
+          type: SNMP_AGENT
+          snmp_oid: 'get[1.3.6.1.4.1.43356.2.1.2.6.2.1.6.2]'
+          key: mimosa.stream.rxmcs[2]
+          tags:
+            - tag: component
+              value: wireless
+        - uuid: 417ffd46b5f64e428328da2a877cdb5c
+          name: 'Stream 2: RX EVM'
+          type: SNMP_AGENT
+          snmp_oid: 'get[1.3.6.1.4.1.43356.2.1.2.6.2.1.8.2]'
+          key: mimosa.stream.evm[2]
+          value_type: FLOAT
+          units: 'dB'
+          preprocessing:
+            - type: MULTIPLIER
+              parameters:
+                - '0.1'
+          tags:
+            - tag: component
+              value: wireless
+        - uuid: 88e23c271493453c9c2b9858f3c954ee
+          name: 'Performance: TX packet error rate'
+          type: SNMP_AGENT
+          snmp_oid: 'get[1.3.6.1.4.1.43356.2.1.2.7.3.0]'
+          key: mimosa.per.tx
+          value_type: FLOAT
+          units: '%'
+          preprocessing:
+            - type: MULTIPLIER
+              parameters:
+                - '0.01'
+          tags:
+            - tag: component
+              value: wireless
+        - uuid: f1354c60747648e3a95b4673087a6327
+          name: 'Performance: RX packet error rate'
+          type: SNMP_AGENT
+          snmp_oid: 'get[1.3.6.1.4.1.43356.2.1.2.7.4.0]'
+          key: mimosa.per.rx
+          value_type: FLOAT
+          units: '%'
+          preprocessing:
+            - type: MULTIPLIER
+              parameters:
+                - '0.01'
+          tags:
+            - tag: component
+              value: wireless
+      tags:
+        - tag: class
+          value: network
+        - tag: target
+          value: mimosa
+      macros:
+        - macro: '{$MIMOSA.RX.POWER.MIN.WARN}'
+          value: '-75'
+          description: 'Warning threshold for total RX power, dBm. Set per link near its design RSL (e.g. design - 6 dB).'
+        - macro: '{$MIMOSA.RX.POWER.MIN.CRIT}'
+          value: '-80'
+          description: 'Critical threshold for total RX power, dBm.'
+        - macro: '{$MIMOSA.CHAIN.DIFF.MAX}'
+          value: '6'
+          description: 'Maximum RX difference between polarizations, dB.'
+        - macro: '{$MIMOSA.SNR.MIN.WARN}'
+          value: '12'
+          description: 'Minimum SNR per chain, dB.'
+        - macro: '{$MIMOSA.NOISE.MAX.WARN}'
+          value: '-85'
+          description: 'Maximum noise per chain, dBm.'
+        - macro: '{$MIMOSA.PER.MAX.WARN}'
+          value: '10'
+          description: 'Maximum packet error rate, %.'
+        - macro: '{$MIMOSA.LINK.UPTIME.MIN}'
+          value: '600'
+          description: 'Link uptime below this (seconds) reports a recent reconnection.'
+        - macro: '{$MIMOSA.TEMP.MAX.WARN}'
+          value: '70'
+          description: 'Temperature warning threshold, °C.'
+        - macro: '{$MIMOSA.TEMP.MAX.CRIT}'
+          value: '80'
+          description: 'Temperature critical threshold, °C.'
+      valuemaps:
+        - uuid: adbbcb5e909b41dea7219365e4044585
+          name: 'Mimosa link status'
+          mappings:
+            - value: '1'
+              newvalue: connected
+            - value: '2'
+              newvalue: disconnected
+        - uuid: c5bb467579a742b2bc8860f55bd892e9
+          name: 'Mimosa wireless mode'
+          mappings:
+            - value: '1'
+              newvalue: accessPoint
+            - value: '2'
+              newvalue: station
+  triggers:
+    - uuid: 31722a090a4845c6a6d8eb7cb66611c7
+      expression: 'last(/Mimosa C5C by SNMP/mimosa.link.status)=2'
+      recovery_mode: RECOVERY_EXPRESSION
+      recovery_expression: 'last(/Mimosa C5C by SNMP/mimosa.link.status)=1'
+      name: 'Mimosa: Wireless link is disconnected'
+      priority: HIGH
+      description: 'The PTP wireless link is down. Traffic of the trunk is interrupted.'
+      tags:
+        - tag: scope
+          value: availability
+    - uuid: 0bde76de2deb4fb082c9adcac9df643e
+      expression: 'last(/Mimosa C5C by SNMP/mimosa.link.uptime)<{$MIMOSA.LINK.UPTIME.MIN} and last(/Mimosa C5C by SNMP/mimosa.link.status)=1'
+      name: 'Mimosa: Wireless link was re-established (up less than {$MIMOSA.LINK.UPTIME.MIN}s)'
+      opdata: 'Link uptime: {ITEM.LASTVALUE1}'
+      priority: WARNING
+      description: 'The link reconnected recently: short outage or instability. Resolves by itself.'
+      tags:
+        - tag: scope
+          value: availability
+    - uuid: b2ccc378b0d04bb08119d590773a6e84
+      expression: 'max(/Mimosa C5C by SNMP/mimosa.rx.power,10m)<{$MIMOSA.RX.POWER.MIN.CRIT}'
+      name: 'Mimosa: Very low RX power (below {$MIMOSA.RX.POWER.MIN.CRIT} dBm for 10m)'
+      opdata: 'RX: {ITEM.LASTVALUE1}'
+      priority: HIGH
+      description: 'Received signal far below design level: alignment, obstruction, rain fade or hardware fault. Link at risk.'
+      dependencies:
+        - name: 'Mimosa: Wireless link is disconnected'
+          expression: 'last(/Mimosa C5C by SNMP/mimosa.link.status)=2'
+          recovery_expression: 'last(/Mimosa C5C by SNMP/mimosa.link.status)=1'
+      tags:
+        - tag: scope
+          value: performance
+    - uuid: 89abec18e40a4297930f168a7f2996cb
+      expression: 'max(/Mimosa C5C by SNMP/mimosa.rx.power,10m)<{$MIMOSA.RX.POWER.MIN.WARN}'
+      name: 'Mimosa: Low RX power (below {$MIMOSA.RX.POWER.MIN.WARN} dBm for 10m)'
+      opdata: 'RX: {ITEM.LASTVALUE1}'
+      priority: WARNING
+      description: 'Received signal below expected level.'
+      dependencies:
+        - name: 'Mimosa: Wireless link is disconnected'
+          expression: 'last(/Mimosa C5C by SNMP/mimosa.link.status)=2'
+          recovery_expression: 'last(/Mimosa C5C by SNMP/mimosa.link.status)=1'
+        - name: 'Mimosa: Very low RX power (below {$MIMOSA.RX.POWER.MIN.CRIT} dBm for 10m)'
+          expression: 'max(/Mimosa C5C by SNMP/mimosa.rx.power,10m)<{$MIMOSA.RX.POWER.MIN.CRIT}'
+      tags:
+        - tag: scope
+          value: performance
+    - uuid: 6bb8e777d1574ac4a5ba1f5d7f02bfb9
+      expression: 'abs(avg(/Mimosa C5C by SNMP/mimosa.chain.rx[1],30m)-avg(/Mimosa C5C by SNMP/mimosa.chain.rx[2],30m))>{$MIMOSA.CHAIN.DIFF.MAX}'
+      name: 'Mimosa: RX chain imbalance (over {$MIMOSA.CHAIN.DIFF.MAX} dB between H and V for 30m)'
+      opdata: 'H: {ITEM.LASTVALUE1}, V: {ITEM.LASTVALUE2}'
+      priority: WARNING
+      description: 'Both polarizations should receive similar power. A difference points to a cable, connector, antenna or polarization alignment problem.'
+      dependencies:
+        - name: 'Mimosa: Wireless link is disconnected'
+          expression: 'last(/Mimosa C5C by SNMP/mimosa.link.status)=2'
+          recovery_expression: 'last(/Mimosa C5C by SNMP/mimosa.link.status)=1'
+      tags:
+        - tag: scope
+          value: performance
+    - uuid: 6ed3a55c27f34442894adee61d2256c7
+      expression: 'max(/Mimosa C5C by SNMP/mimosa.chain.snr[1],15m)<{$MIMOSA.SNR.MIN.WARN} or max(/Mimosa C5C by SNMP/mimosa.chain.snr[2],15m)<{$MIMOSA.SNR.MIN.WARN}'
+      name: 'Mimosa: Low SNR (below {$MIMOSA.SNR.MIN.WARN} dB for 15m)'
+      opdata: 'H: {ITEM.LASTVALUE1}, V: {ITEM.LASTVALUE2}'
+      priority: WARNING
+      description: 'Low signal to noise ratio reduces modulation and capacity.'
+      dependencies:
+        - name: 'Mimosa: Wireless link is disconnected'
+          expression: 'last(/Mimosa C5C by SNMP/mimosa.link.status)=2'
+          recovery_expression: 'last(/Mimosa C5C by SNMP/mimosa.link.status)=1'
+      tags:
+        - tag: scope
+          value: performance
+    - uuid: 1b93bddf29964c3ea72a04a319c9c56b
+      expression: 'min(/Mimosa C5C by SNMP/mimosa.chain.noise[1],15m)>{$MIMOSA.NOISE.MAX.WARN} or min(/Mimosa C5C by SNMP/mimosa.chain.noise[2],15m)>{$MIMOSA.NOISE.MAX.WARN}'
+      name: 'Mimosa: High noise (over {$MIMOSA.NOISE.MAX.WARN} dBm for 15m)'
+      opdata: 'H: {ITEM.LASTVALUE1}, V: {ITEM.LASTVALUE2}'
+      priority: WARNING
+      description: 'Interference on the channel. Consider changing frequency.'
+      dependencies:
+        - name: 'Mimosa: Wireless link is disconnected'
+          expression: 'last(/Mimosa C5C by SNMP/mimosa.link.status)=2'
+          recovery_expression: 'last(/Mimosa C5C by SNMP/mimosa.link.status)=1'
+      tags:
+        - tag: scope
+          value: performance
+    - uuid: 455f983062a248f5a4269036b2e0b45c
+      expression: 'min(/Mimosa C5C by SNMP/mimosa.per.tx,15m)>{$MIMOSA.PER.MAX.WARN} or min(/Mimosa C5C by SNMP/mimosa.per.rx,15m)>{$MIMOSA.PER.MAX.WARN}'
+      name: 'Mimosa: High packet error rate (over {$MIMOSA.PER.MAX.WARN}% for 15m)'
+      opdata: 'TX: {ITEM.LASTVALUE1}, RX: {ITEM.LASTVALUE2}'
+      priority: WARNING
+      description: 'Retransmissions reduce throughput and increase latency on the trunk.'
+      dependencies:
+        - name: 'Mimosa: Wireless link is disconnected'
+          expression: 'last(/Mimosa C5C by SNMP/mimosa.link.status)=2'
+          recovery_expression: 'last(/Mimosa C5C by SNMP/mimosa.link.status)=1'
+      tags:
+        - tag: scope
+          value: performance
+    - uuid: b4424c069a4041f1bb05f6ea54a50ecd
+      expression: 'min(/Mimosa C5C by SNMP/mimosa.temp,5m)>{$MIMOSA.TEMP.MAX.CRIT}'
+      name: 'Mimosa: Temperature is critical (over {$MIMOSA.TEMP.MAX.CRIT} °C for 5m)'
+      opdata: '{ITEM.LASTVALUE1}'
+      priority: HIGH
+      description: 'Overheating, the radio may reboot or degrade.'
+      tags:
+        - tag: scope
+          value: availability
+    - uuid: a1f4c439f32047c7bfccbfd0fef51794
+      expression: 'min(/Mimosa C5C by SNMP/mimosa.temp,5m)>{$MIMOSA.TEMP.MAX.WARN}'
+      name: 'Mimosa: Temperature is high (over {$MIMOSA.TEMP.MAX.WARN} °C for 5m)'
+      opdata: '{ITEM.LASTVALUE1}'
+      priority: WARNING
+      description: 'High internal temperature.'
+      dependencies:
+        - name: 'Mimosa: Temperature is critical (over {$MIMOSA.TEMP.MAX.CRIT} °C for 5m)'
+          expression: 'min(/Mimosa C5C by SNMP/mimosa.temp,5m)>{$MIMOSA.TEMP.MAX.CRIT}'
+      tags:
+        - tag: scope
+          value: performance
+    - uuid: dc6880f2408846788b134fc7ca9977e0
+      expression: 'change(/Mimosa C5C by SNMP/mimosa.fw)=1'
+      name: 'Mimosa: Firmware version has changed'
+      opdata: '{ITEM.LASTVALUE1}'
+      priority: INFO
+      description: 'Informative, for change tracking.'
+      tags:
+        - tag: scope
+          value: notice

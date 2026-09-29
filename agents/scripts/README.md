@@ -25,6 +25,9 @@ printf '%s\n' "$TOKEN" | agents/scripts/run_remote.sh -f zabbix_templates/X.yaml
 | `zbx_inventory.py` | Lectura | Inventario de hosts: interfaces, grupos, plantillas, macros, etiquetas y de quién depende. `--markdown` genera la tabla para `OPERACION.md`; `--dependencies` muestra las dependencias de cada trigger de disponibilidad |
 | `zbx_host_status.py` | Lectura | Estado tras un cambio: disponibilidad, items sin datos o no soportados (separa las limitaciones conocidas) y problemas |
 | `snmp_probe.py` | Lectura | Sondeo previo al alta: ping, SNMPv1/v2c, `sysName`, modelo/firmware airOS 6, clientes y GPS Ubiquiti |
+| `snmp_walk.py` | Lectura | Recorrido SNMP de un equipo para ver qué OIDs publica antes de diseñar una plantilla (`--hide` oculta valores sensibles) |
+| `snmp_tools.py` | Librería | Ejecuta net-snmp en un contenedor temporal con la comunidad de Zabbix sin mostrarla (usada por `snmp_probe` y `snmp_walk`) |
+| `zbx_latest.py` | Lectura | Últimos valores de los items (como *Latest data*), filtrados por clave o nombre |
 | `zbx_create_snmp_host.py` | Escritura | Alta de un host SNMP con plantillas, macros, etiquetas y dependencia de su uplink |
 | `zbx_set_uplink.py` | Escritura | Cambia el equipo padre (dependencias + etiqueta `uplink`), conservando las dependencias internas de la plantilla |
 | `zbx_import_template.py` | Escritura | Importa plantillas YAML (`--delete-missing` para eliminar lo que ya no está en el fichero) |
@@ -51,6 +54,10 @@ printf '%s\n' "$TOKEN" | $S zbx_create_snmp_host.py --name LIKSON_PDV_11 --ip 17
     --self-dependency "no connected clients" --dry-run
 # Cambiar de padre a todos los hosts con una etiqueta
 printf '%s\n' "$TOKEN" | $S zbx_set_uplink.py --tag "uplink=EDGE 01" --parent "Switch Main Site #01" --dry-run
+# Ver qué publica un equipo nuevo en su MIB de fabricante
+printf '%s\n' "$TOKEN" | $S snmp_walk.py 10.100.0.2 1.3.6.1.4.1.43356 --max-lines 200
+# Últimos valores de un host (verificación tras el alta)
+printf '%s\n' "$TOKEN" | $S zbx_latest.py --host AP-Lk_Trunk_01_A --key mimosa.
 # Actualizar una plantilla propia
 printf '%s\n' "$TOKEN" | $S -f zabbix_templates/switch_port_changes.yaml zbx_import_template.py switch_port_changes.yaml --delete-missing
 ```

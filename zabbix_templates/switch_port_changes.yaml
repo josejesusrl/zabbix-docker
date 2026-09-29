@@ -181,8 +181,8 @@ zabbix_export:
           value: '^6$'
           description: 'ifType of monitored ports. 6 = ethernetCsmacd.'
         - macro: '{$PORT.IFNAME.NOT_MATCHES}'
-          value: '^<'
-          description: 'Excluded ports. Default: MikroTik dynamic interfaces.'
+          value: '^(<|wifi|wlan|ath)'
+          description: 'Excluded ports. Default: MikroTik dynamic interfaces and radio interfaces (wifi*, wlan*, ath*), whose speed is the adaptive wireless capacity and changes constantly.'
       valuemaps:
         - uuid: fc7adeecfb2d4d108a89ace9e3e4cc14
           name: 'IF-MIB::ifOperStatus'
