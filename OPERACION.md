@@ -32,6 +32,7 @@ EDGE 01 (192.168.200.1)  MikroTik CCR2004
 │   │   └── APs Ubiquiti 172.16.1.2 – 172.16.1.19 (16 APs, uplink = Switch Main Site #01)
 │   └── Sector_3, Sector_4, Sector_5 (172.16.2.x, uplink = NAS-01)
 └── NAS-03 (192.168.200.10)  RB2011iL-RM, concentrador PPPoE
+    └── LIKSON_CANADAS_A/B/C/D_01 (172.16.3.10 – .13, uplink = NAS-03)
 ```
 
 Los sectores `172.16.2.x` están conectados físicamente a NAS-02, que se va a retirar y no está dado de alta en Zabbix. Por eso dependen de NAS-01.
@@ -53,8 +54,10 @@ Los sectores `172.16.2.x` están conectados físicamente a NAS-02, que se va a r
 | Sector_4 (airOS 8, con GPS) | 172.16.2.10 | Access Points PPPoE Clients | Ubiquiti AirOS by SNMP, Ubiquiti AirOS 8 wireless by SNMPv1 | — | NAS-01 |
 | Sector_3 (airOS 8, sin GPS) | 172.16.2.3 | Access Points PPPoE Clients | Ubiquiti AirOS by SNMP, Ubiquiti AirOS 8 wireless by SNMPv1 | `{$UBNT.GPS.SATS.MIN}=0` | NAS-01 |
 | Sector_5 (NanoStation loco M, airOS 6) | 172.16.2.4 | Access Points PPPoE Clients | Ubiquiti AirOS by SNMP, Ubiquiti airMAX M (airOS 6) wireless by SNMPv1 | — | NAS-01 |
+| LIKSON_CANADAS_A_01, LIKSON_CANADAS_B_01 (airOS 8, con GPS) | 172.16.3.12, .13 | Access Points PPPoE Clients | Ubiquiti AirOS by SNMP, Ubiquiti AirOS 8 wireless by SNMPv1 | — | NAS-03 |
+| LIKSON_CANADAS_C_01, LIKSON_CANADAS_D_01 (airOS 8, sin GPS) | 172.16.3.10, .11 | Access Points PPPoE Clients | Ubiquiti AirOS by SNMP, Ubiquiti AirOS 8 wireless by SNMPv1 | `{$UBNT.GPS.SATS.MIN}=0` | NAS-03 |
 
-IPs de APs: `172.16.1.x` (las `.12` y `.13` no responden y no están dadas de alta) y `172.16.2.x`. Las IPs pueden cambiar: ver 4.10.
+IPs de APs: `172.16.1.x` (las `.12` y `.13` no responden y no están dadas de alta), `172.16.2.x` y `172.16.3.x` (la `.14` no responde y no está dada de alta). Las IPs pueden cambiar: ver 4.10.
 
 ---
 
