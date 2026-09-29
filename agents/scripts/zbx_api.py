@@ -192,6 +192,24 @@ def add_self_dependency(api, hostid, pattern, dry_run=False):
     return changed
 
 
+def find_triggers(api, hostid, text):
+    """Triggers of a host whose name contains `text` (macros expanded), with their dependencies."""
+    triggers = api.call("trigger.get", {"hostids": hostid, "output": ["triggerid", "description", "status"],
+                                        "selectDependencies": ["triggerid"], "expandDescription": True})
+    return [t for t in triggers if text.lower() in t["description"].lower()]
+
+
+def add_dependency(api, trigger, parent_triggerid, dry_run=False):
+    """Add a dependency keeping the existing ones. Returns True if it was missing."""
+    current = {d["triggerid"] for d in trigger["dependencies"]}
+    if parent_triggerid in current:
+        return False
+    if not dry_run:
+        api.call("trigger.update", {"triggerid": trigger["triggerid"],
+                                    "dependencies": [{"triggerid": t} for t in current | {parent_triggerid}]})
+    return True
+
+
 def check_now(api, hostids, key_prefix=""):
     """Execute now the collected items and discovery rules of hosts (dependent items follow their master)."""
     params = {"hostids": list(hostids), "output": ["itemid", "type"]}

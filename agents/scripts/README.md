@@ -32,6 +32,10 @@ printf '%s\n' "$TOKEN" | agents/scripts/run_remote.sh -f zabbix_templates/X.yaml
 | `zbx_set_uplink.py` | Escritura | Cambia el equipo padre (dependencias + etiqueta `uplink`), conservando las dependencias internas de la plantilla |
 | `zbx_import_template.py` | Escritura | Importa plantillas YAML (`--delete-missing` para eliminar lo que ya no está en el fichero) |
 | `zbx_check_now.py` | Acción | Ejecuta ya los items y reglas de descubrimiento de unos hosts |
+| `zbx_events.py` | Lectura | Eventos de problema de las últimas horas agrupados por trigger: veces abierto, notificaciones, cierres manuales. Detecta falsos positivos y *flapping* |
+| `zbx_add_dependency.py` | Escritura | Añade una dependencia a cualquier trigger (p. ej. equipos raíz → enlace de red del Zabbix server), conservando las existentes |
+| `zbx_set_status.py` | Escritura | Activa o desactiva items o triggers por nombre (registrar el motivo en `OPERACION.md`, sección 6) |
+| `zbx_close_problems.py` | Escritura | Cierra problemas abiertos por nombre con un comentario (falsos positivos, problemas de objetos desactivados) |
 | `run_remote.sh` | Envoltorio | Ejecuta un script en el servidor con el token por la entrada estándar |
 
 Selección de hosts común (`zbx_inventory`, `zbx_host_status`, `zbx_set_uplink`, `zbx_check_now`): `--host NOMBRE ...`, `--group GRUPO` o `--tag uplink=EQUIPO`.

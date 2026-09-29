@@ -24,9 +24,9 @@ Todos los procedimientos se pueden hacer desde la interfaz web (`https://zabbix.
 ### Topología y dependencias actuales
 
 ```
-Zabbix server (192.168.0.191)                 sin dependencia
-server-04 (192.168.50.254)                    sin dependencia
-EDGE 01 (192.168.200.1)  MikroTik CCR2004
+Zabbix server (192.168.0.191)                 raíz: su trigger "Interface enp2s0: Link down" es el padre de todo
+server-04 (192.168.50.254)                    depende del enlace de red del Zabbix server
+EDGE 01 (192.168.200.1)  MikroTik CCR2004  depende del enlace de red del Zabbix server
 ├── STA-Lk_Trunk_01_A (10.100.0.3)  Mimosa C5C, extremo del troncal conectado a EDGE 01
 │   └── AP-Lk_Trunk_01_A (10.100.0.2)  Mimosa C5C, extremo lejano (solo se alcanza a través del enlace)
 ├── NAS-01 (192.168.200.2)  CCR2004, concentrador PPPoE
@@ -98,6 +98,8 @@ Acciones (*Alerts → Actions → Trigger actions*):
 - *Report problems to Zabbix administrators:* **desactivada** a propósito (duplicaba los avisos).
 
 El reparto por canal se hace en el usuario: *User settings → Profile → Media*, severidades de cada medio.
+
+Los medios (Gmail y Telegram) reintentan **10 veces cada 30 s** (*Alerts → Media types → Options*): un corte de red del servidor de hasta 5 min no pierde notificaciones.
 
 ### Avisar una sola vez: etiqueta `escalation=off`
 
@@ -244,6 +246,7 @@ Las dependencias evitan recibir decenas de alertas cuando cae un equipo del que 
    - Para **cambiar** de padre: *Mass update* → **Remove** con el trigger del padre anterior, y después **Add** con el nuevo.
 4. En APs Ubiquiti, además: el trigger **"Wireless: AP has no connected clients"** depende del *Unavailable by ICMP ping* **del propio AP**, para que un AP caído no avise también por "sin clientes".
 5. Añadir la etiqueta `uplink = <host padre>` en la pestaña *Tags* del host.
+6. **Equipos raíz** (sin padre en la red, p. ej. EDGE 01 o un servidor directo): su trigger de disponibilidad (*Unavailable by ICMP ping* o *Zabbix agent is not available*) depende de **Zabbix server: Interface enp2s0: Link down**. Si cae la red del propio servidor Zabbix, no se reporta toda la red como caída.
 
 Para configurar varios hosts a la vez, filtrar en *Data collection → Triggers* por grupo o etiqueta y por nombre, seleccionarlos todos y usar **Mass update**.
 
@@ -292,7 +295,9 @@ Para configurar varios hosts a la vez, filtrar en *Data collection → Triggers*
 **En Zabbix:**
 1. *Create host*: nombre = *Identity* del router, grupo `Routers & Switches Likson`, interfaz **SNMP** (IP, 161, **SNMPv2**, `{$SNMP_COMMUNITY}`).
 2. **Templates:** `MikroTik <modelo> by SNMP` (o `Mikrotik by SNMP`) + `MikroTik link traps by SNMP`.
-3. **Si es concentrador PPPoE (NAS):** en *Macros* → *Inherited and host macros*, copiar `{$NET.IF.IFNAME.NOT_MATCHES}` y añadir `|^<pppoe-` **antes del paréntesis final**. Si no, cada sesión de cliente se descubre como interfaz y los items crecen sin control.
+3. **Si el router no tiene radios** (CCR, RB2011…): en *Items*, desactivar *SNMP walk wireless interfaces*. Lee de nuevo toda la tabla de interfaces cada minuto para nada.
+   **Si es concentrador PPPoE (NAS):** en la interfaz SNMP, *Max repetition count* = `50` (defecto 10). Con cientos de sesiones, la tabla de interfaces se lee con 5 veces menos peticiones y se evitan los timeouts cuando el router tiene la CPU alta.
+   **Además, en un NAS:** en *Macros* → *Inherited and host macros*, copiar `{$NET.IF.IFNAME.NOT_MATCHES}` y añadir `|^<pppoe-` **antes del paréntesis final**. Si no, cada sesión de cliente se descubre como interfaz y los items crecen sin control.
 4. Dependencias (4.1) y etiqueta `uplink`.
 5. **Verificar:** SNMP en verde. En *Latest data*, interfaces sin `<pppoe-…>` (en un NAS, el filtro tarda hasta 1 h en aplicarse). Prueba de traps: deshabilitar y habilitar una interfaz **sin uso** con comentario:
    ```routeros
@@ -408,6 +413,14 @@ Ejemplo `Lk_Hq_Pintores_1`: AP `{$UBNT.STA.TXCAP.MIN}=50`, estación `{$UBNT.STA
 - Con la histéresis de la plantilla, una lluvia de ~2 h produce **un aviso al empezar y otro al terminar**, sin repeticiones ni avisos por cada oscilación.
 - Capacidades de Caribe: 20 % de la capacidad medida al darlo de alta (AP 183.6 → 37 Mbps; estación 63.7 → 13 Mbps).
 
+### 4.13 Revisar falsos positivos y salud del monitoreo
+
+Conviene hacerlo tras cada alta de equipos y periódicamente:
+1. *Monitoring → Problems* con *Show: History* de las últimas 24 h, agrupando por trigger. Un trigger que se abre muchas veces indica umbral mal ajustado o *flapping*. Por API: `agents/scripts/zbx_events.py --hours 24`.
+2. *Data collection → Hosts*: iconos de disponibilidad en rojo e items no soportados. Por API: `zbx_host_status.py --details`.
+3. Log del server: `docker compose --env-file .env --env-file server.env logs --since 12h zabbix-server | grep -iE "timed out|not supported|failed"`. Muchos *timed out* de un equipo = equipo sobrecargado o lecturas demasiado grandes (ver 4.3, NAS).
+4. Corregir con los mecanismos de esta guía (macros, dependencias, *overrides*). Desactivar un objeto solo si es inútil por diseño, y registrarlo en la tabla de la sección 6.
+
 ---
 
 ## 5. Solución de problemas
@@ -423,5 +436,25 @@ Ejemplo `Lk_Hq_Pintores_1`: AP `{$UBNT.STA.TXCAP.MIN}=50`, estación `{$UBNT.STA
 | *Firmware version* / *Hardware model name* no soportados en APs AC | airOS 8 no los publica | Normal, ignorar |
 | El cambio de una macro no se refleja en el descubrimiento | Las reglas de descubrimiento reprocesan como mucho 1 vez por hora si el resultado no cambia | Esperar hasta 1 h |
 | Aviso duplicado de desconexión en un switch | Falta `{$IFCONTROL}=0` con *Switch port changes* | 4.4, paso 4 |
+| Muchos *timed out* SNMP en el log y datos con huecos en un MikroTik, sobre todo cuando su CPU está alta | La lectura de la tabla de interfaces (con todas las sesiones PPPoE) es grande y el router responde tarde | 4.3: *Max repetition count* = 50 y desactivar *SNMP walk wireless interfaces* si no tiene radios. Si persiste, el router está saturado (hardware) |
+| A la vez saltan *Unavailable* en EDGE 01, NAS-01… sin fallo real | Cayó la red del propio servidor Zabbix (log del kernel: `enp2s0: Link is Down`) | Dependencia de los equipos raíz sobre *Zabbix server: Interface enp2s0: Link down* (4.1, paso 6). Revisar el cable del servidor si renegocia a 100 Mbps (*downshifted*) |
+| Un problema sigue abierto aunque su item o trigger ya no se descubre o está desactivado | Zabbix no cierra los problemas de triggers desactivados por el descubrimiento | *Monitoring → Problems → Update → Close problem* con un comentario. Por API: `zbx_close_problems.py` |
 | Alertas continuas "speed changed" en la interfaz de radio (`wifi0`, `ath0`) | La vigilancia de puertos incluía una interfaz inalámbrica, cuya velocidad es adaptativa | La plantilla ya las excluye por defecto. Si un host tiene su propio `{$PORT.IFNAME.NOT_MATCHES}`, incluir `wifi\|wlan\|ath`. Cerrar los problemas falsos (*Update → Close problem*) |
 | Al caer un equipo llegan varias alertas (ping, pérdida, latencia, SNMP) en vez de una | Se usó *Replace* al configurar dependencias y se borraron las internas de la plantilla | En cada trigger (*Dependencies*): *High ICMP ping loss* y *No SNMP data collection* → *Unavailable by ICMP ping* propio; *High ICMP ping response time* → *Unavailable by ICMP ping* y *High ICMP ping loss* propios |
+
+---
+
+## 6. Objetos desactivados a propósito
+
+No son errores. Se desactivaron porque no aplican a ese equipo y solo generaban ruido. Si se reactiva alguno, hay que actualizar esta tabla.
+
+| Host | Objeto | Motivo |
+|---|---|---|
+| Zabbix server | Items de *connector*, *ipmi*, *vmware* (plantilla *Zabbix server health*) | Esos procesos del server no están activados. Los items siempre serían no soportados |
+| Zabbix server, server-04 | *Number of installed packages* | El agente corre en un contenedor y no puede leer la base de paquetes del host (en server-04, además, el agente 6.0 no conoce la clave) |
+| Zabbix server | *Interface wlp3s0: Speed* | Tarjeta WiFi del portátil sin uso, no informa de velocidad |
+| server-04 | *Interface enp2s0: Speed* | La tarjeta informa de velocidad desconocida (-1) |
+| server-04 | *Kernel memory enabled*, *Kernel memory TCP enabled* (Docker) | Las versiones recientes de Docker ya no publican ese dato |
+| NAS-01, NAS-03 | *SNMP walk wireless interfaces* | Routers sin radios. Leía cada minuto toda la tabla de interfaces (con las sesiones PPPoE) y sobrecargaba el router |
+| AP-Lk_Trunk_01_A, STA-Lk_Trunk_01_A | Trigger *Interface wifi0(): Ethernet has changed to lower speed* (plantilla *Network Generic Device*) | La velocidad de `wifi0` es la capacidad radio adaptativa y cambia continuamente. La capacidad se vigila con los triggers de velocidad PHY de *Mimosa C5C* |
+| server-04 | Discos `/etc/hosts`, `/etc/hostname`, `/etc/resolv.conf`, `/etc/zabbix/zabbix_agentd.d` | No descubiertos por las macros `{$VFS.FS.FSNAME.*}` (montajes del contenedor). Se borran solos a los 7 días |
