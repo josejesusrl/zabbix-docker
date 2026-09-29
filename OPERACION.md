@@ -32,6 +32,8 @@ EDGE 01 (192.168.200.1)  MikroTik CCR2004
 ├── NAS-01 (192.168.200.2)  CCR2004, concentrador PPPoE
 │   ├── Switch Main Site #01 (172.16.100.2)  TP-Link
 │   │   ├── APs Ubiquiti 172.16.1.2 – 172.16.1.19 (16 APs, uplink = Switch Main Site #01)
+│   │   ├── STA-Lk_Hq_Mayolica_1 (10.155.1.3)  NanoStation loco M2 (airOS 6), backhaul
+│   │   │   └── AP-Lk_Hq_Mayolica_1 (10.155.1.2)  NanoStation loco M2, extremo lejano
 │   │   ├── [STA]Lk_Hq_Caribe_1 (10.155.3.3)  LiteBeam 5AC, backhaul sensible a lluvia (escalation=off)
 │   │   │   └── [AP]Lk_Hq_Caribe_1 (10.155.3.2)  LiteBeam 5AC, extremo lejano
 │   │   └── [CPE]-Lk_Hq_Pintores_1 (10.155.0.3)  LiteBeam 5AC, extremo cercano del backhaul
@@ -69,6 +71,8 @@ Los sectores `172.16.2.x` están conectados físicamente a NAS-02, que se va a r
 | [AP]-Lk_Hq_Pintores_1 (LiteBeam 5AC, AP) | 10.155.0.2 | Enlaces PTP Backhaul | Ubiquiti AirOS by SNMP, Ubiquiti AirOS 8 wireless by SNMPv1 | `{$UBNT.GPS.SATS.MIN}=0`, `{$UBNT.STA.SIGNAL.MIN.WARN}=-57`, `{$UBNT.STA.TXCAP.MIN}=50` | [CPE]-Lk_Hq_Pintores_1 |
 | [CPE]Lk_Pintores_Canadas_1 (LiteBeam 5AC, estación) | 10.155.2.3 | Enlaces PTP Backhaul | Ubiquiti AirOS by SNMP, Ubiquiti AirOS 8 wireless by SNMPv1 | `{$UBNT.GPS.SATS.MIN}=0`, `{$UBNT.STA.SIGNAL.MIN.WARN}=-60`, `{$UBNT.STA.RXCAP.MIN}=50` | [AP]-Lk_Hq_Pintores_1 |
 | [AP]-Lk_Pintores_Canadas_1 (LiteBeam 5AC, AP) | 10.155.2.2 | Enlaces PTP Backhaul | Ubiquiti AirOS by SNMP, Ubiquiti AirOS 8 wireless by SNMPv1 | `{$UBNT.GPS.SATS.MIN}=0`, `{$UBNT.STA.SIGNAL.MIN.WARN}=-59`, `{$UBNT.STA.TXCAP.MIN}=50` | [CPE]Lk_Pintores_Canadas_1 |
+| STA-Lk_Hq_Mayolica_1 (loco M2, estación) | 10.155.1.3 | Enlaces PTP Backhaul | Ubiquiti AirOS by SNMP, Ubiquiti airMAX M (airOS 6) wireless by SNMPv1 | — (umbrales por defecto) | Switch Main Site #01 |
+| AP-Lk_Hq_Mayolica_1 (loco M2, AP) | 10.155.1.2 | Enlaces PTP Backhaul | Ubiquiti AirOS by SNMP, Ubiquiti airMAX M (airOS 6) wireless by SNMPv1 | — (umbrales por defecto) | STA-Lk_Hq_Mayolica_1 |
 | [STA]Lk_Hq_Caribe_1 (LiteBeam 5AC, estación) | 10.155.3.3 | Enlaces PTP Backhaul | Ubiquiti AirOS by SNMP, Ubiquiti AirOS 8 wireless by SNMPv1 | `{$UBNT.GPS.SATS.MIN}=0`, `{$UBNT.STA.SIGNAL.MIN.WARN}=-67`, `{$UBNT.STA.SIGNAL.MIN.CRIT}=-73`, `{$UBNT.STA.RXCAP.MIN}=13`. Etiqueta `escalation=off` | Switch Main Site #01 |
 | [AP]Lk_Hq_Caribe_1 (LiteBeam 5AC, AP) | 10.155.3.2 | Enlaces PTP Backhaul | Ubiquiti AirOS by SNMP, Ubiquiti AirOS 8 wireless by SNMPv1 | `{$UBNT.GPS.SATS.MIN}=0`, `{$UBNT.STA.SIGNAL.MIN.WARN}=-64`, `{$UBNT.STA.SIGNAL.MIN.CRIT}=-70`, `{$UBNT.STA.TXCAP.MIN}=37`. Etiqueta `escalation=off` | [STA]Lk_Hq_Caribe_1 |
 | AP-Lk_Trunk_01_A (Mimosa C5C, AP) | 10.100.0.2 | Enlaces PTP Troncales | Network Generic Device by SNMP, Mimosa C5C by SNMP, Switch port changes by SNMP | `{$IFCONTROL}=0`, `{$MIMOSA.RX.POWER.MIN.WARN}=-71`, `{$MIMOSA.RX.POWER.MIN.CRIT}=-76` | STA-Lk_Trunk_01_A |
@@ -149,7 +153,7 @@ Los triggers de potencia, SNR, ruido, desequilibrio, PER y velocidad PHY se sile
 | Client …: Very weak signal | High | Señal del cliente < `{$UBNT.STA.SIGNAL.MIN.CRIT}` durante 5 min (p. ej. lluvia). **Desactivado con 0** (defecto) | Cuando la señal se mantiene 30 min al menos `{$UBNT.STA.SIGNAL.HYST}` (3 dB) por encima del umbral |
 | Client …: Weak signal | Warning | Señal del cliente < `{$UBNT.STA.SIGNAL.MIN.WARN}` (-75 dBm) durante 15 min. Silenciado si hay *Very weak signal* | Cuando la señal se mantiene 15 min 3 dB por encima del umbral |
 | Client …: Low TX / RX capacity | High | Capacidad airMAX de TX o RX con ese cliente < `{$UBNT.STA.TXCAP.MIN}` / `{$UBNT.STA.RXCAP.MIN}` (Mbps) durante 10 min. **Desactivado con 0** (defecto); se activa por host o por cliente, normalmente en enlaces PTP | Cuando la capacidad se mantiene 10 min por encima del mínimo |
-| Interface …: Speed changed | High | Cambia la velocidad Ethernet negociada de `eth0` (p. ej. 1000 → 100 Mbps: cable, conector o PoE). Las interfaces radio (velocidad 0) no disparan | Manualmente |
+| Interface eth…: Speed changed | High | Cambia la velocidad Ethernet negociada de `eth0` (p. ej. 1000 → 100 Mbps: cable, conector o PoE). Solo se crea para interfaces `eth*` (regla *override* del descubrimiento): en airOS 6 `ath0` reporta una velocidad de radio que no debe vigilarse | Manualmente |
 
 | Macro | Defecto | Uso |
 |---|---|---|
