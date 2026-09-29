@@ -16,6 +16,7 @@ Stack: PostgreSQL + Zabbix server + frontend Nginx con HTTPS (Let's Encrypt) + A
 | `zabbix_agentd.d/sensors_hwmon.*` | UserParameters del Agent 2 para las temperaturas del host |
 | `zabbix_templates/*.yaml` | Plantillas propias: temperaturas, traps de enlace MikroTik, puertos de switch, Ubiquiti airOS 8/airOS 6 |
 | `AGENTS.md` | Reglas para modificar el proyecto y la producción (respaldo previo, qué debe estar en git) |
+| `OPERACION.md` | Uso diario de Zabbix: topología, plantillas, alertas y procedimientos para añadir equipos |
 
 ## Requisitos
 
@@ -96,7 +97,7 @@ sudo ufw allow from 172.16.238.0/24 to any port 10050 proto tcp
 
 1. Entrar con `Admin` / `zabbix` y **cambiar la contraseña** de inmediato.
 2. *Data collection → Hosts → Zabbix server*: cambiar la interfaz Agent a IP `172.16.238.1`, puerto `10050`.
-   - Plantillas: `Linux by Zabbix agent` y `Docker by Zabbix agent 2`.
+   - Plantillas: `Linux by Zabbix agent` y `Zabbix server health` (vienen enlazadas). Opcional: `Docker by Zabbix agent 2` para ver los contenedores del stack.
    - **Sistemas de archivos:** el agente ve los discos del host bajo `/rootfs`. Hay que añadir estas macros en el host (pestaña *Macros*); si no, también se descubren los montajes internos del contenedor (`/etc/hosts`, `/var/lib/zabbix/*`…) como discos duplicados:
      ```
      {$VFS.FS.FSNAME.MATCHES}     = ^/rootfs(/|$)
@@ -118,29 +119,8 @@ sudo ufw allow from 172.16.238.0/24 to any port 10050 proto tcp
      {$CERT.EXPIRY.WARN}      = 14
      ```
      El agente se conecta a `127.0.0.1:443` usando el nombre `zabbix.likson.com`, sin depender del DNS público ni del NAT. Avisa si faltan menos de 14 días, es decir, si `renew` lleva más de 2 semanas fallando. Con el certificado autofirmado el resultado es `valid-but-self-signed` y no genera alerta. Cuando `issue` lo sustituya, cambiará la huella del certificado, algo esperado.
-4. Equipos de red:
-   - Crear el host con una interfaz SNMP (v2c/v3) y la plantilla del fabricante.
-   - Para los traps, usar los items `snmptrap[<regex>]` y `snmptrap.fallback`.
-   - En el equipo, configurar como destino de traps la IP del servidor, puerto 162, con la comunidad de `server_setup.sh`.
-   - Los MIBs del fabricante se copian en `./zbx_env/var/lib/zabbix/mibs/` y se aplican reiniciando `zabbix-server` y `zabbix-snmptraps`.
-   - **MikroTik:** en `/snmp` configurar `src-address` con la misma IP de la interfaz SNMP del host en Zabbix. Si no, el trap sale con la IP de la interfaz de salida y el server lo descarta como *unmatched trap*.
-   - **Alertas inmediatas de enlace:** importar `zabbix_templates/mikrotik_link_traps.yaml` y enlazarla a los MikroTik.
-     - Crea un trigger por cada interfaz **con comentario** (`ifAlias`), sin contar las dinámicas `<…>`.
-     - Alerta con un `linkDown` recibido con la interfaz habilitada y se resuelve con el `linkUp`.
-     - Para limitarla a ciertas interfaces, ajustar la macro `{$LINKTRAP.IFALIAS.MATCHES}` en el host.
-   - **Switches con puertos críticos:** importar `zabbix_templates/switch_port_changes.yaml` y enlazarla al switch. Sirve para cualquier fabricante.
-     - Consulta el estado y la velocidad de cada puerto Ethernet cada 30 s, con una sola lectura SNMP.
-     - Alerta *High* por desconexión, por *flapping* (4 cambios en 10 min, ajustable con `{$PORT.FLAP.COUNT}`/`{$PORT.FLAP.PERIOD}`) y por cambio de velocidad negociada en cualquier sentido.
-     - Poner `{$IFCONTROL}=0` en el host para que el *Link down* de la plantilla del fabricante no duplique alertas.
-     - En TP-Link, excluir las VLAN con `{$PORT.IFNAME.NOT_MATCHES}=^(<|Vlan-interface)`.
-   - **Antenas Ubiquiti airOS 8** (LAP-GPS y otros airMAX AC): solo responden a **SNMPv1**. Con v2c ignoran las consultas y aparecen como no disponibles. En la interfaz SNMP del host elegir *SNMPv1*.
-     - La plantilla oficial *Ubiquiti AirOS by SNMP* solo da datos del sistema: su firmware, modelo e interfaces no funcionan en airOS 8.
-     - Añadir `zabbix_templates/ubiquiti_airos8_wireless.yaml`: clientes conectados, señal, ruido, radio, GPS, datos por cliente (señal, CCQ, distancia, CINR, capacidad) y tráfico de `eth0`/`ath0` con contadores de 32 bits.
-     - Triggers: AP sin clientes, ruido alto (`{$UBNT.NOISE.MAX.WARN}`), GPS con pocos satélites y cliente con señal débil (`{$UBNT.STA.SIGNAL.MIN.WARN}`, ajustable por cliente con contexto).
-     - **Modelos AC sin GPS:** devuelven 0 satélites en lugar de "no existe". Poner `{$UBNT.GPS.SATS.MIN}=0` en el host para que no salte la alerta de GPS.
-     - **airMAX M con airOS 6** (Rocket M5, etc.): usar `zabbix_templates/ubiquiti_airmax_m_airos6_wireless.yaml`, sin GPS, CINR ni capacidad AC, y con airMAX quality/capacity por cliente. También solo responde a SNMPv1.
-     - **Limitación de SNMPv1:** si una lectura por tabla llega a la última columna del MIB, el equipo devuelve `noSuchName` y Zabbix descarta toda la lectura. Por eso la variante airOS 6 no lee la columna 15 (tiempo de conexión).
-   - **Concentradores PPPoE:** añadir `|^<pppoe-` a la macro `{$NET.IF.IFNAME.NOT_MATCHES}` del host, para que no se descubra cada sesión de cliente como interfaz.
+4. **Equipos a monitorear** (routers, switches, APs, servidores), plantillas propias, dependencias, alertas y umbrales: ver **`OPERACION.md`**.
+   - Los MIBs de fabricantes van en `./zbx_env/var/lib/zabbix/mibs/` (incluidos en el respaldo) y se aplican reiniciando `zabbix-server` y `zabbix-snmptraps`.
 
 ## 5. Tareas programadas
 

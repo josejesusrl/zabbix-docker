@@ -12,6 +12,7 @@ Estas reglas aplican a cualquier persona o agente (IA) que modifique el proyecto
 | Stack | `docker-compose.yml` + `compose_server.yaml`, variables en `.env` + `server.env` |
 | Comando base | `docker compose --env-file .env --env-file server.env <acción>` |
 | Guía de despliegue y restauración | `SERVER_DEPLOY.md` |
+| Guía de operación (equipos, plantillas, alertas, procedimientos) | `OPERACION.md` |
 
 ## Regla 1 — Respaldo antes de modificar producción
 
@@ -92,7 +93,7 @@ Al añadir cualquier configuración nueva fuera de la base de datos (un script, 
 - Los ajustes de host hechos por la API (macros, dependencias, items desactivados) quedan en la base de datos. Si son un patrón repetible, se documentan en `SERVER_DEPLOY.md`.
 - Cada equipo nuevo se da de alta con su dependencia topológica (quién le da conectividad).
 
-Particularidades ya conocidas (detalle en `SERVER_DEPLOY.md`):
+Particularidades ya conocidas (detalle en `OPERACION.md`):
 
 | Equipo | Particularidad |
 |---|---|
@@ -102,7 +103,25 @@ Particularidades ya conocidas (detalle en `SERVER_DEPLOY.md`):
 | Ubiquiti airOS 8 / airOS 6 | Solo **SNMPv1**. AC sin GPS: `{$UBNT.GPS.SATS.MIN}=0`. airOS 6 usa la variante airMAX M |
 | TP-Link | `{$PORT.IFNAME.NOT_MATCHES}=^(<\|Vlan-interface)` y `{$IFCONTROL}=0` con la plantilla de puertos |
 
-## Regla 7 — Verificación
+## Regla 7 — Documentar para que una persona pueda hacerlo
+
+Todo lo que se configure o se haga en el proyecto debe poder repetirlo una persona sin ayuda y sin la API. Hay dos documentos, cada uno con su alcance:
+
+| Documento | Contenido |
+|---|---|
+| `SERVER_DEPLOY.md` | Instalar, migrar, restaurar y actualizar el **servidor** |
+| `OPERACION.md` | Usar y ampliar **Zabbix** en el día a día: topología y dependencias, catálogo de plantillas (propias y oficiales) con sus macros y triggers, alertas, procedimientos paso a paso (añadir un AP, un router, un switch o un servidor; ajustar umbrales; mantenimientos; actualizar plantillas; dar de baja equipos) y solución de problemas |
+
+Cada procedimiento de `OPERACION.md` indica:
+
+1. **Cuándo** se usa y los requisitos previos (incluido el respaldo, regla 1).
+2. Los **pasos en la interfaz web** de Zabbix y en el equipo (airOS, RouterOS…), con los menús exactos. La API es opcional; la interfaz es obligatoria.
+3. Qué **plantillas, macros, dependencias y etiquetas** aplicar y por qué.
+4. Cómo **verificar** que funciona.
+
+Cualquier cambio que añada o modifique una plantilla, un trigger, una macro, un tipo de equipo, una dependencia o un procedimiento se documenta en `OPERACION.md` **en el mismo commit**. Esto incluye el inventario de equipos y la topología.
+
+## Regla 8 — Verificación
 
 Después de cada cambio se comprueba el resultado real. No basta con que el comando haya terminado sin error:
 
