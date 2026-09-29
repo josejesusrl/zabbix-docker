@@ -35,6 +35,8 @@ printf '%s\n' "$TOKEN" | agents/scripts/run_remote.sh -f zabbix_templates/X.yaml
 | `zbx_events.py` | Lectura | Eventos de problema de las últimas horas agrupados por trigger: veces abierto, notificaciones, cierres manuales. Detecta falsos positivos y *flapping* |
 | `zbx_add_dependency.py` | Escritura | Añade una dependencia a cualquier trigger (p. ej. equipos raíz → enlace de red del Zabbix server), conservando las existentes |
 | `zbx_set_status.py` | Escritura | Activa o desactiva items o triggers por nombre (registrar el motivo en `OPERACION.md`, sección 6) |
+| `zbx_mediatype_update.py` | Escritura | Aplica a un medio el script, las plantillas y parámetros concretos desde `zabbix_media/`, sin tocar ni mostrar el token |
+| `zbx_test_notification.py` | Escritura | Prueba real de extremo a extremo: host temporal que abre, actualiza y resuelve un problema, muestra el estado de entrega de cada notificación y se borra |
 | `zbx_close_problems.py` | Escritura | Cierra problemas abiertos por nombre con un comentario (falsos positivos, problemas de objetos desactivados) |
 | `run_remote.sh` | Envoltorio | Ejecuta un script en el servidor con el token por la entrada estándar |
 
@@ -62,6 +64,10 @@ printf '%s\n' "$TOKEN" | $S zbx_set_uplink.py --tag "uplink=EDGE 01" --parent "S
 printf '%s\n' "$TOKEN" | $S snmp_walk.py 10.100.0.2 1.3.6.1.4.1.43356 --max-lines 200
 # Últimos valores de un host (verificación tras el alta)
 printf '%s\n' "$TOKEN" | $S zbx_latest.py --host AP-Lk_Trunk_01_A --key mimosa.
+# Aplicar el script y las plantillas de Telegram, y probar
+printf '%s\n' "$TOKEN" | $S -f zabbix_media/telegram/telegram.js -f zabbix_media/telegram/message_templates.json \
+    zbx_mediatype_update.py --name Telegram --script telegram.js --templates message_templates.json --param api_parse_mode=html
+printf '%s\n' "$TOKEN" | $S zbx_test_notification.py
 # Actualizar una plantilla propia
 printf '%s\n' "$TOKEN" | $S -f zabbix_templates/switch_port_changes.yaml zbx_import_template.py switch_port_changes.yaml --delete-missing
 ```

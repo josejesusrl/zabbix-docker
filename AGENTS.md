@@ -52,6 +52,7 @@ El respaldo de la base de datos (`pg_dump`) contiene hosts, plantillas importada
 | Preparación del host: directorios, cron, lm-sensors | `server_setup.sh` | `./server_setup.sh` |
 | Respaldo, restauración y certificados | `server_backup.sh`, `server_restore.sh`, `server_letsencrypt.sh` | `git clone` |
 | Scripts de agentes para la API | `agents/scripts/` | `git clone` |
+| Script y plantillas de mensajes de los medios (Telegram…) | `zabbix_media/` (sin tokens: el token del bot está solo en la BD) | Están también en la BD; si se pierde, `zbx_mediatype_update.py` desde aquí |
 | **Secretos**: contraseña de PostgreSQL, comunidad de traps, `server.env` | **Nunca en git.** En el archivo `zabbix-config-*.tar.gz` del respaldo | `server_restore.sh` o `server_setup.sh` |
 | Certificados TLS y `dhparam` | `zbx_env/etc/ssl/nginx`, `letsencrypt/` (en el respaldo) | `server_restore.sh` o `server_letsencrypt.sh issue` |
 | MIBs de fabricantes | `zbx_env/var/lib/zabbix/mibs` (en el respaldo) | `server_restore.sh` |

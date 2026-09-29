@@ -99,6 +99,27 @@ Acciones (*Alerts → Actions → Trigger actions*):
 
 El reparto por canal se hace en el usuario: *User settings → Profile → Media*, severidades de cada medio.
 
+### Formato de los mensajes de Telegram
+
+Mensajes en español con formato HTML y emoji según el tipo: 🔥 Disaster, 🔴 High, 🟠 Average, 🟡 Warning, 🔵 Information, ✅ Resuelto, 💬 Actualización.
+- Incluyen el problema, el host, la severidad, los datos operativos, las fechas, el ID del evento y un enlace **Ver en Zabbix**.
+- La resolución y las actualizaciones se envían como **respuesta** al mensaje original del problema, formando un hilo por incidente.
+- Las líneas sin valor (p. ej. "Datos:" cuando el trigger no tiene datos operativos) se omiten.
+
+**Origen:** el script y las plantillas se mantienen en el repositorio, en `zabbix_media/telegram/`:
+- `telegram.js` es el script oficial de Zabbix con los cambios marcados `CUSTOM`.
+- `message_templates.json` contiene las plantillas de problema, resolución y actualización.
+
+**Para cambiar un mensaje:**
+1. Editar `message_templates.json`. Formato con etiquetas HTML de Telegram: `<b>`, `<i>`, `<u>`, `<s>`, `<code>`, `<pre>`, `<blockquote>`, `<a href="https://…">`. `{SEV.EMOJI}` pone el emoji.
+2. Respaldo.
+3. Aplicar con `agents/scripts/zbx_mediatype_update.py` (ver su README). Los valores de las macros se escapan solos.
+4. Probar con `agents/scripts/zbx_test_notification.py`, que dispara un problema real y lo resuelve.
+
+Si se edita en la interfaz (*Alerts → Media types → Telegram → Message templates*), copiar el cambio al JSON del repositorio: la próxima aplicación desde el repositorio lo sobrescribiría.
+
+**Actualizaciones:** la acción las envía a los usuarios involucrados **excepto a quien hace la actualización**. Con un solo usuario, los reconocimientos y comentarios propios no generan mensaje.
+
 Los medios (Gmail y Telegram) reintentan **10 veces cada 30 s** (*Alerts → Media types → Options*): un corte de red del servidor de hasta 5 min no pierde notificaciones.
 
 ### Avisar una sola vez: etiqueta `escalation=off`
