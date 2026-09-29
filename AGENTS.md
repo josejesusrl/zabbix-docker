@@ -51,6 +51,7 @@ El respaldo de la base de datos (`pg_dump`) contiene hosts, plantillas importada
 | Scripts de alertas y externos | `alertscripts/`, `externalscripts/` | `git clone` |
 | Preparación del host: directorios, cron, lm-sensors | `server_setup.sh` | `./server_setup.sh` |
 | Respaldo, restauración y certificados | `server_backup.sh`, `server_restore.sh`, `server_letsencrypt.sh` | `git clone` |
+| Scripts de agentes para la API | `agents/scripts/` | `git clone` |
 | **Secretos**: contraseña de PostgreSQL, comunidad de traps, `server.env` | **Nunca en git.** En el archivo `zabbix-config-*.tar.gz` del respaldo | `server_restore.sh` o `server_setup.sh` |
 | Certificados TLS y `dhparam` | `zbx_env/etc/ssl/nginx`, `letsencrypt/` (en el respaldo) | `server_restore.sh` o `server_letsencrypt.sh issue` |
 | MIBs de fabricantes | `zbx_env/var/lib/zabbix/mibs` (en el respaldo) | `server_restore.sh` |
@@ -121,7 +122,27 @@ Cada procedimiento de `OPERACION.md` indica:
 
 Cualquier cambio que añada o modifique una plantilla, un trigger, una macro, un tipo de equipo, una dependencia o un procedimiento se documenta en `OPERACION.md` **en el mismo commit**. Esto incluye el inventario de equipos y la topología.
 
-## Regla 8 — Verificación
+## Regla 8 — Scripts reutilizables para la API
+
+Los scripts que se usan para consultar o modificar Zabbix por la API **no se escriben de un solo uso**. Se guardan en **`agents/scripts/`** para reutilizarlos. Guía y catálogo: `agents/scripts/README.md`.
+
+1. **Antes de escribir un script, se busca en `agents/scripts/`** uno que ya lo haga, o una función de `zbx_api.py` que se pueda reutilizar o ampliar.
+2. **Genéricos:** todo lo variable (hosts, grupos, IPs, plantillas, macros, umbrales) llega por argumentos. Nada de valores de producción fijos en el código.
+3. **SOLID, KISS y DRY:**
+   - Un script, una responsabilidad.
+   - La lógica común (cliente de la API, búsquedas, reglas de dependencias, macros, etiquetas, importación) vive solo en `zbx_api.py`.
+   - Solución lo más simple posible, sin dependencias fuera de la biblioteca estándar de Python.
+4. **Documentados:** docstring con propósito y uso (visible con `--help`) y una fila en la tabla del README.
+5. **Seguros:**
+   - El token se pasa por la entrada estándar con `run_remote.sh` (regla 4).
+   - Los scripts que escriben tienen `--dry-run` y exigen el respaldo previo (regla 1).
+   - Ninguno imprime secretos.
+6. **Validados** con `python3 -m py_compile` y una ejecución de solo lectura o `--dry-run` antes de usarlos en producción.
+7. **Commits:** los cambios en `agents/scripts/` no necesitan un commit por script. Se agrupan en un commit **al final de la sesión de trabajo**, antes de terminarla. El resto de cambios siguen la regla 3.
+
+Las tareas únicas que no justifican un script (una consulta de diagnóstico puntual) pueden hacerse con un script temporal, que se borra al terminar. Si una tarea se repite, se convierte en script de `agents/scripts/`.
+
+## Regla 9 — Verificación
 
 Después de cada cambio se comprueba el resultado real. No basta con que el comando haya terminado sin error:
 

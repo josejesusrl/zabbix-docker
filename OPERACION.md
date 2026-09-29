@@ -3,6 +3,8 @@
 Guía para usar y ampliar Zabbix día a día: qué se monitorea, cómo está organizado, qué plantillas usar y cómo añadir o cambiar equipos.
 Todos los procedimientos se pueden hacer desde la interfaz web (`https://zabbix.likson.com`). La instalación, la restauración y las actualizaciones del servidor están en `SERVER_DEPLOY.md`; las reglas del proyecto, en `AGENTS.md`.
 
+> Para automatizar estos procedimientos por la API (alta masiva, cambio de padre, inventario, estado), ver `agents/scripts/README.md`. La interfaz web sigue siendo el método de referencia.
+
 > **Antes de cualquier cambio en Zabbix:** en el servidor, `cd ~/zabbix-docker && sudo ./server_backup.sh`. Esto incluye dar de alta equipos, importar plantillas o cambiar macros (`AGENTS.md`, regla 1).
 
 ---
