@@ -35,7 +35,7 @@ Formato de los mensajes de ambos medios: [alertas](../operacion/alertas.md).
 
 | Usuario | Rol | Medios | Notas |
 |---|---|---|---|
-| `jjrl` | Super admin | Gmail: Warning y superiores. Telegram: High y superiores. Ambos 1-7, 00:00-24:00 | Cierre automático de sesión desactivado (`0`) |
+| `jjrl` | Super admin | Gmail: Warning y superiores. Telegram: High y superiores. Ambos 1-7, 00:00-24:00 | Cierre automático de sesión `60m` |
 | `guest` | — | — | Desactivado |
 | `melb` (Maria Elena Lopez Balderas) | Solo lectura (grupo `Solo lectura`) | — | Consulta. Auto-logout `15m` |
 

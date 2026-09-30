@@ -37,16 +37,14 @@ Avisos reales que se mantienen a propósito. No son falsos positivos.
 | Acceso público por **Cloudflare Tunnel + Access**, sin puertos redirigidos en el NAT (2026-09-29) | No se expone ningún puerto a Internet. Access añade un login previo al de Zabbix y Cloudflare gestiona el certificado público. Sustituye a Let's Encrypt con redirección de 80/443 ([acceso externo](../despliegue/acceso-externo.md)) |
 | Certificado autofirmado de 10 años en el origen | Solo lo ven `cloudflared` (sin verificarlo) y el acceso directo por la LAN, que muestra un aviso ([instalación](../despliegue/instalacion.md#2-arrancar-y-crear-el-certificado)) |
 | Traps y agentes usan `192.168.0.191`, no `zabbix.likson.com` | El nombre apunta a Cloudflare, que solo lleva la web |
+| Sin MFA en Zabbix | Cloudflare Access ya exige un código enviado al correo autorizado antes del login de Zabbix. El acceso por la LAN no pasa por Access y queda protegido solo por la contraseña |
 
 ## Pendientes
 
 | Pendiente | Qué hacer |
 |---|---|
-| Terminar la configuración de Cloudflare Access | El 2026-09-29 se dejó la web publicada mientras se termina de configurar Access. Revisar en *Access → Applications* la aplicación `zabbix.likson.com` (política *Allow* solo con los correos autorizados, sin *Bypass*) y comprobar desde fuera que un correo no autorizado no entra ([acceso externo](../despliegue/acceso-externo.md#2-proteger-la-web-con-access)) |
-| Cerrar la puesta en marcha del túnel | La plantilla *Cloudflare Tunnel by HTTP* ya está enlazada (2026-09-29). Quitar la línea `server_letsencrypt.sh renew` de `/etc/cron.d/zabbix` y borrar `letsencrypt/`. Revisar que el agente de server-04 no use `ServerActive=zabbix.likson.com`. Comprobar que el router no redirige 80/443 |
+| Comprobar que el router no redirige 80/443 al servidor | El acceso público es solo por el túnel ([acceso externo](../despliegue/acceso-externo.md#4-verificar)). El resto de la puesta en marcha del túnel quedó hecho el 2026-09-29 |
 | Respaldos fuera del servidor | Copiarlos periódicamente ([mantenimiento](../despliegue/mantenimiento.md#copiar-los-respaldos-fuera-del-servidor)) |
-| MFA desactivado | Activar TOTP en *Users → Authentication → MFA settings* |
-| Cierre automático de sesión de `jjrl` en `0` | Poner un valor (p. ej. 15 min) en *User settings → Profile* |
 | Token de API para agentes (caduca 2026-09-30) | Revocarlo al terminar la sesión de trabajo (*User settings → API tokens*) |
 | Cable del Zabbix server a 100 Mbps | Ver *Situaciones conocidas* |
 | Dashboard "Likson NOC": los widgets de CPU no muestran datos | Revisar los widgets de CPU y los items `kpi.cpu.*` del host *KPI Likson* ([dashboard](dashboard.md), `zabbix_dashboards/likson_noc.json`, `zabbix_templates/likson_kpis.yaml`). Detectado el 2026-09-29, sin investigar |

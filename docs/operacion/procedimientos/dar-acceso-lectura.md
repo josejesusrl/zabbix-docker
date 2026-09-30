@@ -26,6 +26,7 @@ Qué puede hacer un usuario **Solo lectura**:
 2. **Acceso desde Internet:** añadir su correo a la política `Personal NOC` de Cloudflare Access ([acceso externo](../../despliegue/acceso-externo.md#2-proteger-la-web-con-access)). En la LAN (`https://192.168.0.191`) no hace falta.
 3. **Registrar** el usuario en la tabla de usuarios de la [configuración base](../../despliegue/configuracion-base.md#usuarios-users--users).
 4. **Verificar** con el usuario nuevo:
+   - Tras editar el usuario en la interfaz, comprobar que *Auto-logout* sigue en `15m` (el 2026-09-29 quedó en `0` tras una edición y hubo que reponerlo).
    - El menú solo muestra *Dashboards*, *Monitoring*, *Services*, *Inventory* y *Reports*.
    - *Likson NOC* muestra datos.
    - En *Monitoring → Hosts* aparecen los equipos.
