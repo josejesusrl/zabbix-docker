@@ -5,7 +5,7 @@ Cada documento empieza indicando **cuándo** usarlo. Las reglas para modificar e
 ## Soy nuevo
 
 1. [Inventario y topología](operacion/inventario.md): qué equipos hay, cómo se nombran y de quién depende cada uno.
-2. [Dashboard "Likson NOC"](operacion/dashboard.md): la vista diaria.
+2. [Dashboard "Likson NOC"](operacion/dashboard.md): la vista diaria. [Mapas de red](operacion/mapas.md): la topología con el estado en vivo.
 3. [Alertas](operacion/alertas.md): quién recibe qué, cómo se leen los mensajes y qué hacer con un problema.
 4. [Registro](operacion/registro.md): decisiones tomadas, situaciones conocidas y pendientes.
 
@@ -63,7 +63,7 @@ docs/
 └── operacion/                 Zabbix en el día a día
     ├── inventario.md          qué hay (cambia con cada alta o baja)
     ├── plantillas.md          catálogo y particularidades
-    ├── alertas.md, dashboard.md
+    ├── alertas.md, dashboard.md, mapas.md
     ├── procedimientos/        un fichero por tarea: Cuándo, Requisitos, pasos, Verificación, Con scripts
     ├── solucion-de-problemas.md
     └── registro.md            decisiones, situaciones conocidas y pendientes

@@ -58,4 +58,4 @@ Se recupera todo lo que está en git (stack, plantillas propias, UserParameters,
 1. Importar `zabbix_templates/*.yaml` (*Data collection → Templates → Import*, o `zbx_import_template.py`) y enlazar las del host "Zabbix server" según [instalación, sección 4](instalacion.md#4-configuración-en-la-interfaz-web), incluida *Cloudflare Tunnel by HTTP* (`zbx_link_template.py`).
 2. Rehacer lo descrito en [configuración base](configuracion-base.md): medios Telegram y Gmail (con `zbx_mediatype_update.py` se cargan el script y las plantillas de `zabbix_media/`), usuarios, acciones, macro global y ajustes.
 3. Volver a dar de alta los equipos según el [inventario](../operacion/inventario.md) y los [procedimientos](../README.md#añadir-o-cambiar-equipos).
-4. Crear el dashboard con `zbx_dashboard_apply.py` desde `zabbix_dashboards/likson_noc.json`.
+4. Crear el dashboard con `zbx_dashboard_apply.py` desde `zabbix_dashboards/likson_noc.json` y los mapas con `zbx_map_apply.py` desde `zabbix_maps/likson_red.json`, después de las dependencias ([mapas](../operacion/mapas.md)).

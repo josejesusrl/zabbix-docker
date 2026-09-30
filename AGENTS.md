@@ -71,6 +71,7 @@ El respaldo de la base de datos (`pg_dump`) contiene hosts, plantillas importada
 | Túnel de Cloudflare, ruta pública y Access | Panel de Cloudflare Zero Trust, documentado en [`docs/despliegue/acceso-externo.md`](docs/despliegue/acceso-externo.md). El conector está en `compose_server.yaml` | Ya está en Cloudflare; si se pierde, a mano según ese documento |
 | Scripts de agentes para la API | `agents/scripts/` | `git clone` |
 | Perfiles de acceso (rol, grupo de usuarios, dashboards compartidos) | `zabbix_access/*.json` | Están también en la BD; si se pierde, `zbx_access_apply.py` |
+| Mapas de red (se generan desde las dependencias) | `zabbix_maps/*.json` | Están también en la BD; si se pierde, `zbx_map_apply.py` |
 | Dashboards | `zabbix_dashboards/*.json` (por nombres) | Están también en la BD; si se pierde, `zbx_dashboard_apply.py` |
 | Script y plantillas de mensajes de los medios (Telegram…) | `zabbix_media/` (sin tokens: el token del bot está solo en la BD) | Están también en la BD; si se pierde, `zbx_mediatype_update.py` desde aquí |
 | **Secretos**: contraseña de PostgreSQL, token del túnel (`env_vars/.CLOUDFLARE_TUNNEL_TOKEN`), comunidad de traps, `server.env` | **Nunca en git.** En el archivo `zabbix-config-*.tar.gz` del respaldo | `server_restore.sh` o `server_setup.sh` |
@@ -126,7 +127,7 @@ Todo lo que se configure o se haga en el proyecto debe poder repetirlo una perso
 | `docs/despliegue/` | Instalar, restaurar, migrar y mantener el **servidor**, y la configuración que vive solo en la BD |
 | `docs/operacion/inventario.md` | Convenciones, topología e inventario de hosts (tabla generada con `zbx_inventory.py --markdown`) |
 | `docs/operacion/plantillas.md` | Catálogo de plantillas (propias y oficiales), macros, triggers y particularidades por tipo de equipo |
-| `docs/operacion/alertas.md`, `dashboard.md` | Notificaciones y dashboard |
+| `docs/operacion/alertas.md`, `dashboard.md`, `mapas.md` | Notificaciones, dashboard y mapas de red |
 | `docs/operacion/procedimientos/` | Un fichero por procedimiento |
 | `docs/operacion/solucion-de-problemas.md` | Síntomas y soluciones |
 | `docs/operacion/registro.md` | Objetos desactivados, situaciones conocidas, decisiones y pendientes |

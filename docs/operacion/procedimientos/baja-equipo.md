@@ -5,4 +5,4 @@
 
 - **Temporal** (equipo apagado o en reparación): *Data collection → Hosts* → estado **Disabled**. Se conserva el historial.
 - **Definitiva:** antes, revisar qué hosts dependen de él (etiqueta `uplink`, [inventario](../inventario.md)) y reasignar sus dependencias. Después, **Delete**. Se pierde su historial.
-- Actualizar el inventario y la topología de la documentación de operación.
+- Actualizar el inventario y la topología de la documentación de operación, y regenerar los [mapas de red](../mapas.md#actualizar-los-mapas-después-de-un-alta-una-baja-o-un-cambio-de-padre).

@@ -18,6 +18,8 @@ Las dependencias evitan recibir decenas de alertas cuando cae un equipo del que 
 5. Añadir la etiqueta `uplink = <host padre>` en la pestaña *Tags* del host.
 6. **Equipos raíz** (sin padre en la red, p. ej. EDGE 01 o un servidor directo): su trigger de disponibilidad (*Unavailable by ICMP ping* o *Zabbix agent is not available*) depende de **Zabbix server: Interface enp2s0: Link down**. Si cae la red del propio servidor Zabbix, no se reporta toda la red como caída.
 
+7. **Actualizar los mapas de red**, que se dibujan a partir de estas dependencias ([mapas](../mapas.md#actualizar-los-mapas-después-de-un-alta-una-baja-o-un-cambio-de-padre)).
+
 Para configurar varios hosts a la vez, filtrar en *Data collection → Triggers* por grupo o etiqueta y por nombre, seleccionarlos todos y usar **Mass update**.
 
 ## Con scripts (opcional)
