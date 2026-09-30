@@ -63,10 +63,10 @@ printf '%s\n' "$TOKEN" | $S snmp_probe.py 172.16.1.20 172.16.1.21
 printf '%s\n' "$TOKEN" | $S zbx_create_snmp_host.py --name LIKSON_PDV_11 --ip 172.16.1.20 \
     --group "Access Points PPPoE Clients" --snmp-version 1 \
     --template "Ubiquiti AirOS by SNMP" "Ubiquiti AirOS 8 wireless by SNMPv1" \
-    --macro '{$UBNT.GPS.SATS.MIN}=0' --uplink "Switch Main Site #01" \
+    --macro '{$UBNT.GPS.SATS.MIN}=0' --uplink MAIN-SW-01 \
     --self-dependency "no connected clients" --dry-run
 # Cambiar de padre a todos los hosts con una etiqueta
-printf '%s\n' "$TOKEN" | $S zbx_set_uplink.py --tag "uplink=EDGE 01" --parent "Switch Main Site #01" --dry-run
+printf '%s\n' "$TOKEN" | $S zbx_set_uplink.py --tag "uplink=EDGE 01" --parent MAIN-SW-01 --dry-run
 # Ver qué publica un equipo nuevo en su MIB de fabricante
 printf '%s\n' "$TOKEN" | $S snmp_walk.py 10.100.0.2 1.3.6.1.4.1.43356 --max-lines 200
 # Últimos valores de un host (verificación tras el alta)

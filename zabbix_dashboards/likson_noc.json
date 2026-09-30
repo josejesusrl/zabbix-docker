@@ -601,13 +601,13 @@
         },
         {
           "type": "svggraph",
-          "name": "Switch Main Site #01: tráfico de puertos",
+          "name": "MAIN-SW-01: tráfico de puertos",
           "x": 36,
           "y": 8,
           "width": 36,
           "height": 4,
           "fields": {
-            "ds.0.hosts.0": "Switch Main Site #01",
+            "ds.0.hosts.0": "MAIN-SW-01",
             "ds.0.items.0": "Interface gigabitEthernet*: Bits received",
             "ds.0.color": "1E88E5",
             "ds.0.type": 0,

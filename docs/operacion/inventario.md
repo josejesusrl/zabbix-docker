@@ -7,6 +7,7 @@ Qué se monitorea y de quién depende cada equipo. **Es lo que más cambia:** al
 | Elemento | Convención |
 |---|---|
 | Nombre del host | El nombre de sistema del equipo (`sysName` o *Device Name*), idéntico en *Host name* y *Visible name*. Si el equipo no tiene nombre, se le pone primero en el propio equipo. El *Host name* solo admite letras, dígitos, espacios, `.`, `-` y `_`: si el nombre lleva otros caracteres (p. ej. `[AP]-…`), el *Host name* los omite y el *Visible name* conserva el nombre exacto. **Nunca la IP como Host name**: las fórmulas de los items calculados (host *KPI Likson*) usan el *Host name*. Para corregir un host: `zbx_align_host_name.py` |
+| Nombre de equipos de infraestructura nuevos | `SITIO-ROL-NN` en mayúsculas, p. ej. `MAIN-SW-01` (switch administrable 1 del sitio Main Site). Roles: `SW` switch, `RTR` router, `NAS` concentrador PPPoE. Primero se cambia en el equipo y después en Zabbix (`zbx_align_host_name.py --rename`, y `zbx_set_uplink.py` para la etiqueta `uplink` de los hijos) |
 | Grupos de hosts | `Routers & Switches Likson` (MikroTik, switches), `Access Points PPPoE Clients` (APs Ubiquiti), `Enlaces PTP Troncales` y `Enlaces PTP Backhaul` (radios PTP), `Linux servers`, `Zabbix servers`, `Likson KPIs` (host de indicadores) |
 | Etiqueta `uplink` | Nombre del equipo del que depende (p. ej. `uplink = EDGE 01`). Sirve para filtrar y como documentación de la dependencia |
 | Interfaz SNMP | Comunidad `{$SNMP_COMMUNITY}` (macro global). MikroTik, TP-Link y Mimosa: SNMPv2. **Ubiquiti: SNMPv1**. La macro es de tipo **texto** a propósito: `snmp_probe.py` y `snmp_walk.py` la leen por la API para sondear equipos sin mostrarla. Si se cambia a *Secret text*, esos scripts dejan de funcionar |
@@ -22,8 +23,8 @@ EDGE 01 (192.168.200.1)  MikroTik CCR2004  depende del enlace de red del Zabbix 
 ├── STA-Lk_Trunk_01_A (10.100.0.3)  Mimosa C5C, extremo del troncal conectado a EDGE 01
 │   └── AP-Lk_Trunk_01_A (10.100.0.2)  Mimosa C5C, extremo lejano (solo se alcanza a través del enlace)
 ├── NAS-01 (192.168.200.2)  CCR2004, concentrador PPPoE
-│   ├── Switch Main Site #01 (172.16.100.2)  TP-Link
-│   │   ├── APs Ubiquiti 172.16.1.2 – 172.16.1.19 (16 APs, uplink = Switch Main Site #01)
+│   ├── MAIN-SW-01 (172.16.100.2)  TP-Link, switch administrable 1 del sitio Main Site
+│   │   ├── APs Ubiquiti 172.16.1.2 – 172.16.1.19 (16 APs, uplink = MAIN-SW-01)
 │   │   ├── STA-Lk_Hq_Mayolica_1 (10.155.1.3)  NanoStation loco M2 (airOS 6), backhaul
 │   │   │   └── AP-Lk_Hq_Mayolica_1 (10.155.1.2)  NanoStation loco M2, extremo lejano
 │   │   ├── [STA]Lk_Hq_Caribe_1 (10.155.3.3)  LiteBeam 5AC, backhaul sensible a lluvia (escalation=off)
@@ -47,26 +48,26 @@ Tablas generadas con `agents/scripts/zbx_inventory.py --markdown` y pegadas aqu�
 
 | Host | Interfaz | Plantillas | Macros de host | Etiquetas | Depende de |
 |---|---|---|---|---|---|
-| LIKSON_BETA01 | snmpv1 172.16.1.14 | Ubiquiti AirOS 8 wireless by SNMPv1, Ubiquiti AirOS by SNMP | — | uplink=Switch Main Site #01 | Switch Main Site #01 |
+| LIKSON_BETA01 | snmpv1 172.16.1.14 | Ubiquiti AirOS 8 wireless by SNMPv1, Ubiquiti AirOS by SNMP | — | uplink=MAIN-SW-01 | MAIN-SW-01 |
 | LIKSON_CANADAS_A_01 | snmpv1 172.16.3.12 | Ubiquiti AirOS 8 wireless by SNMPv1, Ubiquiti AirOS by SNMP | — | uplink=NAS-03 | NAS-03 |
 | LIKSON_CANADAS_B_01 | snmpv1 172.16.3.13 | Ubiquiti AirOS 8 wireless by SNMPv1, Ubiquiti AirOS by SNMP | — | uplink=NAS-03 | NAS-03 |
 | LIKSON_CANADAS_C_01 | snmpv1 172.16.3.10 | Ubiquiti AirOS 8 wireless by SNMPv1, Ubiquiti AirOS by SNMP | {$UBNT.GPS.SATS.MIN}=0 | uplink=NAS-03 | NAS-03 |
 | LIKSON_CANADAS_D_01 | snmpv1 172.16.3.11 | Ubiquiti AirOS 8 wireless by SNMPv1, Ubiquiti AirOS by SNMP | {$UBNT.GPS.SATS.MIN}=0 | uplink=NAS-03 | NAS-03 |
-| LIKSON_HQ_DELTA_01 | snmpv1 172.16.1.18 | Ubiquiti AirOS 8 wireless by SNMPv1, Ubiquiti AirOS by SNMP | — | uplink=Switch Main Site #01 | Switch Main Site #01 |
-| LIKSON_HQ_EPSILON_01 | snmpv1 172.16.1.19 | Ubiquiti AirOS 8 wireless by SNMPv1, Ubiquiti AirOS by SNMP | — | uplink=Switch Main Site #01 | Switch Main Site #01 |
-| LIKSON_PDV_1 | snmpv1 172.16.1.2 | Ubiquiti AirOS 8 wireless by SNMPv1, Ubiquiti AirOS by SNMP | {$UBNT.GPS.SATS.MIN}=0 | uplink=Switch Main Site #01 | Switch Main Site #01 |
-| LIKSON_PDV_10 | snmpv1 172.16.1.9 | Ubiquiti AirOS 8 wireless by SNMPv1, Ubiquiti AirOS by SNMP | {$UBNT.GPS.SATS.MIN}=0 | uplink=Switch Main Site #01 | Switch Main Site #01 |
-| LIKSON_PDV_2 | snmpv1 172.16.1.3 | Ubiquiti AirOS 8 wireless by SNMPv1, Ubiquiti AirOS by SNMP | {$UBNT.GPS.SATS.MIN}=0 | uplink=Switch Main Site #01 | Switch Main Site #01 |
-| LIKSON_PDV_3 | snmpv1 172.16.1.4 | Ubiquiti AirOS 8 wireless by SNMPv1, Ubiquiti AirOS by SNMP | — | uplink=Switch Main Site #01 | Switch Main Site #01 |
-| LIKSON_PDV_4 | snmpv1 172.16.1.5 | Ubiquiti AirOS 8 wireless by SNMPv1, Ubiquiti AirOS by SNMP | {$UBNT.GPS.SATS.MIN}=0 | uplink=Switch Main Site #01 | Switch Main Site #01 |
-| LIKSON_PDV_5 | snmpv1 172.16.1.6 | Ubiquiti airMAX M airOS6 wireless by SNMPv1, Ubiquiti AirOS by SNMP | — | uplink=Switch Main Site #01 | Switch Main Site #01 |
-| LIKSON_PDV_6 | snmpv1 172.16.1.7 | Ubiquiti AirOS 8 wireless by SNMPv1, Ubiquiti AirOS by SNMP | {$UBNT.GPS.SATS.MIN}=0 | uplink=Switch Main Site #01 | Switch Main Site #01 |
-| LIKSON_PDV_7 | snmpv1 172.16.1.15 | Ubiquiti AirOS 8 wireless by SNMPv1, Ubiquiti AirOS by SNMP | — | uplink=Switch Main Site #01 | Switch Main Site #01 |
-| LIKSON_PDV_9 | snmpv1 172.16.1.8 | Ubiquiti AirOS 8 wireless by SNMPv1, Ubiquiti AirOS by SNMP | {$UBNT.GPS.SATS.MIN}=0 | uplink=Switch Main Site #01 | Switch Main Site #01 |
-| LKON_SGAMMA01 | snmpv1 172.16.1.10 | Ubiquiti AirOS 8 wireless by SNMPv1, Ubiquiti AirOS by SNMP | {$UBNT.GPS.SATS.MIN}=0 | uplink=Switch Main Site #01 | Switch Main Site #01 |
-| LK_C2 | snmpv1 172.16.1.16 | Ubiquiti AirOS 8 wireless by SNMPv1, Ubiquiti AirOS by SNMP | {$UBNT.GPS.SATS.MIN}=0 | uplink=Switch Main Site #01 | Switch Main Site #01 |
-| LK_C3 | snmpv1 172.16.1.11 | Ubiquiti AirOS 8 wireless by SNMPv1, Ubiquiti AirOS by SNMP | — | uplink=Switch Main Site #01 | Switch Main Site #01 |
-| LK_C4 | snmpv1 172.16.1.17 | Ubiquiti AirOS 8 wireless by SNMPv1, Ubiquiti AirOS by SNMP | {$UBNT.GPS.SATS.MIN}=0 | uplink=Switch Main Site #01 | Switch Main Site #01 |
+| LIKSON_HQ_DELTA_01 | snmpv1 172.16.1.18 | Ubiquiti AirOS 8 wireless by SNMPv1, Ubiquiti AirOS by SNMP | — | uplink=MAIN-SW-01 | MAIN-SW-01 |
+| LIKSON_HQ_EPSILON_01 | snmpv1 172.16.1.19 | Ubiquiti AirOS 8 wireless by SNMPv1, Ubiquiti AirOS by SNMP | — | uplink=MAIN-SW-01 | MAIN-SW-01 |
+| LIKSON_PDV_1 | snmpv1 172.16.1.2 | Ubiquiti AirOS 8 wireless by SNMPv1, Ubiquiti AirOS by SNMP | {$UBNT.GPS.SATS.MIN}=0 | uplink=MAIN-SW-01 | MAIN-SW-01 |
+| LIKSON_PDV_10 | snmpv1 172.16.1.9 | Ubiquiti AirOS 8 wireless by SNMPv1, Ubiquiti AirOS by SNMP | {$UBNT.GPS.SATS.MIN}=0 | uplink=MAIN-SW-01 | MAIN-SW-01 |
+| LIKSON_PDV_2 | snmpv1 172.16.1.3 | Ubiquiti AirOS 8 wireless by SNMPv1, Ubiquiti AirOS by SNMP | {$UBNT.GPS.SATS.MIN}=0 | uplink=MAIN-SW-01 | MAIN-SW-01 |
+| LIKSON_PDV_3 | snmpv1 172.16.1.4 | Ubiquiti AirOS 8 wireless by SNMPv1, Ubiquiti AirOS by SNMP | — | uplink=MAIN-SW-01 | MAIN-SW-01 |
+| LIKSON_PDV_4 | snmpv1 172.16.1.5 | Ubiquiti AirOS 8 wireless by SNMPv1, Ubiquiti AirOS by SNMP | {$UBNT.GPS.SATS.MIN}=0 | uplink=MAIN-SW-01 | MAIN-SW-01 |
+| LIKSON_PDV_5 | snmpv1 172.16.1.6 | Ubiquiti airMAX M airOS6 wireless by SNMPv1, Ubiquiti AirOS by SNMP | — | uplink=MAIN-SW-01 | MAIN-SW-01 |
+| LIKSON_PDV_6 | snmpv1 172.16.1.7 | Ubiquiti AirOS 8 wireless by SNMPv1, Ubiquiti AirOS by SNMP | {$UBNT.GPS.SATS.MIN}=0 | uplink=MAIN-SW-01 | MAIN-SW-01 |
+| LIKSON_PDV_7 | snmpv1 172.16.1.15 | Ubiquiti AirOS 8 wireless by SNMPv1, Ubiquiti AirOS by SNMP | — | uplink=MAIN-SW-01 | MAIN-SW-01 |
+| LIKSON_PDV_9 | snmpv1 172.16.1.8 | Ubiquiti AirOS 8 wireless by SNMPv1, Ubiquiti AirOS by SNMP | {$UBNT.GPS.SATS.MIN}=0 | uplink=MAIN-SW-01 | MAIN-SW-01 |
+| LKON_SGAMMA01 | snmpv1 172.16.1.10 | Ubiquiti AirOS 8 wireless by SNMPv1, Ubiquiti AirOS by SNMP | {$UBNT.GPS.SATS.MIN}=0 | uplink=MAIN-SW-01 | MAIN-SW-01 |
+| LK_C2 | snmpv1 172.16.1.16 | Ubiquiti AirOS 8 wireless by SNMPv1, Ubiquiti AirOS by SNMP | {$UBNT.GPS.SATS.MIN}=0 | uplink=MAIN-SW-01 | MAIN-SW-01 |
+| LK_C3 | snmpv1 172.16.1.11 | Ubiquiti AirOS 8 wireless by SNMPv1, Ubiquiti AirOS by SNMP | — | uplink=MAIN-SW-01 | MAIN-SW-01 |
+| LK_C4 | snmpv1 172.16.1.17 | Ubiquiti AirOS 8 wireless by SNMPv1, Ubiquiti AirOS by SNMP | {$UBNT.GPS.SATS.MIN}=0 | uplink=MAIN-SW-01 | MAIN-SW-01 |
 | Sector_3 | snmpv1 172.16.2.3 | Ubiquiti AirOS 8 wireless by SNMPv1, Ubiquiti AirOS by SNMP | {$UBNT.GPS.SATS.MIN}=0 | uplink=NAS-01 | NAS-01 |
 | Sector_4 | snmpv1 172.16.2.10 | Ubiquiti AirOS 8 wireless by SNMPv1, Ubiquiti AirOS by SNMP | — | uplink=NAS-01 | NAS-01 |
 | Sector_5 | snmpv1 172.16.2.4 | Ubiquiti airMAX M airOS6 wireless by SNMPv1, Ubiquiti AirOS by SNMP | — | uplink=NAS-01 | NAS-01 |
@@ -76,13 +77,13 @@ Tablas generadas con `agents/scripts/zbx_inventory.py --markdown` y pegadas aqu�
 | Host | Interfaz | Plantillas | Macros de host | Etiquetas | Depende de |
 |---|---|---|---|---|---|
 | AP-Lk_Hq_Mayolica_1 | snmpv1 10.155.1.2 | Ubiquiti airMAX M airOS6 wireless by SNMPv1, Ubiquiti AirOS by SNMP | — | uplink=STA-Lk_Hq_Mayolica_1 | STA-Lk_Hq_Mayolica_1 |
-| STA-Lk_Hq_Mayolica_1 | snmpv1 10.155.1.3 | Ubiquiti airMAX M airOS6 wireless by SNMPv1, Ubiquiti AirOS by SNMP | — | uplink=Switch Main Site #01 | Switch Main Site #01 |
+| STA-Lk_Hq_Mayolica_1 | snmpv1 10.155.1.3 | Ubiquiti airMAX M airOS6 wireless by SNMPv1, Ubiquiti AirOS by SNMP | — | uplink=MAIN-SW-01 | MAIN-SW-01 |
 | [AP]-Lk_Hq_Pintores_1 | snmpv1 10.155.0.2 | Ubiquiti AirOS 8 wireless by SNMPv1, Ubiquiti AirOS by SNMP | {$UBNT.GPS.SATS.MIN}=0, {$UBNT.STA.SIGNAL.MIN.WARN}=-57, {$UBNT.STA.TXCAP.MIN}=50 | uplink=[CPE]-Lk_Hq_Pintores_1 | [CPE]-Lk_Hq_Pintores_1 |
 | [AP]-Lk_Pintores_Canadas_1 | snmpv1 10.155.2.2 | Ubiquiti AirOS 8 wireless by SNMPv1, Ubiquiti AirOS by SNMP | {$UBNT.GPS.SATS.MIN}=0, {$UBNT.STA.SIGNAL.MIN.WARN}=-59, {$UBNT.STA.TXCAP.MIN}=50 | uplink=[CPE]Lk_Pintores_Canadas_1 | [CPE]Lk_Pintores_Canadas_1 |
 | [AP]Lk_Hq_Caribe_1 | snmpv1 10.155.3.2 | Ubiquiti AirOS 8 wireless by SNMPv1, Ubiquiti AirOS by SNMP | {$UBNT.GPS.SATS.MIN}=0, {$UBNT.STA.SIGNAL.MIN.WARN}=-64, {$UBNT.STA.SIGNAL.MIN.CRIT}=-70, {$UBNT.STA.TXCAP.MIN}=37 | escalation=off, uplink=[STA]Lk_Hq_Caribe_1 | [STA]Lk_Hq_Caribe_1 |
-| [CPE]-Lk_Hq_Pintores_1 | snmpv1 10.155.0.3 | Ubiquiti AirOS 8 wireless by SNMPv1, Ubiquiti AirOS by SNMP | {$UBNT.GPS.SATS.MIN}=0, {$UBNT.STA.SIGNAL.MIN.WARN}=-57, {$UBNT.STA.RXCAP.MIN}=30 | uplink=Switch Main Site #01 | Switch Main Site #01 |
+| [CPE]-Lk_Hq_Pintores_1 | snmpv1 10.155.0.3 | Ubiquiti AirOS 8 wireless by SNMPv1, Ubiquiti AirOS by SNMP | {$UBNT.GPS.SATS.MIN}=0, {$UBNT.STA.SIGNAL.MIN.WARN}=-57, {$UBNT.STA.RXCAP.MIN}=30 | uplink=MAIN-SW-01 | MAIN-SW-01 |
 | [CPE]Lk_Pintores_Canadas_1 | snmpv1 10.155.2.3 | Ubiquiti AirOS 8 wireless by SNMPv1, Ubiquiti AirOS by SNMP | {$UBNT.GPS.SATS.MIN}=0, {$UBNT.STA.SIGNAL.MIN.WARN}=-60, {$UBNT.STA.RXCAP.MIN}=50 | uplink=[AP]-Lk_Hq_Pintores_1 | [AP]-Lk_Hq_Pintores_1 |
-| [STA]Lk_Hq_Caribe_1 | snmpv1 10.155.3.3 | Ubiquiti AirOS 8 wireless by SNMPv1, Ubiquiti AirOS by SNMP | {$UBNT.GPS.SATS.MIN}=0, {$UBNT.STA.SIGNAL.MIN.WARN}=-67, {$UBNT.STA.SIGNAL.MIN.CRIT}=-73, {$UBNT.STA.RXCAP.MIN}=13 | escalation=off, uplink=Switch Main Site #01 | Switch Main Site #01 |
+| [STA]Lk_Hq_Caribe_1 | snmpv1 10.155.3.3 | Ubiquiti AirOS 8 wireless by SNMPv1, Ubiquiti AirOS by SNMP | {$UBNT.GPS.SATS.MIN}=0, {$UBNT.STA.SIGNAL.MIN.WARN}=-67, {$UBNT.STA.SIGNAL.MIN.CRIT}=-73, {$UBNT.STA.RXCAP.MIN}=13 | escalation=off, uplink=MAIN-SW-01 | MAIN-SW-01 |
 
 #### Enlaces PTP Troncales
 
@@ -108,9 +109,9 @@ Tablas generadas con `agents/scripts/zbx_inventory.py --markdown` y pegadas aqu�
 | Host | Interfaz | Plantillas | Macros de host | Etiquetas | Depende de |
 |---|---|---|---|---|---|
 | EDGE 01 | snmpv2 192.168.200.1 | MikroTik link traps by SNMP, MikroTik CCR2004-16G-2S by SNMP | — | — | Zabbix server |
+| MAIN-SW-01 | snmpv2 172.16.100.2 | Switch port changes by SNMP, TP-LINK by SNMP | {$IFCONTROL}=0, {$PORT.IFNAME.NOT_MATCHES}=^(<\|Vlan-interface) | — | NAS-01 |
 | NAS-01 | snmpv2 192.168.200.2 | MikroTik link traps by SNMP, MikroTik CCR2004-16G-2S by SNMP | {$NET.IF.IFNAME.NOT_MATCHES} (regex) | — | EDGE 01 |
 | NAS-03 | snmpv2 192.168.200.10 | MikroTik link traps by SNMP, MikroTik RB2011iL-RM by SNMP | {$NET.IF.IFNAME.NOT_MATCHES} (regex) | — | EDGE 01 |
-| Switch Main Site #01 | snmpv2 172.16.100.2 | Switch port changes by SNMP, TP-LINK by SNMP | {$IFCONTROL}=0, {$PORT.IFNAME.NOT_MATCHES}=^(<\|Vlan-interface) | — | NAS-01 |
 
 #### Zabbix servers
 
