@@ -29,6 +29,7 @@ printf '%s\n' "$TOKEN" | agents/scripts/run_remote.sh -f zabbix_templates/X.yaml
 | `snmp_tools.py` | Librería | Ejecuta net-snmp en un contenedor temporal con la comunidad de Zabbix sin mostrarla (usada por `snmp_probe` y `snmp_walk`) |
 | `zbx_latest.py` | Lectura | Últimos valores de los items (como *Latest data*), filtrados por clave o nombre |
 | `zbx_create_snmp_host.py` | Escritura | Alta de un host SNMP con plantillas, macros, etiquetas y dependencia de su uplink (`--visible-name` si el nombre del equipo tiene caracteres no válidos para el *Host name*) |
+| `zbx_align_host_name.py` | Escritura | Pone el *Host name* técnico igual al visible (sin caracteres no válidos), conservando el *Visible name*. Para hosts dados de alta con la IP como *Host name* |
 | `zbx_set_uplink.py` | Escritura | Cambia el equipo padre (dependencias + etiqueta `uplink`), conservando las dependencias internas de la plantilla |
 | `zbx_import_template.py` | Escritura | Importa plantillas YAML (`--delete-missing` para eliminar lo que ya no está en el fichero) |
 | `zbx_link_template.py` | Escritura | Enlaza plantillas a hosts (`host.massadd`), conservando las que ya tienen |

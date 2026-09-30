@@ -43,8 +43,6 @@ Avisos reales que se mantienen a propósito. No son falsos positivos.
 
 | Pendiente | Qué hacer |
 |---|---|
-| Comprobar que el router no redirige 80/443 al servidor | El acceso público es solo por el túnel ([acceso externo](../despliegue/acceso-externo.md#4-verificar)). El resto de la puesta en marcha del túnel quedó hecho el 2026-09-29 |
 | Respaldos fuera del servidor | Copiarlos periódicamente ([mantenimiento](../despliegue/mantenimiento.md#copiar-los-respaldos-fuera-del-servidor)) |
 | Token de API para agentes (caduca 2026-09-30) | Revocarlo al terminar la sesión de trabajo (*User settings → API tokens*) |
 | Cable del Zabbix server a 100 Mbps | Ver *Situaciones conocidas* |
-| Dashboard "Likson NOC": los widgets de CPU no muestran datos | Revisar los widgets de CPU y los items `kpi.cpu.*` del host *KPI Likson* ([dashboard](dashboard.md), `zabbix_dashboards/likson_noc.json`, `zabbix_templates/likson_kpis.yaml`). Detectado el 2026-09-29, sin investigar |

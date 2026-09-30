@@ -6,7 +6,7 @@ Qué se monitorea y de quién depende cada equipo. **Es lo que más cambia:** al
 
 | Elemento | Convención |
 |---|---|
-| Nombre del host | El nombre de sistema del equipo (`sysName` o *Device Name*), idéntico en *Host name* y *Visible name*. Si el equipo no tiene nombre, se le pone primero en el propio equipo. El *Host name* solo admite letras, dígitos, espacios, `.`, `-` y `_`: si el nombre lleva otros caracteres (p. ej. `[AP]-…`), el *Host name* los omite y el *Visible name* conserva el nombre exacto |
+| Nombre del host | El nombre de sistema del equipo (`sysName` o *Device Name*), idéntico en *Host name* y *Visible name*. Si el equipo no tiene nombre, se le pone primero en el propio equipo. El *Host name* solo admite letras, dígitos, espacios, `.`, `-` y `_`: si el nombre lleva otros caracteres (p. ej. `[AP]-…`), el *Host name* los omite y el *Visible name* conserva el nombre exacto. **Nunca la IP como Host name**: las fórmulas de los items calculados (host *KPI Likson*) usan el *Host name*. Para corregir un host: `zbx_align_host_name.py` |
 | Grupos de hosts | `Routers & Switches Likson` (MikroTik, switches), `Access Points PPPoE Clients` (APs Ubiquiti), `Enlaces PTP Troncales` y `Enlaces PTP Backhaul` (radios PTP), `Linux servers`, `Zabbix servers`, `Likson KPIs` (host de indicadores) |
 | Etiqueta `uplink` | Nombre del equipo del que depende (p. ej. `uplink = EDGE 01`). Sirve para filtrar y como documentación de la dependencia |
 | Interfaz SNMP | Comunidad `{$SNMP_COMMUNITY}` (macro global). MikroTik, TP-Link y Mimosa: SNMPv2. **Ubiquiti: SNMPv1**. La macro es de tipo **texto** a propósito: `snmp_probe.py` y `snmp_walk.py` la leen por la API para sondear equipos sin mostrarla. Si se cambia a *Secret text*, esos scripts dejan de funcionar |

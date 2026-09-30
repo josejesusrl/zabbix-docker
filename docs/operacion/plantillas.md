@@ -100,7 +100,7 @@ Umbrales por chip: `{$TEMP.CRIT:"nvme"}=70`.
 
 ### Likson KPIs — `likson_kpis.yaml`
 **Para:** el host **KPI Likson** (sin interfaz, grupo *Likson KPIs*). Items calculados a partir de otros hosts para el dashboard: clientes conectados (total de APs), APs en línea y totales, y CPU media de EDGE 01, NAS-01 y NAS-03.
-Sus fórmulas usan el grupo *Access Points PPPoE Clients* y los nombres de host `EDGE 01`, `NAS-01`, `NAS-03`: si cambian, actualizar la plantilla. Sin triggers.
+Sus fórmulas usan el grupo *Access Points PPPoE Clients* y el ***Host name* técnico** `EDGE 01`, `NAS-01`, `NAS-03`, no el visible: si cambian, actualizar la plantilla. Si un item queda *UNSUPPORTED* con *no input data for function*, el *Host name* no coincide ([solución de problemas](solucion-de-problemas.md)). Sin triggers.
 
 ### Cloudflare Tunnel by HTTP — `cloudflared_tunnel.yaml`
 **Para:** el host **Zabbix server**. Vigila el conector `cloudflared` que publica la web ([acceso externo](../despliegue/acceso-externo.md)). El Zabbix server lee las métricas Prometheus de `http://cloudflared:2000/metrics` por la red Docker `frontend`, sin agente ni interfaz.
