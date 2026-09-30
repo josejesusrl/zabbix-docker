@@ -79,6 +79,10 @@ services:
    start_period: 30s
 
  postgres-server:
+# Memory tuning for a host with ~3.3 GB RAM shared with Zabbix server and web (defaults: 128MB, 4GB, 4MB)
+  command: postgres -c shared_buffers=512MB -c effective_cache_size=2GB -c work_mem=8MB -c maintenance_work_mem=128MB
+# Parallel queries use /dev/shm, Docker default is 64MB
+  shm_size: 256mb
   volumes:
    - ./zabbix-db-data:/var/lib/postgresql/data:rw
 

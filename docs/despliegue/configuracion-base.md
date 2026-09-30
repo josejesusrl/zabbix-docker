@@ -59,7 +59,7 @@ Al crear un grupo de hosts nuevo, añadirlo al grupo `Solo lectura` y al JSON.
 | Escalate unacknowledged High/Disaster | Activa | Severidad ≥ High **y** no existe la etiqueta `escalation` | Paso de 30 min. Pasos 2 → ∞: reenviar a `jjrl` mientras el problema **no esté reconocido** |
 | Report problems to Zabbix administrators | Desactivada | (la acción por defecto) | — |
 
-Las acciones de descubrimiento, autorregistro e internas están desactivadas. Las notificaciones de actualización no se envían al usuario que hizo la actualización (comportamiento de Zabbix, ver [registro](../operacion/registro.md)).
+Las dos acciones activas tienen marcado **Pause operations for suppressed problems**: los problemas suprimidos por un [mantenimiento](../operacion/procedimientos/mantenimiento-programado.md) no notifican. Las acciones de descubrimiento, autorregistro e internas están desactivadas. Las notificaciones de actualización no se envían al usuario que hizo la actualización (comportamiento de Zabbix, ver [registro](../operacion/registro.md)).
 
 ## Macros globales (*Administration → Macros*)
 

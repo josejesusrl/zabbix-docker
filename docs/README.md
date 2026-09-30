@@ -34,6 +34,7 @@ Antes de cualquier cambio: respaldo (`sudo ./server_backup.sh`). Leer las [parti
 | Dar de baja un equipo | [baja-equipo](operacion/procedimientos/baja-equipo.md) |
 | Crear o modificar una plantilla propia | [plantilla-propia](operacion/procedimientos/plantilla-propia.md) |
 | Dar acceso de solo lectura a una persona | [dar-acceso-lectura](operacion/procedimientos/dar-acceso-lectura.md) |
+| Silenciar alertas durante un trabajo planificado | [mantenimiento-programado](operacion/procedimientos/mantenimiento-programado.md) |
 
 Catálogo de plantillas, macros y triggers: [plantillas](operacion/plantillas.md).
 

@@ -37,12 +37,14 @@ Avisos reales que se mantienen a propósito. No son falsos positivos.
 | Acceso público por **Cloudflare Tunnel + Access**, sin puertos redirigidos en el NAT (2026-09-29) | No se expone ningún puerto a Internet. Access añade un login previo al de Zabbix y Cloudflare gestiona el certificado público. Sustituye a Let's Encrypt con redirección de 80/443 ([acceso externo](../despliegue/acceso-externo.md)) |
 | Certificado autofirmado de 10 años en el origen | Solo lo ven `cloudflared` (sin verificarlo) y el acceso directo por la LAN, que muestra un aviso ([instalación](../despliegue/instalacion.md#2-arrancar-y-crear-el-certificado)) |
 | Traps y agentes usan `192.168.0.191`, no `zabbix.likson.com` | El nombre apunta a Cloudflare, que solo lleva la web |
+| Ajustes de rendimiento (caché de configuración 128M, 3 pingers, memoria de PostgreSQL) (2026-09-29) | Recomendaciones de Zabbix revisadas: caché al 73 % y pinger al 63 %. Detalle en [mantenimiento](../despliegue/mantenimiento.md#ajustes-de-rendimiento). Descartados por ahora: TimescaleDB (solo 90 valores/s), CSP estricta (puede romper la interfaz), `SameSite` en la cookie (Access ya protege) |
 | Sin MFA en Zabbix | Cloudflare Access ya exige un código enviado al correo autorizado antes del login de Zabbix. El acceso por la LAN no pasa por Access y queda protegido solo por la contraseña |
 
 ## Pendientes
 
 | Pendiente | Qué hacer |
 |---|---|
+| **Actualizar a Zabbix 8.0 LTS antes del 2026-12-31** | Zabbix 7.4 deja de tener soporte (ni parches de seguridad) el 31-12-2026. El 2026-09-29, 8.0 LTS seguía en beta. Cuando salga la versión estable: leer las notas de actualización, respaldo, probar en una copia (restaurar el respaldo en otra máquina con `ZBX_IMAGE_TAG` de 8.0), y después en producción ([mantenimiento](../despliegue/mantenimiento.md)). Revisar también que las plantillas propias y los scripts de `agents/scripts/` funcionen con la API de 8.0 |
 | Respaldos fuera del servidor | Copiarlos periódicamente ([mantenimiento](../despliegue/mantenimiento.md#copiar-los-respaldos-fuera-del-servidor)) |
 | Token de API para agentes (caduca 2026-09-30) | Revocarlo al terminar la sesión de trabajo (*User settings → API tokens*) |
 | Cable del Zabbix server a 100 Mbps | Ver *Situaciones conocidas* |
