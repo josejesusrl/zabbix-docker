@@ -37,6 +37,19 @@ Formato de los mensajes de ambos medios: [alertas](../operacion/alertas.md).
 |---|---|---|---|
 | `jjrl` | Super admin | Gmail: Warning y superiores. Telegram: High y superiores. Ambos 1-7, 00:00-24:00 | Cierre automático de sesión desactivado (`0`) |
 | `guest` | — | — | Desactivado |
+| `melb` (Maria Elena Lopez Balderas) | Solo lectura (grupo `Solo lectura`) | — | Consulta. Auto-logout `15m` |
+
+### Roles y grupos de usuarios
+
+Definidos en `zabbix_access/solo_lectura.json` y aplicados con `zbx_access_apply.py`, o a mano según [dar acceso de solo lectura](../operacion/procedimientos/dar-acceso-lectura.md).
+
+| Rol / grupo | Tipo | Permisos |
+|---|---|---|
+| Rol `Solo lectura` | User | Toda la interfaz del tipo *User* (dashboards, monitoring, services, inventory, reports). **Ninguna acción** (no reconoce ni cierra problemas, no ejecuta scripts, no edita dashboards). **Sin API** |
+| Grupo `Solo lectura` | — | **Read** en: Access Points PPPoE Clients, Enlaces PTP Backhaul, Enlaces PTP Troncales, Likson KPIs, Linux servers, Routers & Switches Likson, Zabbix servers |
+| Dashboard *Likson NOC* | — | Compartido con el grupo `Solo lectura`, solo lectura |
+
+Al crear un grupo de hosts nuevo, añadirlo al grupo `Solo lectura` y al JSON.
 
 ## Acciones de trigger (*Alerts → Actions → Trigger actions*)
 

@@ -1,0 +1,22 @@
+{
+  "description": "Read-only access: graphs, dashboards, problems, latest data and inventory of all Likson devices. No configuration, no problem actions, no API. Applied with agents/scripts/zbx_access_apply.py (docs/despliegue/configuracion-base.md).",
+  "role": {
+    "name": "Solo lectura",
+    "ui_deny": [],
+    "actions": [],
+    "api": false
+  },
+  "user_group": {
+    "name": "Solo lectura",
+    "read": [
+      "Access Points PPPoE Clients",
+      "Enlaces PTP Backhaul",
+      "Enlaces PTP Troncales",
+      "Likson KPIs",
+      "Linux servers",
+      "Routers & Switches Likson",
+      "Zabbix servers"
+    ]
+  },
+  "dashboards": ["Likson NOC"]
+}

@@ -70,6 +70,7 @@ El respaldo de la base de datos (`pg_dump`) contiene hosts, plantillas importada
 | Respaldo, restauración y certificado | `server_backup.sh`, `server_restore.sh`, `server_certificate.sh` | `git clone` |
 | Túnel de Cloudflare, ruta pública y Access | Panel de Cloudflare Zero Trust, documentado en [`docs/despliegue/acceso-externo.md`](docs/despliegue/acceso-externo.md). El conector está en `compose_server.yaml` | Ya está en Cloudflare; si se pierde, a mano según ese documento |
 | Scripts de agentes para la API | `agents/scripts/` | `git clone` |
+| Perfiles de acceso (rol, grupo de usuarios, dashboards compartidos) | `zabbix_access/*.json` | Están también en la BD; si se pierde, `zbx_access_apply.py` |
 | Dashboards | `zabbix_dashboards/*.json` (por nombres) | Están también en la BD; si se pierde, `zbx_dashboard_apply.py` |
 | Script y plantillas de mensajes de los medios (Telegram…) | `zabbix_media/` (sin tokens: el token del bot está solo en la BD) | Están también en la BD; si se pierde, `zbx_mediatype_update.py` desde aquí |
 | **Secretos**: contraseña de PostgreSQL, token del túnel (`env_vars/.CLOUDFLARE_TUNNEL_TOKEN`), comunidad de traps, `server.env` | **Nunca en git.** En el archivo `zabbix-config-*.tar.gz` del respaldo | `server_restore.sh` o `server_setup.sh` |

@@ -33,6 +33,7 @@ Antes de cualquier cambio: respaldo (`sudo ./server_backup.sh`). Leer las [parti
 | Cambiar la IP de un equipo | [cambiar-ip](operacion/procedimientos/cambiar-ip.md) |
 | Dar de baja un equipo | [baja-equipo](operacion/procedimientos/baja-equipo.md) |
 | Crear o modificar una plantilla propia | [plantilla-propia](operacion/procedimientos/plantilla-propia.md) |
+| Dar acceso de solo lectura a una persona | [dar-acceso-lectura](operacion/procedimientos/dar-acceso-lectura.md) |
 
 Catálogo de plantillas, macros y triggers: [plantillas](operacion/plantillas.md).
 

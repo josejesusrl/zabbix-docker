@@ -39,6 +39,9 @@ printf '%s\n' "$TOKEN" | agents/scripts/run_remote.sh -f zabbix_templates/X.yaml
 | `zbx_mediatype_update.py` | Escritura | Aplica a un medio el script, las plantillas y parámetros concretos desde `zabbix_media/`, sin tocar ni mostrar el token |
 | `zbx_test_notification.py` | Escritura | Prueba real de extremo a extremo: host temporal que abre, actualiza y resuelve un problema, muestra el estado de entrega de cada notificación y se borra |
 | `zbx_dashboard_apply.py` | Escritura | Crea o actualiza un dashboard desde `zabbix_dashboards/*.json` (hosts, grupos e items por nombre) |
+| `zbx_users.py` | Lectura | Roles (UI, acciones, API), grupos de usuarios con permisos por grupo de hosts, usuarios y, con `--dashboards`, con quién se comparte cada dashboard |
+| `zbx_access_apply.py` | Escritura | Crea o actualiza un perfil de acceso desde `zabbix_access/*.json`: rol de tipo *User*, grupo de usuarios con lectura en grupos de hosts y dashboards compartidos |
+| `zbx_user_set.py` | Escritura | Asigna a un usuario su rol, añade grupos (conserva los que tiene) y auto-logout. No toca contraseñas |
 | `zbx_close_problems.py` | Escritura | Cierra problemas abiertos por nombre con un comentario (falsos positivos, problemas de objetos desactivados) |
 | `docs_check.py` | Local | Comprueba la documentación: enlaces relativos y anclas, referencias a documentos antiguos, plantillas y scripts documentados. `--zabbix` (en el servidor, con token) compara el inventario con los hosts de Zabbix |
 | `run_remote.sh` | Envoltorio | Ejecuta un script en el servidor con el token por la entrada estándar |
