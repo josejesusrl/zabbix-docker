@@ -615,6 +615,249 @@
             "ds.0.fill": 1,
             "ds.0.transparency": 5
           }
+        },
+        {
+          "type": "svggraph",
+          "name": "Latencia a routers y switch (ping)",
+          "x": 0,
+          "y": 12,
+          "width": 36,
+          "height": 5,
+          "fields": {
+            "ds.0.hosts.0": "EDGE 01",
+            "ds.0.hosts.1": "NAS-01",
+            "ds.0.hosts.2": "NAS-03",
+            "ds.0.hosts.3": "MAIN-SW-01",
+            "ds.0.items.0": "ICMP response time",
+            "ds.0.color": "1E88E5",
+            "ds.0.type": 0,
+            "ds.0.width": 2,
+            "ds.0.fill": 0,
+            "ds.0.transparency": 5
+          }
+        },
+        {
+          "type": "svggraph",
+          "name": "Temperatura CPU de routers",
+          "x": 36,
+          "y": 12,
+          "width": 36,
+          "height": 5,
+          "fields": {
+            "ds.0.hosts.0": "EDGE 01",
+            "ds.0.hosts.1": "NAS-01",
+            "ds.0.hosts.2": "NAS-03",
+            "ds.0.items.0": "CPU: Temperature",
+            "ds.0.color": "1E88E5",
+            "ds.0.type": 0,
+            "ds.0.width": 2,
+            "ds.0.fill": 0,
+            "ds.0.transparency": 5
+          }
+        },
+        {
+          "type": "svggraph",
+          "name": "Tráfico de clientes PPPoE (VLAN 901)",
+          "x": 0,
+          "y": 17,
+          "width": 72,
+          "height": 5,
+          "fields": {
+            "ds.0.hosts.0": "NAS-01",
+            "ds.0.items.0": "Interface VLAN_901(PPPoE Internet Clients): Bits*",
+            "ds.0.color": "1E88E5",
+            "ds.0.type": 0,
+            "ds.0.width": 2,
+            "ds.0.fill": 1,
+            "ds.0.transparency": 5,
+            "ds.1.hosts.0": "NAS-03",
+            "ds.1.items.0": "Interface VLAN_901(PPPoE ): Bits*",
+            "ds.1.color": "43A047",
+            "ds.1.type": 0,
+            "ds.1.width": 2,
+            "ds.1.fill": 1,
+            "ds.1.transparency": 5
+          }
+        }
+      ]
+    },
+    {
+      "name": "Servidores",
+      "widgets": [
+        {
+          "type": "svggraph",
+          "name": "server-04: CPU (histórico)",
+          "x": 0,
+          "y": 0,
+          "width": 36,
+          "height": 5,
+          "fields": {
+            "ds.0.hosts.0": "server-04",
+            "ds.0.items.0": "CPU utilization",
+            "ds.0.color": "1E88E5",
+            "ds.0.type": 0,
+            "ds.0.width": 2,
+            "ds.0.fill": 1,
+            "ds.0.transparency": 5,
+            "lefty_static_units": "%",
+            "lefty_units": 1,
+            "lefty_min": "0",
+            "lefty_max": "100"
+          }
+        },
+        {
+          "type": "svggraph",
+          "name": "server-04: memoria y disco (%)",
+          "x": 36,
+          "y": 0,
+          "width": 36,
+          "height": 5,
+          "fields": {
+            "ds.0.hosts.0": "server-04",
+            "ds.0.items.0": "Memory utilization",
+            "ds.0.color": "1E88E5",
+            "ds.0.type": 0,
+            "ds.0.width": 2,
+            "ds.0.fill": 0,
+            "ds.0.transparency": 5,
+            "ds.1.hosts.0": "server-04",
+            "ds.1.items.0": "FS [/rootfs]: Space: Used, in %",
+            "ds.1.color": "43A047",
+            "ds.1.type": 0,
+            "ds.1.width": 2,
+            "ds.1.fill": 0,
+            "ds.1.transparency": 5,
+            "lefty_static_units": "%",
+            "lefty_units": 1,
+            "lefty_min": "0",
+            "lefty_max": "100"
+          }
+        },
+        {
+          "type": "svggraph",
+          "name": "server-04: CPU por contenedor",
+          "x": 0,
+          "y": 5,
+          "width": 36,
+          "height": 5,
+          "fields": {
+            "ds.0.hosts.0": "server-04",
+            "ds.0.items.0": "Container *: CPU percent usage",
+            "ds.0.color": "1E88E5",
+            "ds.0.type": 0,
+            "ds.0.width": 2,
+            "ds.0.fill": 0,
+            "ds.0.transparency": 5
+          }
+        },
+        {
+          "type": "svggraph",
+          "name": "server-04: carga del sistema (1 min)",
+          "x": 36,
+          "y": 5,
+          "width": 36,
+          "height": 5,
+          "fields": {
+            "ds.0.hosts.0": "server-04",
+            "ds.0.items.0": "Load average (1m avg)",
+            "ds.0.color": "1E88E5",
+            "ds.0.type": 0,
+            "ds.0.width": 2,
+            "ds.0.fill": 1,
+            "ds.0.transparency": 5
+          }
+        },
+        {
+          "type": "svggraph",
+          "name": "Zabbix server: CPU y memoria (%)",
+          "x": 0,
+          "y": 10,
+          "width": 36,
+          "height": 5,
+          "fields": {
+            "ds.0.hosts.0": "Zabbix server",
+            "ds.0.items.0": "CPU utilization",
+            "ds.0.color": "1E88E5",
+            "ds.0.type": 0,
+            "ds.0.width": 2,
+            "ds.0.fill": 0,
+            "ds.0.transparency": 5,
+            "ds.1.hosts.0": "Zabbix server",
+            "ds.1.items.0": "Memory utilization",
+            "ds.1.color": "43A047",
+            "ds.1.type": 0,
+            "ds.1.width": 2,
+            "ds.1.fill": 0,
+            "ds.1.transparency": 5,
+            "lefty_static_units": "%",
+            "lefty_units": 1,
+            "lefty_min": "0",
+            "lefty_max": "100"
+          }
+        },
+        {
+          "type": "svggraph",
+          "name": "Zabbix: uso de procesos de recogida (%)",
+          "x": 36,
+          "y": 10,
+          "width": 24,
+          "height": 5,
+          "fields": {
+            "ds.0.hosts.0": "Zabbix server",
+            "ds.0.items.0": "Utilization of * data collector processes, in %",
+            "ds.0.color": "1E88E5",
+            "ds.0.type": 0,
+            "ds.0.width": 2,
+            "ds.0.fill": 0,
+            "ds.0.transparency": 5,
+            "lefty_static_units": "%",
+            "lefty_units": 1,
+            "lefty_min": "0",
+            "lefty_max": "100"
+          }
+        },
+        {
+          "type": "item",
+          "name": "Túnel Cloudflare",
+          "x": 60,
+          "y": 10,
+          "width": 12,
+          "height": 5,
+          "fields": {
+            "itemid.0": {
+              "item": [
+                "Zabbix server",
+                "cloudflared.ha_connections"
+              ]
+            },
+            "show.0": 1,
+            "show.1": 2,
+            "show.2": 5,
+            "description": "Conexiones del túnel",
+            "desc_size": 14,
+            "value_size": 40,
+            "decimal_places": 0,
+            "units_show": 1,
+            "sparkline.width": 2,
+            "sparkline.fill": 2
+          }
+        },
+        {
+          "type": "svggraph",
+          "name": "Zabbix: valores procesados por segundo",
+          "x": 0,
+          "y": 15,
+          "width": 72,
+          "height": 4,
+          "fields": {
+            "ds.0.hosts.0": "Zabbix server",
+            "ds.0.items.0": "Number of processed values per second",
+            "ds.0.color": "1E88E5",
+            "ds.0.type": 0,
+            "ds.0.width": 2,
+            "ds.0.fill": 1,
+            "ds.0.transparency": 5
+          }
         }
       ]
     }
