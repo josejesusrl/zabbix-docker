@@ -49,6 +49,7 @@ Los sectores `172.16.2.x` están conectados físicamente a NAS-02, que se va a r
 Tablas generadas con `agents/scripts/zbx_inventory.py --markdown` y pegadas aquí; no editarlas a mano. Para regenerarlas, ver [agents/scripts/README.md](../../agents/scripts/README.md). Las macros con regex largas se muestran solo por nombre.
 
 
+
 #### Access Points PPPoE Clients
 
 | Host | Interfaz | Plantillas | Macros de host | Etiquetas | Depende de |
@@ -82,12 +83,12 @@ Tablas generadas con `agents/scripts/zbx_inventory.py --markdown` y pegadas aqu�
 | Host | Interfaz | Plantillas | Macros de host | Etiquetas | Depende de |
 |---|---|---|---|---|---|
 | CAM 05 Canadas del bosque | agent 192.168.60.30 | Hikvision camera by HTTP, ICMP Ping | {$HIKVISION_ISAPI_HOST}=192.168.60.30, {$PASSWORD}=<secret>, {$USER}=admin, {$HIKVISION_STREAM_HEIGHT}=1440, {$HIKVISION_STREAM_WIDTH}=2560, {$MEMORY.UTIL.MAX}=95 | uplink=NAS-03, notificar=no | NAS-03 |
-| CAM 192.168.60.10 | agent 192.168.60.10 | Hikvision camera by HTTP, ICMP Ping | {$HIKVISION_ISAPI_HOST}=192.168.60.10 | uplink=NVR 01, notificar=no | NVR 01 |
-| CAM 192.168.60.11 | agent 192.168.60.11 | Hikvision camera by HTTP, ICMP Ping | {$HIKVISION_ISAPI_HOST}=192.168.60.11 | uplink=NVR 01, notificar=no | NVR 01 |
-| CAM 192.168.60.12 | agent 192.168.60.12 | Hikvision camera by HTTP, ICMP Ping | {$HIKVISION_ISAPI_HOST}=192.168.60.12 | uplink=NVR 01, notificar=no | NVR 01 |
-| CAM 192.168.60.13 | agent 192.168.60.13 | Hikvision camera by HTTP, ICMP Ping | {$HIKVISION_ISAPI_HOST}=192.168.60.13 | uplink=NVR 01, notificar=no | NVR 01 |
-| CAM 192.168.60.14 | agent 192.168.60.14 | Hikvision camera by HTTP, ICMP Ping | {$HIKVISION_ISAPI_HOST}=192.168.60.14 | uplink=NVR 01, notificar=no | NVR 01 |
-| NVR 01 | snmpv2 192.168.60.2 | Hikvision camera by HTTP, ICMP Ping | {$HIKVISION_ISAPI_HOST}=192.168.60.2, {$PASSWORD}=<secret> | uplink=EDGE 01 | EDGE 01 |
+| CAM 192.168.60.10 | agent 192.168.60.10 | Hikvision camera by HTTP, ICMP Ping | {$HIKVISION_ISAPI_HOST}=192.168.60.10, {$PASSWORD}=<secret>, {$HIKVISION_STREAM_WIDTH}=2560, {$HIKVISION_STREAM_HEIGHT}=1440 | uplink=NVR 01, notificar=no | NVR 01 |
+| CAM 192.168.60.11 | agent 192.168.60.11 | Hikvision camera by HTTP, ICMP Ping | {$HIKVISION_ISAPI_HOST}=192.168.60.11, {$PASSWORD}=<secret>, {$HIKVISION_STREAM_WIDTH}=2560, {$HIKVISION_STREAM_HEIGHT}=1440 | uplink=NVR 01, notificar=no | NVR 01 |
+| CAM 192.168.60.12 | agent 192.168.60.12 | Hikvision camera by HTTP, ICMP Ping | {$HIKVISION_ISAPI_HOST}=192.168.60.12, {$PASSWORD}=<secret> | uplink=NVR 01, notificar=no | NVR 01 |
+| CAM 192.168.60.13 | agent 192.168.60.13 | Hikvision camera by HTTP, ICMP Ping | {$HIKVISION_ISAPI_HOST}=192.168.60.13, {$PASSWORD}=<secret>, {$HIKVISION_STREAM_WIDTH}=1280, {$HIKVISION_STREAM_HEIGHT}=720 | uplink=NVR 01, notificar=no | NVR 01 |
+| CAM 192.168.60.14 | agent 192.168.60.14 | Hikvision camera by HTTP, ICMP Ping | {$HIKVISION_ISAPI_HOST}=192.168.60.14, {$PASSWORD}=<secret>, {$HIKVISION_STREAM_WIDTH}=2560, {$HIKVISION_STREAM_HEIGHT}=1440 | uplink=NVR 01, notificar=no | NVR 01 |
+| NVR 01 | snmpv2 192.168.60.2 | Hikvision camera by HTTP, ICMP Ping | {$HIKVISION_ISAPI_HOST}=192.168.60.2, {$PASSWORD}=<secret>, {$HIKVISION_STREAM_WIDTH}=2560, {$HIKVISION_STREAM_HEIGHT}=1440 | uplink=EDGE 01 | EDGE 01 |
 
 #### Enlaces PTP Backhaul
 
