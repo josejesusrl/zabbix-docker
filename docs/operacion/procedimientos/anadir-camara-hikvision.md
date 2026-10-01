@@ -28,7 +28,7 @@ Las cámaras Hikvision no tienen SNMP activado. Se monitorean con dos plantillas
 4. **Interfaces → Add → Agent:** IP del equipo, puerto `10050`. No hay agente; la interfaz solo da al ping la IP que debe usar. Su disponibilidad *ZBX* quedará en gris (*unknown*), lo cual es normal.
 5. **Tags:**
    - `uplink` = equipo del que depende (`NVR 01`, `NAS-03`…).
-   - **`notificar` = `no` mientras se termina el alta.** Sin contraseña, la plantilla da *Authorisation error* y, sin esta etiqueta, enviaría correos. Si se pone después de crear el host, los problemas ya abiertos no la tienen y sí notifican.
+   - **`notificar` = `no` mientras se termina el alta.** Además, poner la contraseña **en el mismo momento de crear el host**: Hikvision bloquea unos 30 min la IP que falla el login varias veces, y Zabbix lo intenta cada minuto. Si la cámara queda bloqueada, esperar a que pase el bloqueo con la contraseña ya puesta. Sin contraseña, la plantilla da *Authorisation error* y, sin esta etiqueta, enviaría correos. Si se pone después de crear el host, los problemas ya abiertos no la tienen y sí notifican.
 6. **Macros** (pestaña *Macros*):
 
    | Macro | Valor |
@@ -36,7 +36,7 @@ Las cámaras Hikvision no tienen SNMP activado. Se monitorean con dos plantillas
    | `{$HIKVISION_ISAPI_HOST}` | IP del equipo |
    | `{$PASSWORD}` | Contraseña, de tipo **Secret text** (botón del candado). Nunca en texto plano |
    | `{$USER}` | Solo si no es `admin`, el valor por defecto de la plantilla |
-   | `{$HIKVISION_STREAM_WIDTH}` / `{$HIKVISION_STREAM_HEIGHT}` | Resolución del canal principal si no es 1920×1080 (p. ej. `2560`/`1440`). Si no coincide, aparece el aviso *Invalid video stream resolution parameters* |
+   | `{$HIKVISION_STREAM_WIDTH}` / `{$HIKVISION_STREAM_HEIGHT}` | Resolución del canal principal (`{$HIKVISION_MAIN_CHANNEL_ID}`, por defecto 101) si no es 1920×1080 (p. ej. `2560`/`1440`). Si no coincide, aparece el aviso *Invalid video stream resolution parameters*. Al corregirla, el aviso se cierra cuando llega el siguiente dato, no al instante |
 
    Para varias cámaras con la misma contraseña: crearlas y después *Data collection → Hosts* → marcarlas → *Mass update* → pestaña *Macros* → *Add* `{$PASSWORD}` (Secret text).
 7. **Add**.
@@ -74,6 +74,8 @@ printf '%s\n' "$TOKEN" | $S zbx_create_snmp_host.py --name "CAM 06 Patio" --ip 1
 printf '%s\n' "$TOKEN" | $S zbx_latest.py --group CCTV --name "Device name"
 printf '%s\n' "$TOKEN" | $S zbx_align_host_name.py --host "CAM 192.168.60.15" --rename "CAM 06 Patio"
 printf '%s\n' "$TOKEN" | $S zbx_set_tag.py --host "CAM 06 Patio" --remove notificar
+# Resolución del canal principal (no secreto)
+printf '%s\n' "$TOKEN" | $S zbx_set_macro.py --host "NVR 01" --macro '{$HIKVISION_STREAM_WIDTH}=2560' '{$HIKVISION_STREAM_HEIGHT}=1440'
 # Equipo ya creado sin interfaz: añadir la de ping
 printf '%s\n' "$TOKEN" | $S zbx_add_interface.py --host "CAM 06 Patio" --ip 192.168.60.15 --type ping
 ```

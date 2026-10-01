@@ -29,6 +29,7 @@ printf '%s\n' "$TOKEN" | agents/scripts/run_remote.sh -f zabbix_templates/X.yaml
 | `snmp_tools.py` | Librería | Ejecuta net-snmp en un contenedor temporal con la comunidad de Zabbix sin mostrarla (usada por `snmp_probe` y `snmp_walk`) |
 | `zbx_latest.py` | Lectura | Últimos valores de los items (como *Latest data*), filtrados por clave o nombre |
 | `zbx_add_interface.py` | Escritura | Añade una interfaz a un host que no la tiene: `ping` (tipo *Agent*, para *ICMP Ping* en equipos sin SNMP) o `snmp` |
+| `zbx_set_macro.py` | Escritura | Crea o cambia macros de host con valores no secretos (rechaza nombres de secretos: esos van en la interfaz como *Secret text*) |
 | `zbx_set_tag.py` | Escritura | Pone o quita una etiqueta de host (`notificar=no`, `escalation=off`…) conservando las demás |
 | `zbx_create_snmp_host.py` | Escritura | Alta de un host SNMP (o solo ping con `--interface ping`, p. ej. cámaras Hikvision) con plantillas, macros, etiquetas y dependencia de su uplink (`--visible-name` si el nombre del equipo tiene caracteres no válidos para el *Host name*) |
 | `zbx_align_host_name.py` | Escritura | Pone el *Host name* técnico igual al visible (sin caracteres no válidos), conservando el *Visible name*. Para hosts dados de alta con la IP como *Host name* |
