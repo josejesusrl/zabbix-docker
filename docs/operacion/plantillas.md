@@ -122,6 +122,8 @@ Macros: `{$CLOUDFLARED.METRICS.URL}` (`http://cloudflared:2000`) y `{$CLOUDFLARE
 | *Ubiquiti AirOS by SNMP* | APs Ubiquiti (sistema: CPU, memoria, ping) | En airOS 8, *Firmware version* y *Hardware model name* quedan como no soportados (airOS 8 no publica esos datos). Es normal |
 | *Linux by Zabbix agent* | Servidores Linux | Si el agente corre en un contenedor con `/rootfs`: macros de sistemas de archivos ([Añadir un servidor Linux](procedimientos/anadir-servidor-linux.md)) |
 | *Docker by Zabbix agent 2* | Servidores con Docker | El agente necesita acceso a `/var/run/docker.sock`. Solo descubre los contenedores en ejecución |
+| *Hikvision camera by HTTP* | Cámaras y NVR Hikvision (API ISAPI) | `{$HIKVISION_ISAPI_HOST}`, `{$PASSWORD}` (Secret text), `{$USER}` si no es `admin`, resolución del canal principal. Siempre junto con *ICMP Ping* ([añadir una cámara](procedimientos/anadir-camara-hikvision.md)) |
+| *ICMP Ping* | Equipos sin SNMP ni agente: cámaras, NVR, gateways de proveedores | Necesita una interfaz (tipo *Agent*) con la IP. Aporta *Unavailable by ICMP ping* para dependencias y mapas |
 | *Website certificate by Zabbix agent 2* | Caducidad del certificado autofirmado del origen (host Zabbix server); el público lo renueva Cloudflare | `{$CERT.WEBSITE.HOSTNAME}`, `{$CERT.WEBSITE.IP}=127.0.0.1`, `{$CERT.EXPIRY.WARN}=14` |
 
 ## Particularidades por tipo de equipo
@@ -141,5 +143,7 @@ Resumen de lo que hay que recordar al dar de alta cada tipo de equipo. El detall
 | MikroTik NAS con muchas sesiones PPPoE | *Max repetition count* 50 en la interfaz SNMP; desactivar *SNMP walk wireless interfaces* en routers sin radios |
 | Problemas de objetos ya no descubiertos o desactivados | Zabbix no los cierra: cerrarlos con comentario (`zbx_close_problems.py`). Cada objeto desactivado a propósito se registra en el [registro](registro.md) |
 | Enlaces con problemas largos y conocidos (lluvia) | Etiqueta de host `escalation=off`: la acción de escalada no repite sus *High*. Señal crítica con `{$UBNT.STA.SIGNAL.MIN.CRIT}` y la histéresis `{$UBNT.STA.SIGNAL.HYST}` de la plantilla |
+| Hikvision (cámaras, NVR) | Sin SNMP: plantilla HTTP + *ICMP Ping* con interfaz *Agent* solo para el ping. Contraseña en `{$PASSWORD}` como *Secret text*. Etiqueta `notificar=no` mientras se completa el alta. *Error receiving data* depende del ping propio |
+| Gateway de proveedor | *ICMP Ping* y una ruta *blackhole* de distancia 254 en EDGE 01 para que el ping solo salga por la interfaz de ese proveedor ([procedimiento](procedimientos/anadir-gateway-proveedor.md)) |
 | *Switch port changes* | Requiere SNMPv2 (`ifXTable`): no usar en airOS (SNMPv1), cuyas plantillas ya vigilan la velocidad de `eth0` |
 | Cualquier radio con *Switch port changes* | Nunca vigilar interfaces inalámbricas (`wifi*`, `wlan*`, `ath*`): su velocidad es adaptativa. La plantilla ya las excluye por defecto |

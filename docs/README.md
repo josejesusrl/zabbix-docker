@@ -27,6 +27,8 @@ Antes de cualquier cambio: respaldo (`sudo ./server_backup.sh`). Leer las [parti
 | Añadir un servidor Linux (LAN o remoto) | [anadir-servidor-linux](operacion/procedimientos/anadir-servidor-linux.md) |
 | Añadir un enlace PTP Mimosa | [enlace-ptp-mimosa](operacion/procedimientos/enlace-ptp-mimosa.md) |
 | Añadir un enlace PTP Ubiquiti | [enlace-ptp-ubiquiti](operacion/procedimientos/enlace-ptp-ubiquiti.md) |
+| Añadir una cámara o NVR Hikvision | [anadir-camara-hikvision](operacion/procedimientos/anadir-camara-hikvision.md) |
+| Monitorear el gateway de un proveedor de internet | [anadir-gateway-proveedor](operacion/procedimientos/anadir-gateway-proveedor.md) |
 | Configurar dependencias (siempre, en cada alta) | [dependencias](operacion/procedimientos/dependencias.md) |
 | Configurar el envío de traps | [configurar-traps](operacion/procedimientos/configurar-traps.md) |
 | Ajustar umbrales de un equipo | [ajustar-umbrales](operacion/procedimientos/ajustar-umbrales.md) |

@@ -10,13 +10,17 @@
     "name": "Solo lectura",
     "read": [
       "Access Points PPPoE Clients",
+      "CCTV",
       "Enlaces PTP Backhaul",
       "Enlaces PTP Troncales",
       "Likson KPIs",
       "Linux servers",
+      "Proveedores de internet",
       "Routers & Switches Likson",
       "Zabbix servers"
     ]
   },
-  "dashboards": ["Likson NOC"]
+  "dashboards": [
+    "Likson NOC"
+  ]
 }

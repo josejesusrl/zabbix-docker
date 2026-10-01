@@ -46,7 +46,7 @@ Definidos en `zabbix_access/solo_lectura.json` y aplicados con `zbx_access_apply
 | Rol / grupo | Tipo | Permisos |
 |---|---|---|
 | Rol `Solo lectura` | User | Toda la interfaz del tipo *User* (dashboards, monitoring, services, inventory, reports). **Ninguna acción** (no reconoce ni cierra problemas, no ejecuta scripts, no edita dashboards). **Sin API** |
-| Grupo `Solo lectura` | — | **Read** en: Access Points PPPoE Clients, Enlaces PTP Backhaul, Enlaces PTP Troncales, Likson KPIs, Linux servers, Routers & Switches Likson, Zabbix servers |
+| Grupo `Solo lectura` | — | **Read** en: Access Points PPPoE Clients, CCTV, Enlaces PTP Backhaul, Enlaces PTP Troncales, Likson KPIs, Linux servers, Proveedores de internet, Routers & Switches Likson, Zabbix servers |
 | Dashboard *Likson NOC* | — | Compartido con el grupo `Solo lectura`, solo lectura |
 
 Al crear un grupo de hosts nuevo, añadirlo al grupo `Solo lectura` y al JSON.
@@ -55,9 +55,11 @@ Al crear un grupo de hosts nuevo, añadirlo al grupo `Solo lectura` y al JSON.
 
 | Acción | Estado | Condiciones | Operaciones |
 |---|---|---|---|
-| Alert by severity | Activa | Severidad ≥ Warning | Paso 1: enviar a `jjrl` (todos los medios). Recuperación: avisar. Actualización: avisar a todos los implicados |
-| Escalate unacknowledged High/Disaster | Activa | Severidad ≥ High **y** no existe la etiqueta `escalation` | Paso de 30 min. Pasos 2 → ∞: reenviar a `jjrl` mientras el problema **no esté reconocido** |
+| Alert by severity | Activa | Severidad ≥ Warning **y** valor de la etiqueta `notificar` distinto de `no` | Paso 1: enviar a `jjrl` (todos los medios). Recuperación: avisar. Actualización: avisar a todos los implicados |
+| Escalate unacknowledged High/Disaster | Activa | Severidad ≥ High **y** no existe la etiqueta `escalation` **y** valor de la etiqueta `notificar` distinto de `no` | Paso de 30 min. Pasos 2 → ∞: reenviar a `jjrl` mientras el problema **no esté reconocido** |
 | Report problems to Zabbix administrators | Desactivada | (la acción por defecto) | — |
+
+Condición `notificar` en la interfaz: acción → pestaña *Action* → *Conditions → Add* → *Type: Tag value*, *Tag:* `notificar`, *Operator: does not equal*, *Value:* `no` ([alertas](../operacion/alertas.md#solo-dashboard-etiqueta-notificarno)).
 
 Las dos acciones activas tienen marcado **Pause operations for suppressed problems**: los problemas suprimidos por un [mantenimiento](../operacion/procedimientos/mantenimiento-programado.md) no notifican. Las acciones de descubrimiento, autorregistro e internas están desactivadas. Las notificaciones de actualización no se envían al usuario que hizo la actualización (comportamiento de Zabbix, ver [registro](../operacion/registro.md)).
 
@@ -73,13 +75,13 @@ Las dos acciones activas tienen marcado **Pause operations for suppressed proble
 |---|---|
 | GUI | Zona horaria `America/Mexico_City` |
 | Other | Frontend URL `https://zabbix.likson.com/`. Registrar traps SNMP no emparejados: sí. Inventario de hosts: automático. Timeout SNMP: 3 s |
-| Autenticación | Contraseña mínima de 12 caracteres con mayúsculas, minúsculas, dígitos y símbolos. MFA desactivado (pendiente, ver [registro](../operacion/registro.md)) |
+| Autenticación | Contraseña mínima de 8 caracteres con reglas de complejidad. MFA desactivado: Cloudflare Access ya pide un código por correo ([registro](../operacion/registro.md)) |
 | Login | Bloqueo tras 5 intentos durante 300 s |
 | Housekeeping | Historial 31 días, tendencias 730 días, eventos 365 días, auditoría 90 días |
 
 ## Grupos de hosts
 
-`Access Points PPPoE Clients`, `Enlaces PTP Backhaul`, `Enlaces PTP Troncales`, `Likson KPIs`, `Linux servers`, `Routers & Switches Likson`, `Zabbix servers`. Qué va en cada uno: [inventario](../operacion/inventario.md).
+`Access Points PPPoE Clients`, `CCTV`, `Enlaces PTP Backhaul`, `Enlaces PTP Troncales`, `Likson KPIs`, `Linux servers`, `Proveedores de internet`, `Routers & Switches Likson`, `Zabbix servers`. Qué va en cada uno: [inventario](../operacion/inventario.md).
 
 ## Dashboard
 

@@ -49,6 +49,13 @@ Los medios (Gmail y Telegram) reintentan **10 veces cada 30 s** (*Alerts → Med
 
 En equipos cuyos problemas duran horas por causas conocidas (p. ej. un enlace que se degrada con la lluvia), añadir al host la etiqueta **`escalation` = `off`** (*Host → Tags*). Sus problemas *High* avisan al empezar y al resolverse, pero no se repiten cada 30 min. Las etiquetas del host se heredan en todos sus problemas.
 
+## Solo dashboard: etiqueta `notificar=no`
+
+En equipos inestables cuyos avisos no son accionables (p. ej. una cámara tras un enlace débil), y mientras se termina el alta de un equipo, añadir al host la etiqueta **`notificar` = `no`** (*Host → Tags*). Sus problemas se siguen viendo en el dashboard y en *Monitoring → Problems*, pero **no envían Telegram ni Gmail**. Las dos acciones tienen la condición *Tag value* `notificar` *does not equal* `no` ([configuración base](../despliegue/configuracion-base.md#acciones-de-trigger-alerts--actions--trigger-actions)).
+
+- La etiqueta solo afecta a los problemas que se abren **después** de ponerla: un problema ya abierto conserva sus etiquetas y notificará su resolución.
+- Cada equipo con `notificar=no` permanente se registra en el [registro](registro.md) con el motivo.
+
 ## Qué hacer con un problema
 
 En *Monitoring → Problems* → *Update* sobre el problema:

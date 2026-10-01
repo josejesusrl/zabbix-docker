@@ -2,21 +2,64 @@
   "description": "Network maps generated from the topology (availability trigger dependencies). Applied with agents/scripts/zbx_map_apply.py after adding, removing or moving devices (docs/operacion/mapas.md).",
   "general": "Likson - Red general",
   "submaps": [
-    {"root": "NAS-01", "name": "Likson - Sitio NAS-01"},
-    {"root": "NAS-03", "name": "Likson - Sitio NAS-03 Cañadas"}
+    {
+      "root": "NAS-01",
+      "name": "Likson - Sitio NAS-01"
+    },
+    {
+      "root": "NAS-03",
+      "name": "Likson - Sitio NAS-03 Cañadas"
+    },
+    {
+      "root": "NVR 01",
+      "name": "Likson - CCTV NVR 01"
+    }
   ],
-  "exclude": ["KPI Likson"],
+  "exclude": [
+    "KPI Likson"
+  ],
   "icons": [
-    {"template": "TP-LINK", "icon": "Switch_(48)"},
-    {"group": "Routers & Switches Likson", "icon": "Router_symbol_(48)"},
-    {"group": "Access Points PPPoE Clients", "icon": "Satellite_antenna_(48)"},
-    {"group": "Enlaces PTP Troncales", "icon": "Modem_(48)"},
-    {"group": "Enlaces PTP Backhaul", "icon": "Modem_(48)"},
-    {"group": "Zabbix servers", "icon": "Server_(48)"},
-    {"group": "Linux servers", "icon": "Server_(48)"}
+    {
+      "template": "TP-LINK",
+      "icon": "Switch_(48)"
+    },
+    {
+      "group": "Routers & Switches Likson",
+      "icon": "Router_symbol_(48)"
+    },
+    {
+      "group": "Access Points PPPoE Clients",
+      "icon": "Satellite_antenna_(48)"
+    },
+    {
+      "group": "Enlaces PTP Troncales",
+      "icon": "Modem_(48)"
+    },
+    {
+      "group": "Enlaces PTP Backhaul",
+      "icon": "Modem_(48)"
+    },
+    {
+      "group": "Zabbix servers",
+      "icon": "Server_(48)"
+    },
+    {
+      "group": "Linux servers",
+      "icon": "Server_(48)"
+    },
+    {
+      "group": "CCTV",
+      "icon": "Video_terminal_(48)"
+    },
+    {
+      "group": "Proveedores de internet",
+      "icon": "Cloud_(48)"
+    }
   ],
   "default_icon": "Network_adapter_(48)",
   "submap_icon": "Router_symbol_(48)",
   "back_icon": "Network_(48)",
-  "share_read": ["Solo lectura"]
+  "share_read": [
+    "Solo lectura"
+  ]
 }

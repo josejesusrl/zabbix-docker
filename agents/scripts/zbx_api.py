@@ -176,11 +176,13 @@ def add_self_dependency(api, hostid, pattern, dry_run=False):
     """Make triggers whose name contains `pattern` depend on the host's own 'Unavailable by ICMP ping'.
 
     Example: 'no connected clients' on APs, so an unreachable AP does not also report 0 clients.
+    Triggers created by low-level discovery are skipped: their dependencies can only be set on the prototype.
     Returns the list of changed trigger names.
     """
     own_down = icmp_down_trigger(api, hostid)
     triggers = api.call("trigger.get", {"hostids": hostid, "output": ["triggerid", "description"],
-                                        "selectDependencies": ["triggerid"], "search": {"description": [pattern]}})
+                                        "selectDependencies": ["triggerid"], "search": {"description": [pattern]},
+                                        "filter": {"flags": 0}})
     changed = []
     for trigger in triggers:
         current = {d["triggerid"] for d in trigger["dependencies"]}

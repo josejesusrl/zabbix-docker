@@ -28,7 +28,9 @@ printf '%s\n' "$TOKEN" | agents/scripts/run_remote.sh -f zabbix_templates/X.yaml
 | `snmp_walk.py` | Lectura | Recorrido SNMP de un equipo para ver qué OIDs publica antes de diseñar una plantilla (`--hide` oculta valores sensibles) |
 | `snmp_tools.py` | Librería | Ejecuta net-snmp en un contenedor temporal con la comunidad de Zabbix sin mostrarla (usada por `snmp_probe` y `snmp_walk`) |
 | `zbx_latest.py` | Lectura | Últimos valores de los items (como *Latest data*), filtrados por clave o nombre |
-| `zbx_create_snmp_host.py` | Escritura | Alta de un host SNMP con plantillas, macros, etiquetas y dependencia de su uplink (`--visible-name` si el nombre del equipo tiene caracteres no válidos para el *Host name*) |
+| `zbx_add_interface.py` | Escritura | Añade una interfaz a un host que no la tiene: `ping` (tipo *Agent*, para *ICMP Ping* en equipos sin SNMP) o `snmp` |
+| `zbx_set_tag.py` | Escritura | Pone o quita una etiqueta de host (`notificar=no`, `escalation=off`…) conservando las demás |
+| `zbx_create_snmp_host.py` | Escritura | Alta de un host SNMP (o solo ping con `--interface ping`, p. ej. cámaras Hikvision) con plantillas, macros, etiquetas y dependencia de su uplink (`--visible-name` si el nombre del equipo tiene caracteres no válidos para el *Host name*) |
 | `zbx_align_host_name.py` | Escritura | Pone el *Host name* técnico igual al visible (sin caracteres no válidos), conservando el *Visible name*. Para hosts dados de alta con la IP como *Host name* |
 | `zbx_set_uplink.py` | Escritura | Cambia el equipo padre (dependencias + etiqueta `uplink`), conservando las dependencias internas de la plantilla |
 | `zbx_import_template.py` | Escritura | Importa plantillas YAML (`--delete-missing` para eliminar lo que ya no está en el fichero) |

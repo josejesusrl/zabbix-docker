@@ -8,7 +8,7 @@ Qué se monitorea y de quién depende cada equipo. **Es lo que más cambia:** al
 |---|---|
 | Nombre del host | El nombre de sistema del equipo (`sysName` o *Device Name*), idéntico en *Host name* y *Visible name*. Si el equipo no tiene nombre, se le pone primero en el propio equipo. El *Host name* solo admite letras, dígitos, espacios, `.`, `-` y `_`: si el nombre lleva otros caracteres (p. ej. `[AP]-…`), el *Host name* los omite y el *Visible name* conserva el nombre exacto. **Nunca la IP como Host name**: las fórmulas de los items calculados (host *KPI Likson*) usan el *Host name*. Para corregir un host: `zbx_align_host_name.py` |
 | Nombre de equipos de infraestructura nuevos | `SITIO-ROL-NN` en mayúsculas, p. ej. `MAIN-SW-01` (switch administrable 1 del sitio Main Site). Roles: `SW` switch, `RTR` router, `NAS` concentrador PPPoE. Primero se cambia en el equipo y después en Zabbix (`zbx_align_host_name.py --rename`, y `zbx_set_uplink.py` para la etiqueta `uplink` de los hijos) |
-| Grupos de hosts | `Routers & Switches Likson` (MikroTik, switches), `Access Points PPPoE Clients` (APs Ubiquiti), `Enlaces PTP Troncales` y `Enlaces PTP Backhaul` (radios PTP), `Linux servers`, `Zabbix servers`, `Likson KPIs` (host de indicadores) |
+| Grupos de hosts | `Routers & Switches Likson` (MikroTik, switches), `Access Points PPPoE Clients` (APs Ubiquiti), `Enlaces PTP Troncales` y `Enlaces PTP Backhaul` (radios PTP), `Linux servers`, `Zabbix servers`, `Likson KPIs` (host de indicadores), `CCTV` (NVR y cámaras Hikvision), `Proveedores de internet` (gateways de los proveedores) |
 | Etiqueta `uplink` | Nombre del equipo del que depende (p. ej. `uplink = EDGE 01`). Sirve para filtrar y como documentación de la dependencia |
 | Interfaz SNMP | Comunidad `{$SNMP_COMMUNITY}` (macro global). MikroTik, TP-Link y Mimosa: SNMPv2. **Ubiquiti: SNMPv1**. La macro es de tipo **texto** a propósito: `snmp_probe.py` y `snmp_walk.py` la leen por la API para sondear equipos sin mostrarla. Si se cambia a *Secret text*, esos scripts dejan de funcionar |
 | Dependencias | Cada equipo depende del que le da conectividad hacia Zabbix ([Configurar las dependencias de un host](procedimientos/dependencias.md)) |
@@ -20,6 +20,9 @@ Zabbix server (192.168.0.191)                 raíz: su trigger "Interface enp2s
 server-04 (192.168.50.254)                    depende del enlace de red del Zabbix server
 KPI Likson                                    host sin interfaz: indicadores calculados (dashboard)
 EDGE 01 (192.168.200.1)  MikroTik CCR2004  depende del enlace de red del Zabbix server
+├── ISP-COEFI01-GW (170.80.29.30)  gateway del proveedor Coefi01 (ping por ether1)
+├── NVR 01 (192.168.60.2)  NVR Hikvision
+│   └── CAM 192.168.60.10 – .14  cámaras Hikvision (nombre provisional hasta leer su Device name)
 ├── STA-Lk_Trunk_01_A (10.100.0.3)  Mimosa C5C, extremo del troncal conectado a EDGE 01
 │   └── AP-Lk_Trunk_01_A (10.100.0.2)  Mimosa C5C, extremo lejano (solo se alcanza a través del enlace)
 ├── NAS-01 (192.168.200.2)  CCR2004, concentrador PPPoE
@@ -35,7 +38,8 @@ EDGE 01 (192.168.200.1)  MikroTik CCR2004  depende del enlace de red del Zabbix 
 │   │               └── [AP]-Lk_Pintores_Canadas_1 (10.155.2.2)  LiteBeam 5AC, extremo lejano
 │   └── Sector_3, Sector_4, Sector_5 (172.16.2.x, uplink = NAS-01)
 └── NAS-03 (192.168.200.10)  RB2011iL-RM, concentrador PPPoE
-    └── LIKSON_CANADAS_A/B/C/D_01 (172.16.3.10 – .13, uplink = NAS-03)
+    ├── LIKSON_CANADAS_A/B/C/D_01 (172.16.3.10 – .13, uplink = NAS-03)
+    └── CAM 05 Canadas del bosque (192.168.60.30)  cámara Hikvision, notificar=no
 ```
 
 Los sectores `172.16.2.x` están conectados físicamente a NAS-02, que se va a retirar y no está dado de alta en Zabbix. Por eso dependen de NAS-01.
@@ -43,6 +47,7 @@ Los sectores `172.16.2.x` están conectados físicamente a NAS-02, que se va a r
 ### Inventario (generado desde Zabbix)
 
 Tablas generadas con `agents/scripts/zbx_inventory.py --markdown` y pegadas aquí; no editarlas a mano. Para regenerarlas, ver [agents/scripts/README.md](../../agents/scripts/README.md). Las macros con regex largas se muestran solo por nombre.
+
 
 #### Access Points PPPoE Clients
 
@@ -71,6 +76,18 @@ Tablas generadas con `agents/scripts/zbx_inventory.py --markdown` y pegadas aqu�
 | Sector_3 | snmpv1 172.16.2.3 | Ubiquiti AirOS 8 wireless by SNMPv1, Ubiquiti AirOS by SNMP | {$UBNT.GPS.SATS.MIN}=0 | uplink=NAS-01 | NAS-01 |
 | Sector_4 | snmpv1 172.16.2.10 | Ubiquiti AirOS 8 wireless by SNMPv1, Ubiquiti AirOS by SNMP | — | uplink=NAS-01 | NAS-01 |
 | Sector_5 | snmpv1 172.16.2.4 | Ubiquiti airMAX M airOS6 wireless by SNMPv1, Ubiquiti AirOS by SNMP | — | uplink=NAS-01 | NAS-01 |
+
+#### CCTV
+
+| Host | Interfaz | Plantillas | Macros de host | Etiquetas | Depende de |
+|---|---|---|---|---|---|
+| CAM 05 Canadas del bosque | agent 192.168.60.30 | Hikvision camera by HTTP, ICMP Ping | {$HIKVISION_ISAPI_HOST}=192.168.60.30, {$PASSWORD}=<secret>, {$USER}=admin, {$HIKVISION_STREAM_HEIGHT}=1440, {$HIKVISION_STREAM_WIDTH}=2560, {$MEMORY.UTIL.MAX}=95 | uplink=NAS-03, notificar=no | NAS-03 |
+| CAM 192.168.60.10 | agent 192.168.60.10 | Hikvision camera by HTTP, ICMP Ping | {$HIKVISION_ISAPI_HOST}=192.168.60.10 | uplink=NVR 01, notificar=no | NVR 01 |
+| CAM 192.168.60.11 | agent 192.168.60.11 | Hikvision camera by HTTP, ICMP Ping | {$HIKVISION_ISAPI_HOST}=192.168.60.11 | uplink=NVR 01, notificar=no | NVR 01 |
+| CAM 192.168.60.12 | agent 192.168.60.12 | Hikvision camera by HTTP, ICMP Ping | {$HIKVISION_ISAPI_HOST}=192.168.60.12 | uplink=NVR 01, notificar=no | NVR 01 |
+| CAM 192.168.60.13 | agent 192.168.60.13 | Hikvision camera by HTTP, ICMP Ping | {$HIKVISION_ISAPI_HOST}=192.168.60.13 | uplink=NVR 01, notificar=no | NVR 01 |
+| CAM 192.168.60.14 | agent 192.168.60.14 | Hikvision camera by HTTP, ICMP Ping | {$HIKVISION_ISAPI_HOST}=192.168.60.14 | uplink=NVR 01, notificar=no | NVR 01 |
+| NVR 01 | snmpv2 192.168.60.2 | Hikvision camera by HTTP, ICMP Ping | {$HIKVISION_ISAPI_HOST}=192.168.60.2, {$PASSWORD}=<secret> | uplink=EDGE 01 | EDGE 01 |
 
 #### Enlaces PTP Backhaul
 
@@ -103,6 +120,12 @@ Tablas generadas con `agents/scripts/zbx_inventory.py --markdown` y pegadas aqu�
 | Host | Interfaz | Plantillas | Macros de host | Etiquetas | Depende de |
 |---|---|---|---|---|---|
 | server-04 | agent 192.168.50.254 | Linux by Zabbix agent, Docker by Zabbix agent 2 | {$VFS.FS.FSNAME.MATCHES}=^/rootfs(/\|$), {$VFS.FS.FSNAME.NOT_MATCHES} (regex) | os=linux | — |
+
+#### Proveedores de internet
+
+| Host | Interfaz | Plantillas | Macros de host | Etiquetas | Depende de |
+|---|---|---|---|---|---|
+| ISP-COEFI01-GW | agent 170.80.29.30 | ICMP Ping | — | proveedor=Coefi01, uplink=EDGE 01 | EDGE 01 |
 
 #### Routers & Switches Likson
 

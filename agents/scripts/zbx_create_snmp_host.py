@@ -1,12 +1,15 @@
-"""Create an SNMP host with templates, macros, tags and its upstream dependency.
+"""Create a host (SNMP, or ping only) with templates, macros, tags and its upstream dependency.
 
 Usage (token on stdin, see README.md). Requires a recent backup (AGENTS.md, rule 1):
   zbx_create_snmp_host.py --name NAME --ip IP --group GROUP --template TPL [TPL ...]
-                          [--visible-name TEXT] [--snmp-version 1|2] [--macro '{$M}=VALUE' ...] [--tag TAG=VALUE ...]
+                          [--visible-name TEXT] [--interface snmp|ping] [--snmp-version 1|2]
+                          [--macro '{$M}=VALUE' ...] [--tag TAG=VALUE ...]
                           [--uplink PARENT] [--self-dependency TEXT ...] [--dry-run]
 
 --name is the technical name (letters, digits, spaces, '.', '-', '_'); use --visible-name when the
 device name has other characters (e.g. '[AP]-Link'). The SNMP community is always {$SNMP_COMMUNITY}. Ubiquiti airOS answers SNMPv1 only (--snmp-version 1).
+--interface ping: devices without SNMP whose data comes from other item types (e.g. Hikvision cameras by HTTP);
+the host gets an agent-type interface only so that the "ICMP Ping" template has an IP to ping.
 Examples in README.md and docs/operacion/procedimientos/.
 """
 import argparse
@@ -29,6 +32,13 @@ def lookup_ids(api, method, field, names, id_field):
     return [{id_field: f[id_field]} for f in found]
 
 
+def interface(args):
+    if args.interface == "ping":
+        return {"type": 1, "main": 1, "useip": 1, "ip": args.ip, "dns": "", "port": "10050"}
+    return {"type": 2, "main": 1, "useip": 1, "ip": args.ip, "dns": "", "port": "161",
+            "details": {"version": int(args.snmp_version), "community": "{$SNMP_COMMUNITY}", "bulk": 1}}
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--name", required=True, help="Host name (sysName / device name)")
@@ -36,6 +46,7 @@ def main():
     parser.add_argument("--ip", required=True)
     parser.add_argument("--group", required=True)
     parser.add_argument("--template", nargs="+", required=True)
+    parser.add_argument("--interface", choices=["snmp", "ping"], default="snmp")
     parser.add_argument("--snmp-version", choices=["1", "2"], default="2")
     parser.add_argument("--macro", nargs="*", type=key_value, default=[])
     parser.add_argument("--tag", nargs="*", type=key_value, default=[])
@@ -51,14 +62,14 @@ def main():
     templates = lookup_ids(api, "template.get", "host", args.template, "templateid")
     parent = get_host(api, args.uplink) if args.uplink else None
     if args.dry_run:
-        print(f"Se crearía {args.name} [{args.visible_name or args.name}] ({args.ip}, SNMPv{args.snmp_version}) en {args.group} con {args.template}, "
+        kind = f"SNMPv{args.snmp_version}" if args.interface == "snmp" else "solo ping"
+        print(f"Se crearía {args.name} [{args.visible_name or args.name}] ({args.ip}, {kind}) en {args.group} con {args.template}, "
               f"macros {dict(args.macro)}, tags {dict(args.tag)}, uplink {args.uplink or '—'}")
         return
 
     hostid = api.call("host.create", {
         "host": args.name, "name": args.visible_name or args.name, "groups": groups, "templates": templates,
-        "interfaces": [{"type": 2, "main": 1, "useip": 1, "ip": args.ip, "dns": "", "port": "161",
-                        "details": {"version": int(args.snmp_version), "community": "{$SNMP_COMMUNITY}", "bulk": 1}}],
+        "interfaces": [interface(args)],
         "macros": [{"macro": m, "value": v} for m, v in args.macro],
         "tags": [{"tag": t, "value": v} for t, v in args.tag],
     })["hostids"][0]

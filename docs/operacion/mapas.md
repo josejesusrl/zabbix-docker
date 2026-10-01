@@ -7,9 +7,10 @@
 
 | Mapa | Contenido |
 |---|---|
-| **Likson - Red general** | Zabbix server, EDGE 01, el troncal Mimosa, server-04 y un elemento por cada sitio. El icono de cada sitio toma el color del peor problema de sus equipos; al hacer clic se abre su submapa |
+| **Likson - Red general** | Zabbix server, EDGE 01, el gateway de Coefi01, el troncal Mimosa, server-04 y un elemento por cada sitio. El icono de cada sitio toma el color del peor problema de sus equipos; al hacer clic se abre su submapa |
 | **Likson - Sitio NAS-01** | NAS-01, MAIN-SW-01, sus APs, los sectores y los enlaces de backhaul (Mayólica, Caribe, Pintores → Cañadas) |
-| **Likson - Sitio NAS-03 Cañadas** | NAS-03 y los APs LIKSON_CANADAS |
+| **Likson - Sitio NAS-03 Cañadas** | NAS-03, los APs LIKSON_CANADAS y CAM 05 |
+| **Likson - CCTV NVR 01** | NVR 01 y sus cámaras |
 
 Cómo leerlos:
 - **Icono:** tipo de equipo (router, switch, AP o radio PTP). Se resalta con el color del problema más grave del equipo.
@@ -60,6 +61,6 @@ Para crear un mapa nuevo: *Monitoring → Maps → Create map*, con los mismos c
 
 ## Verificar
 
-- *Monitoring → Maps* muestra los 3 mapas. Cada equipo del [inventario](inventario.md), salvo *KPI Likson*, aparece en uno de ellos.
+- *Monitoring → Maps* muestra los 4 mapas. Cada equipo del [inventario](inventario.md), salvo *KPI Likson*, aparece en uno de ellos.
 - Un equipo caído muestra su icono en rojo y su línea hacia el padre roja y gruesa.
 - Con un usuario *Solo lectura*, los mapas se ven pero no aparece *Edit map*.
