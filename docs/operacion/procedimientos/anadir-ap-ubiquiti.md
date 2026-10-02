@@ -22,7 +22,7 @@
 3. **Verificar** (unos 5 min):
    - En *Data collection → Hosts*, el icono **SNMP** en verde.
    - En *Monitoring → Latest data*, filtrado por el host: *Connected clients* igual al número de clientes que muestra airOS, y un grupo de items *Client …* por cada uno.
-   - *Firmware version* y *Hardware model name* no soportados es normal en airOS 8. Cualquier otro item no soportado se revisa en [solución de problemas](../solucion-de-problemas.md).
+   - *Firmware version* y *Hardware model name* no soportados es normal en airOS 8: **desactivarlos** en el host (*Items* → marcar → *Disable*, o `zbx_set_status.py --item "Firmware version" "Hardware model name" --disable`). Si no, su trigger *Firmware has changed* queda en error ([registro](../registro.md)). Cualquier otro item no soportado se revisa en [solución de problemas](../solucion-de-problemas.md).
 
 **Por qué SNMPv1:** airOS ignora las consultas SNMPv2c aunque la comunidad sea correcta, y el host aparece como no disponible.
 

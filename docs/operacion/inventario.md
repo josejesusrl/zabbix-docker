@@ -55,6 +55,7 @@ Tablas generadas con `agents/scripts/zbx_inventory.py --markdown` y pegadas aqu√
 
 
 
+
 #### Access Points PPPoE Clients
 
 | Host | Interfaz | Plantillas | Macros de host | Etiquetas | Depende de |
@@ -87,7 +88,7 @@ Tablas generadas con `agents/scripts/zbx_inventory.py --markdown` y pegadas aqu√
 
 | Host | Interfaz | Plantillas | Macros de host | Etiquetas | Depende de |
 |---|---|---|---|---|---|
-| CANADAS-CAM-01 | agent 192.168.60.30 | Hikvision camera by HTTP, ICMP Ping | {$HIKVISION_ISAPI_HOST}=192.168.60.30, {$PASSWORD}=<secret>, {$USER}=admin, {$HIKVISION_STREAM_HEIGHT}=1440, {$HIKVISION_STREAM_WIDTH}=2560, {$MEMORY.UTIL.MAX}=95 | uplink=NAS-03, notificar=no | NAS-03 |
+| CANADAS-CAM-01 | agent 192.168.60.30 | Hikvision camera by HTTP, ICMP Ping | {$HIKVISION_ISAPI_HOST}=192.168.60.30, {$PASSWORD}=<secret>, {$USER}=admin, {$HIKVISION_STREAM_HEIGHT}=1440, {$HIKVISION_STREAM_WIDTH}=2560, {$MEMORY.UTIL.MAX}=99 | uplink=NAS-03, notificar=no | NAS-03 |
 | MAIN-CAM-01 | agent 192.168.60.10 | Hikvision camera by HTTP, ICMP Ping | {$HIKVISION_ISAPI_HOST}=192.168.60.10, {$PASSWORD}=<secret>, {$HIKVISION_STREAM_WIDTH}=2560, {$HIKVISION_STREAM_HEIGHT}=1440 | uplink=NVR 01 | NVR 01 |
 | MAIN-CAM-02 | agent 192.168.60.11 | Hikvision camera by HTTP, ICMP Ping | {$HIKVISION_ISAPI_HOST}=192.168.60.11, {$PASSWORD}=<secret>, {$HIKVISION_STREAM_WIDTH}=2560, {$HIKVISION_STREAM_HEIGHT}=1440 | uplink=NVR 01 | NVR 01 |
 | MAIN-CAM-03 | agent 192.168.60.12 | Hikvision camera by HTTP, ICMP Ping | {$HIKVISION_ISAPI_HOST}=192.168.60.12, {$PASSWORD}=<secret>, {$HIKVISION_STREAM_WIDTH}=2560, {$HIKVISION_STREAM_HEIGHT}=1440 | uplink=NVR 01 | NVR 01 |

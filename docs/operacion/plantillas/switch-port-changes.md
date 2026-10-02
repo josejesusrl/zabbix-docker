@@ -18,3 +18,5 @@
 | `{$PORT.IFNAME.NOT_MATCHES}` | `^(<\|wifi\|wlan\|ath\|br[0-9])` | Puertos excluidos: interfaces dinámicas, de radio (su velocidad es la capacidad inalámbrica, que cambia continuamente) y bridges virtuales. En TP-Link: `^(<\|Vlan-interface)` |
 
 Requiere **SNMPv2** (lee `ifXTable`): no sirve para Ubiquiti airOS, que solo responde a SNMPv1. En airOS, el cambio de velocidad de `eth0` lo vigilan sus propias plantillas. Al usarla, poner `{$IFCONTROL}=0` en el host para que el *Link down* de la plantilla del fabricante no duplique los avisos de desconexión. Los cortes de menos de 30 s pueden no detectarse; los repetidos, sí (flapping).
+
+El estado de cada puerto se guarda aunque no cambie cada 5 min (*Discard unchanged with heartbeat*), la mitad de `{$PORT.FLAP.PERIOD}`. Con un reenvío igual al periodo (10 min), un puerto quieto dejaba el aviso de *flapping* en "not enough data". Si se cambia `{$PORT.FLAP.PERIOD}`, mantener el reenvío por debajo.
