@@ -16,6 +16,8 @@
 - Las comprobaciones rápidas, como la lectura HTTP de las cámaras o el ping de 10 s a los proveedores, fallan a los pocos segundos. Con la lectura cada minuto de la plantilla Linux, el trigger raíz se abrió casi un minuto tarde y esos avisos ya habían saltado.
 - Tras volver el enlace, los pings y las medias de 5 min tardan unos minutos en normalizarse. El trigger sigue activo 5 min para cubrirlo.
 
+**Comprobado** en una segunda prueba de 10 min: el trigger raíz se abrió en el mismo segundo del corte (23 s antes que *Link down*) y no avisó ningún otro equipo. Durante el corte solo se intenta enviar el aviso de *Link down*, que falla porque no hay red; al volver llega su "Resuelto".
+
 **Efecto a tener en cuenta:** mientras un trigger del que se depende está en problema, Zabbix **tampoco resuelve** los que dependen de él. Si un aviso se abrió antes que el trigger raíz, queda abierto hasta que llegue un dato nuevo. Si no llega porque el valor no cambia, hay que cerrarlo a mano ([solución de problemas](../solucion-de-problemas.md)).
 
 Macro: `{$ROOT.IF}` (`enp2s0`). En un servidor nuevo con otra interfaz, cambiarla en el host.
