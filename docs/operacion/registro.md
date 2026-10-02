@@ -41,7 +41,7 @@ Avisos reales que se mantienen a propósito. No son falsos positivos.
 | Traps y agentes usan `192.168.0.191`, no `zabbix.likson.com` | El nombre apunta a Cloudflare, que solo lleva la web |
 | Ajustes de rendimiento (caché de configuración 128M, 3 pingers, memoria de PostgreSQL) (2026-09-29) | Recomendaciones de Zabbix revisadas: caché al 73 % y pinger al 63 %. Detalle en [mantenimiento](../despliegue/mantenimiento.md#ajustes-de-rendimiento). Descartados por ahora: TimescaleDB (solo 90 valores/s), CSP estricta (puede romper la interfaz), `SameSite` en la cookie (Access ya protege) |
 | Cámaras con esquema `SITIO-CAM-NN` (2026-10-02) | Las de Main Site son MAIN-CAM-01 a 05 (192.168.60.10 – .14, en orden de IP) y la de Cañadas, CANADAS-CAM-01. En las cámaras, el *Device name* aún es el de fábrica (`Torre`, `IP CAMERA`, `Camera 05`); conviene cambiarlo por el mismo nombre. La .13 (MAIN-CAM-04) transmite a 1280×720 |
-| Ping rápido (cada 10 s) a los gateways de proveedores (2026-10-02) | El corte de Coefi01 del 2026-10-01 a las 22:56 duró menos de un minuto y no se vio: *ICMP Ping* comprueba cada minuto y avisa tras 3 fallos. Plantilla *ISP gateway fast ping*: aviso High con unos 20 s sin respuesta ([plantillas](plantillas.md#isp-gateway-fast-ping--isp_gateway_fast_pingyaml)) |
+| Ping rápido (cada 10 s) a los gateways de proveedores (2026-10-02) | El corte de Coefi01 del 2026-10-01 a las 22:56 duró menos de un minuto y no se vio: *ICMP Ping* comprueba cada minuto y avisa tras 3 fallos. Plantilla *ISP gateway fast ping*: aviso High con unos 20 s sin respuesta ([plantillas](plantillas/isp-gateway-fast-ping.md)) |
 | Salida a Internet por Coefi01 vigilada con 208.67.222.222 y 8.8.4.4 (2026-10-02) | Son las direcciones que EDGE 01 enruta solo por Coefi01 (las mismas de Uptime Kuma). Avisa solo si fallan las dos; con `ether1` desconectado se alcanzan por Telmex y no avisa (lo cubren el gateway y el *Link down*) |
 | Sin MFA en Zabbix | Cloudflare Access ya exige un código enviado al correo autorizado antes del login de Zabbix. El acceso por la LAN no pasa por Access y queda protegido solo por la contraseña |
 
@@ -49,7 +49,7 @@ Avisos reales que se mantienen a propósito. No son falsos positivos.
 
 | Pendiente | Qué hacer |
 |---|---|
-| **Actualizar a Zabbix 8.0 LTS antes del 2026-12-31** | Zabbix 7.4 deja de tener soporte (ni parches de seguridad) el 31-12-2026. El 2026-09-29, 8.0 LTS seguía en beta. Cuando salga la versión estable: leer las notas de actualización, respaldo, probar en una copia (restaurar el respaldo en otra máquina con `ZBX_IMAGE_TAG` de 8.0), y después en producción ([mantenimiento](../despliegue/mantenimiento.md)). Revisar también que las plantillas propias y los scripts de `agents/scripts/` funcionen con la API de 8.0 |
+| **Actualizar a Zabbix 8.0 LTS antes del 2026-12-31** | Zabbix 7.4 deja de tener soporte (ni parches de seguridad) el 31-12-2026; el 2026-09-29, 8.0 LTS seguía en beta. Cuando salga la versión estable, seguir [actualizar, versión mayor](../despliegue/actualizar.md#zabbix-versión-mayor-p-ej-74--80-lts) |
 | Respaldos fuera del servidor | Copiarlos periódicamente ([mantenimiento](../despliegue/mantenimiento.md#copiar-los-respaldos-fuera-del-servidor)) |
-| Token de API para agentes (caduca 2026-09-30) | Revocarlo al terminar la sesión de trabajo (*User settings → API tokens*) |
+| Token de API de cada sesión de trabajo | Crearlo con caducidad corta y revocarlo al terminar (*User settings → API tokens*) |
 | Cable del Zabbix server a 100 Mbps | Ver *Situaciones conocidas* |

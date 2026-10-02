@@ -3,7 +3,7 @@
 > **Cuándo:** al crear una plantilla nueva o cambiar una de `zabbix_templates/`.
 > **Requisitos:** respaldo reciente antes de cualquier cambio ([AGENTS.md](../../../AGENTS.md), regla 1). Todos los pasos se pueden hacer desde la interfaz web.
 
-1. Editar el YAML en `zabbix_templates/` (reglas de formato en [AGENTS.md](../../../AGENTS.md), regla 6), hacer commit y push, y documentar el cambio en la documentación de operación.
+1. Editar el YAML en `zabbix_templates/` (reglas de formato en [AGENTS.md](../../../AGENTS.md), regla 6), hacer commit y push. Documentar el cambio en la **ficha** de la plantilla (`docs/operacion/plantillas/<plantilla>.md`, una por plantilla) y añadirla al catálogo [plantillas](../plantillas.md). Una plantilla nueva lleva ficha nueva, enlazada desde el [índice](../../README.md#3-mapa-completo).
 2. Respaldo en el servidor.
 3. *Data collection → Templates → Import* → elegir el YAML. Marcar **Update existing** y **Create new**. Para que se eliminen items, triggers o prototipos que ya no están en el YAML, marcar también **Delete missing** en *Items*, *Discovery rules* y *Triggers*.
 4. Verificar en un host que la usa: items con datos y sin no soportados nuevos.

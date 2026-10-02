@@ -33,18 +33,6 @@ Telegram lleva **solo lo necesario para actuar desde el móvil**; el detalle va 
 - Las líneas sin valor se omiten: "Datos:" cuando el trigger no tiene datos operativos, o "Depende de:" en equipos raíz sin etiqueta `uplink`. También se omiten las que quedan en `*UNKNOWN*` o con una macro sin resolver.
 - Si un mensaje superara el límite de Telegram (4096 caracteres), se recorta con "…".
 
-**Origen:** el script y las plantillas se mantienen en el repositorio, en `zabbix_media/telegram/`:
-- `telegram.js` es el script oficial de Zabbix con los cambios marcados `CUSTOM`.
-- `message_templates.json` contiene las plantillas de problema, resolución y actualización.
-
-**Para cambiar un mensaje:**
-1. Editar `message_templates.json`. Formato con etiquetas HTML de Telegram: `<b>`, `<i>`, `<u>`, `<s>`, `<code>`, `<pre>`, `<blockquote>`, `<a href="https://…">`. `{SEV.EMOJI}` pone el emoji.
-2. Respaldo.
-3. Aplicar con `agents/scripts/zbx_mediatype_update.py` (ver su README). Los valores de las macros se escapan solos.
-4. Probar con `agents/scripts/zbx_test_notification.py`, que dispara un problema real y lo resuelve.
-
-Si se edita en la interfaz (*Alerts → Media types → Telegram → Message templates*), copiar el cambio al JSON del repositorio: la próxima aplicación desde el repositorio lo sobrescribiría.
-
 ## Formato de los correos (Gmail)
 
 Correo HTML **completo**, para analizar el incidente. Cabecera con el **color de la severidad** (colores estándar de Zabbix, clase `sev{EVENT.NSEVERITY}`), verde para las resoluciones y azul para las actualizaciones. El asunto empieza por 🚨 / ✅ / 💬 / 🔔, seguido de la severidad, el problema y el host.
@@ -57,18 +45,17 @@ Correo HTML **completo**, para analizar el incidente. Cabecera con el **color de
 | Recordatorio (escalada) | Aviso "sigue abierto hace … y nadie lo ha reconocido" · **historial de la escalada** (a quién se avisó y cuándo) · botón *Reconocer en Zabbix* |
 
 Si el trigger no tiene descripción o el host no tiene etiquetas, esos campos salen vacíos: el correo no puede ocultar filas.
-- **Origen:** `zabbix_media/gmail/message_templates.json`. Se aplica y se prueba igual que Telegram. El email no tiene script, así que no hay `{SEV.EMOJI}` ni se omiten líneas vacías.
-- Zabbix **no escapa** los valores en el cuerpo HTML de un correo: un texto como `<test>` desaparecería. Por eso los valores que pueden llevar `< > &` usan la función de macro `htmlencode()`, p. ej. `{{EVENT.NAME}.htmlencode()}`. Hay que mantenerla al añadir campos al cuerpo. El asunto es texto plano y no la necesita.
+
+**Cambiar el texto de los mensajes** (Telegram, Gmail o recordatorios): [procedimiento](procedimientos/cambiar-mensajes.md).
 
 ## Recordatorios de la escalada
 
-Los reenvíos cada 30 min de *Escalate unacknowledged High/Disaster* usan un **mensaje propio** para cada medio ("🔔 Recordatorio"), distinto del primer aviso. No usan las plantillas del medio: el texto está en `zabbix_media/escalation.json` y se aplica con `agents/scripts/zbx_action_operations.py`.
-- En la interfaz: *Alerts → Actions → Trigger actions* → la acción → *Operations*. Hay una operación por medio (*Send only to* Telegram y Gmail), pasos 2 → 0, con *Custom message* marcado.
-- Si se edita ahí, copiar el cambio al JSON.
+Los reenvíos cada 30 min de *Escalate unacknowledged High/Disaster* usan un **mensaje propio** para cada medio ("🔔 Recordatorio"), distinto del primer aviso: dice cuánto lleva sin reconocer y, en el correo, a quién se avisó y cuándo.
 
-**Actualizaciones (reconocimientos y comentarios):** Zabbix solo ejecuta las operaciones de actualización para usuarios **distintos del que hizo el cambio**. Con un solo usuario, los reconocimientos y comentarios propios no generan mensaje.
+## Entrega
 
-Los medios (Gmail y Telegram) reintentan **10 veces cada 30 s** (*Alerts → Media types → Options*): un corte de red del servidor de hasta 5 min no pierde notificaciones.
+- **Actualizaciones (reconocimientos y comentarios):** Zabbix solo ejecuta las operaciones de actualización para usuarios **distintos del que hizo el cambio**. Con un solo usuario, los reconocimientos y comentarios propios no generan mensaje.
+- Los medios (Gmail y Telegram) reintentan **10 veces cada 30 s** (*Alerts → Media types → Options*): un corte de red del servidor de hasta 5 min no pierde notificaciones.
 
 ## Avisar una sola vez: etiqueta `escalation=off`
 
@@ -90,4 +77,4 @@ En *Monitoring → Problems* → *Update* sobre el problema:
 
 ## Silenciar durante trabajos programados
 
-*Data collection → Maintenance → Create maintenance period*: tipo *With data collection*, hosts o grupos afectados y horario. Durante el mantenimiento no se envían avisos, pero se siguen recogiendo datos.
+Un mantenimiento programado suprime los avisos de los equipos incluidos mientras se sigue recogiendo datos: [programar un mantenimiento](procedimientos/mantenimiento-programado.md).

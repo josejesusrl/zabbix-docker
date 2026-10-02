@@ -103,30 +103,8 @@ sudo ufw allow from 172.16.238.0/24 to any port 10050 proto tcp
 En la LAN, `https://192.168.0.191` (o `https://zabbix.likson.com`, que pasa por Cloudflare Access).
 
 1. Entrar con `Admin` / `zabbix` y **cambiar la contraseña** de inmediato.
-2. *Data collection → Hosts → Zabbix server*: cambiar la interfaz Agent a IP `172.16.238.1`, puerto `10050`.
-   - Plantillas: `Linux by Zabbix agent` y `Zabbix server health` (vienen enlazadas). Opcional: `Docker by Zabbix agent 2` para ver los contenedores del stack.
-   - **Sistemas de archivos:** el agente ve los discos del host bajo `/rootfs`. Hay que añadir estas macros en el host (pestaña *Macros*); si no, también se descubren los montajes internos del contenedor (`/etc/hosts`, `/var/lib/zabbix/*`…) como discos duplicados:
-     ```
-     {$VFS.FS.FSNAME.MATCHES}     = ^/rootfs(/|$)
-     {$VFS.FS.FSNAME.NOT_MATCHES} = ^/rootfs/(dev|proc|sys|run|var/lib/docker)(/|$)|/shm$
-     ```
-   - Estos items leen datos del contenedor y no del host. Se recomienda desactivarlos:
-     - `Checksum of /etc/passwd` y su trigger, que nunca se dispararía.
-     - `Number of logged in users`, que siempre valdrá 0.
-   - **Temperaturas:** importar `zabbix_templates/linux_hwmon_temperature.yaml` en *Data collection → Templates → Import* y enlazarla al host.
-     - Descubre cada sensor de `/sys/class/hwmon` (CPU, NVMe, placa…) cada hora.
-     - Crea un item por sensor cada minuto, en °C.
-     - Triggers: aviso con `{$TEMP.WARN}` (75) y crítico con `{$TEMP.CRIT}` (85). Se pueden ajustar por chip, por ejemplo `{$TEMP.CRIT:"nvme"}=70`.
-     - Prueba desde el host: `zbx exec zabbix-agent zabbix_agent2 -t hwmon.temp.discovery`.
-3. *Administration → General → Other*: poner `Frontend URL` en `https://zabbix.likson.com/`. Es necesario para los informes PDF.
-   - **Caducidad del certificado:** enlazar al host "Zabbix server" la plantilla `Website certificate by Zabbix agent 2` con estas macros de host:
-     ```
-     {$CERT.WEBSITE.HOSTNAME} = zabbix.likson.com
-     {$CERT.WEBSITE.IP}       = 127.0.0.1
-     {$CERT.EXPIRY.WARN}      = 14
-     ```
-     El agente se conecta a `127.0.0.1:443` usando el nombre `zabbix.likson.com`, sin depender del DNS público ni del túnel. Vigila el certificado autofirmado del origen: el resultado es `valid-but-self-signed`, sin alerta, y avisa 14 días antes de que caduque (10 años). El certificado público lo renueva Cloudflare.
-   - **Túnel:** importar `zabbix_templates/cloudflared_tunnel.yaml` y enlazar la plantilla *Cloudflare Tunnel by HTTP* al host "Zabbix server" ([plantillas](../operacion/plantillas.md#cloudflare-tunnel-by-http--cloudflared_tunnelyaml)).
+2. *Administration → General → Other*: poner `Frontend URL` en `https://zabbix.likson.com/`. Es necesario para los informes PDF y los enlaces de los avisos.
+3. **Host "Zabbix server"** (interfaz del agente, plantillas, temperaturas, certificado y túnel): [configurar el host Zabbix server](host-zabbix-server.md).
 4. **Equipos a monitorear** (routers, switches, APs, servidores), plantillas propias, dependencias, alertas y umbrales: ver la [documentación de operación](../README.md). La configuración que vive solo en la BD (medios, acciones, usuarios, ajustes) está en [configuración base](configuracion-base.md).
    - Los MIBs de fabricantes van en `./zbx_env/var/lib/zabbix/mibs/` (incluidos en el respaldo) y se aplican reiniciando `zabbix-server` y `zabbix-snmptraps`.
 

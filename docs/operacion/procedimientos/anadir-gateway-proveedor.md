@@ -30,7 +30,7 @@ Con el enlace activo, la ruta directa tiene prioridad y esta no se usa. Sin enla
 *Data collection → Hosts → Create host*:
 
 1. **Host name:** `ISP-<PROVEEDOR>-GW` (p. ej. `ISP-COEFI01-GW`).
-2. **Templates:** `ICMP Ping` e `ISP gateway fast ping` ([catálogo](../plantillas.md#isp-gateway-fast-ping--isp_gateway_fast_pingyaml)).
+2. **Templates:** `ICMP Ping` e `ISP gateway fast ping` ([catálogo](../plantillas/isp-gateway-fast-ping.md)).
    - *ICMP Ping* comprueba cada minuto: *Unavailable by ICMP ping* (High), *High ICMP ping loss* y *High ICMP ping response time* (Warning). Solo detecta caídas de varios minutos.
    - *ISP gateway fast ping* comprueba cada 10 s: **Corte del proveedor** (High, Telegram y Gmail) con unos 20 s sin respuesta, y *Pérdida intermitente* (Warning).
 3. **Host groups:** `Proveedores de internet`.

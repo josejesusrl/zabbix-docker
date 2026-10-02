@@ -21,7 +21,7 @@ Para conservar hosts, plantillas, historial y usuarios de un Zabbix existente.
    sudo ./server_restore.sh --db zabbix-anterior.dump
    ```
    Si el dump es de una versión anterior de Zabbix, el server migra el esquema al arrancar. Seguir el progreso con `zbx logs -f zabbix-server`: la actualización de la BD puede tardar varios minutos.
-5. **Revisar en la nueva interfaz** la interfaz del agente del host "Zabbix server" (`172.16.238.1`) y sus macros ([instalación, sección 4](instalacion.md#4-configuración-en-la-interfaz-web)). Importar las plantillas de `zabbix_templates/` que falten y comprobar los hosts.
+5. **Revisar en la nueva interfaz** la interfaz del agente del host "Zabbix server" (`172.16.238.1`) y sus macros ([host Zabbix server](host-zabbix-server.md)). Importar las plantillas de `zabbix_templates/` que falten y comprobar los hosts.
 6. Continuar con las secciones 2 a 5 de [instalación](instalacion.md) (certificado, firewall, tareas programadas).
 
 ## Restauración
@@ -55,7 +55,7 @@ Para reconstruir este despliegue en un disco o servidor nuevo a partir de los re
 Se recupera todo lo que está en git (stack, plantillas propias, UserParameters, scripts), pero **los hosts, macros de host, acciones, usuarios e historial se pierden**. Por eso los respaldos deben copiarse fuera del servidor. Para reconstruir:
 
 0. Instalar con las secciones 1 a 5 de [instalación](instalacion.md). El token del túnel se copia del panel de Cloudflare, donde el túnel y Access siguen configurados ([acceso externo](acceso-externo.md#servidor-nuevo-o-reinstalado)); la contraseña de PostgreSQL y la comunidad de traps son nuevas (configurar la comunidad nueva en los equipos).
-1. Importar `zabbix_templates/*.yaml` (*Data collection → Templates → Import*, o `zbx_import_template.py`) y enlazar las del host "Zabbix server" según [instalación, sección 4](instalacion.md#4-configuración-en-la-interfaz-web), incluida *Cloudflare Tunnel by HTTP* (`zbx_link_template.py`).
+1. Importar `zabbix_templates/*.yaml` (*Data collection → Templates → Import*, o `zbx_import_template.py`) y enlazar las del host "Zabbix server" según [configurar el host Zabbix server](host-zabbix-server.md), incluida *Cloudflare Tunnel by HTTP* (`zbx_link_template.py`).
 2. Rehacer lo descrito en [configuración base](configuracion-base.md): medios Telegram y Gmail (con `zbx_mediatype_update.py` se cargan el script y las plantillas de `zabbix_media/`), usuarios, acciones, macro global y ajustes.
 3. Volver a dar de alta los equipos según el [inventario](../operacion/inventario.md) y los [procedimientos](../README.md#añadir-o-cambiar-equipos).
 4. Crear el dashboard con `zbx_dashboard_apply.py` desde `zabbix_dashboards/likson_noc.json` y los mapas con `zbx_map_apply.py` desde `zabbix_maps/likson_red.json`, después de las dependencias ([mapas](../operacion/mapas.md)).

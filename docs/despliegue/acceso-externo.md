@@ -69,7 +69,7 @@ Cloudflare crea o sustituye el registro DNS `zabbix.likson.com` por un CNAME al 
 - Desde fuera de la LAN (datos móviles), `https://zabbix.likson.com` muestra la pantalla de Cloudflare Access. Tras poner el código llega al login de Zabbix, con un certificado válido.
 - Un correo que no está en la política no recibe el código ni puede entrar.
 - `https://192.168.0.191` en la LAN sigue funcionando, con aviso de certificado. Es el acceso de emergencia si cae Internet o Cloudflare.
-- En Zabbix, host *Zabbix server* → *Latest data*: `Cloudflared: Tunnel connections` = 4 ([plantilla](../operacion/plantillas.md#cloudflare-tunnel-by-http--cloudflared_tunnelyaml)).
+- En Zabbix, host *Zabbix server* → *Latest data*: `Cloudflared: Tunnel connections` = 4 ([plantilla](../operacion/plantillas/cloudflare-tunnel.md)).
 - En el router, **ninguna** redirección de los puertos 80 ni 443 hacia el servidor.
 
 ## Servidor nuevo o reinstalado

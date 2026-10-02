@@ -8,9 +8,10 @@ Usage:
 Local checks:
 - Relative links of the project documents point to existing files, and their #anchors to existing headings.
 - No references to removed documents (OPERACION.md, SERVER_DEPLOY.md).
-- Every zabbix_templates/*.yaml is described in docs/operacion/plantillas.md.
+- Every zabbix_templates/*.yaml is in the catalog docs/operacion/plantillas.md and has its own page in
+  docs/operacion/plantillas/ (the page names the file).
 - Every script of agents/scripts/ is listed in agents/scripts/README.md.
-- Every procedure of docs/operacion/procedimientos/ is linked from docs/README.md.
+- Every document of docs/ is linked from the index docs/README.md.
 Exit code 1 if something fails.
 """
 import argparse
@@ -70,6 +71,23 @@ def check_listed(errors, files, document, what):
             errors.append(f"{document}: falta {what} {f.name}")
 
 
+def check_index(errors, index="docs/README.md"):
+    """Every document of docs/ must be reachable from the index."""
+    text = (ROOT / index).read_text(encoding="utf-8")
+    linked = {((ROOT / index).parent / t.partition("#")[0]).resolve() for t in LINK.findall(text) if not re.match(r"[a-z]+:", t)}
+    for md in sorted((ROOT / "docs").rglob("*.md")):
+        rel = str(md.relative_to(ROOT))
+        if rel not in SKIP and rel != index and md.resolve() not in linked:
+            errors.append(f"{index}: falta el enlace a {rel}")
+
+
+def check_template_pages(errors, pages="docs/operacion/plantillas"):
+    texts = " ".join(f.read_text(encoding="utf-8") for f in (ROOT / pages).glob("*.md"))
+    for f in sorted((ROOT / "zabbix_templates").glob("*.yaml")):
+        if f.name not in texts:
+            errors.append(f"{pages}/: falta la ficha de {f.name}")
+
+
 def check_zabbix(inventory):
     from zbx_api import api_from_stdin
 
@@ -100,7 +118,8 @@ def main():
         check_listed(errors, sorted((ROOT / "zabbix_templates").glob("*.yaml")), "docs/operacion/plantillas.md", "la plantilla")
         scripts = [f for f in sorted((ROOT / "agents/scripts").iterdir()) if f.suffix in (".py", ".sh")]
         check_listed(errors, scripts, "agents/scripts/README.md", "el script")
-        check_listed(errors, sorted((ROOT / "docs/operacion/procedimientos").glob("*.md")), "docs/README.md", "el procedimiento")
+        check_template_pages(errors)
+        check_index(errors)
         ok = f"documentación OK ({len(list(markdown_files()))} ficheros)"
     for e in errors:
         print("ERROR", e)

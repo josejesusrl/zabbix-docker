@@ -61,7 +61,7 @@ El respaldo de la base de datos (`pg_dump`) contiene hosts, plantillas importada
 |---|---|---|
 | Definición del stack | `docker-compose.yml`, `compose_server.yaml`, `server.env.example` | `git clone` |
 | Variables de Zabbix | `env_vars/.env_*_override` | `git clone` |
-| Configuración de Nginx (HTTP → HTTPS, ACME) | `nginx/zabbix_http.conf` | `git clone` |
+| Configuración de Nginx (HTTP → HTTPS) | `nginx/zabbix_http.conf` | `git clone` |
 | UserParameters del Agent 2 (temperaturas) | `zabbix_agentd.d/` | `git clone` |
 | Plantillas propias | `zabbix_templates/*.yaml` | Están también en la BD; si la BD se pierde, se importan desde aquí |
 | Scripts de alertas y externos | `alertscripts/`, `externalscripts/` | `git clone` |
@@ -120,13 +120,14 @@ Las particularidades ya conocidas de cada tipo de equipo están en [plantillas](
 
 ## Regla 7 — Documentar para que una persona pueda hacerlo
 
-Todo lo que se configure o se haga en el proyecto debe poder repetirlo una persona sin ayuda y sin la API. La documentación está en [`docs/`](docs/README.md):
+Todo lo que se configure o se haga en el proyecto debe poder repetirlo una persona sin ayuda y sin la API. La documentación está en [`docs/`](docs/README.md); su **índice** tiene tres entradas: por necesidad, *Busco…* (tema → documento) y mapa completo.
 
 | Documento | Contenido |
 |---|---|
-| `docs/despliegue/` | Instalar, restaurar, migrar y mantener el **servidor**, y la configuración que vive solo en la BD |
+| `docs/despliegue/` | Instalar, configurar el host Zabbix server, acceso externo, restaurar, migrar, mantener y actualizar el **servidor**, y la configuración que vive solo en la BD |
 | `docs/operacion/inventario.md` | Convenciones, topología e inventario de hosts (tabla generada con `zbx_inventory.py --markdown`) |
-| `docs/operacion/plantillas.md` | Catálogo de plantillas (propias y oficiales), macros, triggers y particularidades por tipo de equipo |
+| `docs/operacion/plantillas.md` | Catálogo de plantillas (propias y oficiales) y particularidades por tipo de equipo |
+| `docs/operacion/plantillas/` | **Una ficha por plantilla propia**: items, triggers, macros y requisitos |
 | `docs/operacion/alertas.md`, `dashboard.md`, `mapas.md` | Notificaciones, dashboard y mapas de red |
 | `docs/operacion/procedimientos/` | Un fichero por procedimiento |
 | `docs/operacion/solucion-de-problemas.md` | Síntomas y soluciones |
@@ -139,7 +140,9 @@ Cada procedimiento indica:
 3. Qué **plantillas, macros, dependencias y etiquetas** aplicar y por qué.
 4. Cómo **verificar** que funciona.
 
-Cualquier cambio que añada o modifique una plantilla, un trigger, una macro, un tipo de equipo, una dependencia, un procedimiento o la configuración base se documenta **en el mismo commit**. Al dar de alta, mover o retirar equipos se regenera el inventario. Los enlaces entre documentos son relativos; `python3 agents/scripts/docs_check.py` comprueba enlaces, plantillas y scripts documentados, y con `--zabbix` que el inventario coincide con Zabbix.
+Cualquier cambio que añada o modifique una plantilla, un trigger, una macro, un tipo de equipo, una dependencia, un procedimiento o la configuración base se documenta **en el mismo commit**.
+
+**Documentos cortos y atómicos:** una tarea repetible es un procedimiento propio, y una plantilla propia tiene su ficha. Los documentos de referencia (alertas, mantenimiento, plantillas) enlazan a ellos en vez de repetir pasos. Todo documento nuevo se enlaza desde el índice [`docs/README.md`](docs/README.md), en su tabla por necesidad y en *Busco…*. Al dar de alta, mover o retirar equipos se regenera el inventario. Los enlaces entre documentos son relativos; `python3 agents/scripts/docs_check.py` comprueba enlaces y anclas, que cada plantilla tenga su ficha, que cada script esté en el catálogo y que todos los documentos estén en el índice, y con `--zabbix` que el inventario coincide con Zabbix.
 
 ## Regla 8 — Scripts reutilizables para la API
 

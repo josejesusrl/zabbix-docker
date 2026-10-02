@@ -4,8 +4,8 @@ Monitoreo de la red WISP de Likson con Zabbix 7.4 en Docker: routers MikroTik, s
 
 | Necesito… | Ir a |
 |---|---|
-| Ver qué se monitorea y cómo | [Documentación](docs/README.md) |
-| Instalar o recuperar el servidor | [Despliegue](docs/README.md#servidor) |
+| Ver qué se monitorea y cómo, o buscar un tema | [Índice de la documentación](docs/README.md) |
+| Instalar, recuperar o actualizar el servidor | [Servidor](docs/README.md#servidor) |
 | Añadir un equipo o resolver una alerta | [Operación](docs/README.md#añadir-o-cambiar-equipos) |
 | Trabajar como agente de IA | [AGENTS.md](AGENTS.md) |
 | El README original de Zabbix | [docs/upstream-zabbix-README.md](docs/upstream-zabbix-README.md) |
@@ -15,8 +15,8 @@ Monitoreo de la red WISP de Likson con Zabbix 7.4 en Docker: routers MikroTik, s
 | Ruta | Contenido |
 |---|---|
 | `docker-compose.yml`, `compose_server.yaml`, `server.env.example`, `env_vars/`, `nginx/` | Definición del stack |
-| `server_*.sh` | Preparación del host, certificados, respaldo y restauración |
-| `zabbix_templates/`, `zabbix_media/`, `zabbix_dashboards/`, `zabbix_agentd.d/` | Plantillas, mensajes, dashboard y UserParameters |
+| `server_*.sh` | Preparación del host, certificado, respaldo y restauración |
+| `zabbix_templates/`, `zabbix_media/`, `zabbix_dashboards/`, `zabbix_maps/`, `zabbix_access/`, `zabbix_agentd.d/` | Plantillas, mensajes, dashboard, mapas, perfiles de acceso y UserParameters |
 | `agents/scripts/` | Scripts de la API de Zabbix |
 | `docs/` | Documentación |
 | Resto (`Dockerfiles/`, `compose_*.yaml`, `kubernetes.yaml`…) | Ficheros oficiales de Zabbix, sin modificar |
