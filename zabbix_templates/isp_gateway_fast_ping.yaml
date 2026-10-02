@@ -1,0 +1,84 @@
+zabbix_export:
+  version: '7.0'
+  template_groups:
+    - uuid: 3a6730e62a4f4685831df097d40f3044
+      name: Templates/Likson
+  templates:
+    - uuid: 228e7e1892384f9eac3999cfe11c1961
+      template: 'ISP gateway fast ping'
+      name: 'ISP gateway fast ping'
+      description: |
+        Fast ping to the gateway of an internet provider, to detect outages shorter than one minute that the
+        "ICMP Ping" template (one check per minute, alert after 3 failures) misses. Linked together with "ICMP Ping"
+        to the hosts of group "Proveedores de internet". See docs/operacion/procedimientos/anadir-gateway-proveedor.md.
+      groups:
+        - name: Templates/Likson
+      items:
+        - uuid: 834dbf3ea7e64ad3b481c6ac592daaf1
+          name: 'Ping rápido al gateway'
+          type: SIMPLE
+          key: 'icmpping[,{$ISP.PING.COUNT},200,,500]'
+          delay: '{$ISP.PING.INTERVAL}'
+          history: 31d
+          valuemap:
+            name: 'Service state'
+          description: '{$ISP.PING.COUNT} packets every {$ISP.PING.INTERVAL}, 500 ms timeout. 1 = at least one reply.'
+          tags:
+            - tag: component
+              value: isp
+        - uuid: f58f975881de4577b775dc5ff14ff7b0
+          name: 'Pérdida en ping rápido'
+          type: SIMPLE
+          key: 'icmppingloss[,{$ISP.PING.COUNT},200,,500]'
+          delay: '{$ISP.PING.INTERVAL}'
+          history: 31d
+          value_type: FLOAT
+          units: '%'
+          tags:
+            - tag: component
+              value: isp
+      macros:
+        - macro: '{$ISP.PING.INTERVAL}'
+          value: 10s
+          description: 'Interval of the fast ping.'
+        - macro: '{$ISP.PING.COUNT}'
+          value: '3'
+          description: 'Packets per check.'
+        - macro: '{$ISP.LOSS.CHECKS}'
+          value: '3'
+          description: 'Checks with packet loss within 5 minutes that open "Intermittent packet loss".'
+      valuemaps:
+        - uuid: 80a7dfe945984a51ad0709067bd2f1e1
+          name: 'Service state'
+          mappings:
+            - value: '0'
+              newvalue: Down
+            - value: '1'
+              newvalue: Up
+  triggers:
+    - uuid: dd06a5d49efa4d77b3e78c5a6d223b58
+      expression: 'max(/ISP gateway fast ping/icmpping[,{$ISP.PING.COUNT},200,,500],#2)=0'
+      recovery_mode: RECOVERY_EXPRESSION
+      recovery_expression: 'min(/ISP gateway fast ping/icmpping[,{$ISP.PING.COUNT},200,,500],#3)=1'
+      name: 'Corte del proveedor: el gateway no responde'
+      event_name: 'Corte del proveedor: {HOST.NAME} no responde'
+      priority: HIGH
+      description: 'Ningún paquete respondió en 2 comprobaciones seguidas (unos 20 s). Cruzar con el estado del puerto WAN de EDGE 01: si el puerto sigue arriba, la falla es del proveedor. Se resuelve con 3 comprobaciones correctas. Duración y hora exactas: Monitoring → Problems.'
+      tags:
+        - tag: scope
+          value: availability
+    - uuid: 6da8771c29134522a01f00459ac631a3
+      expression: 'count(/ISP gateway fast ping/icmppingloss[,{$ISP.PING.COUNT},200,,500],5m,"gt",0)>={$ISP.LOSS.CHECKS}'
+      recovery_mode: RECOVERY_EXPRESSION
+      recovery_expression: 'count(/ISP gateway fast ping/icmppingloss[,{$ISP.PING.COUNT},200,,500],5m,"gt",0)=0'
+      name: 'Pérdida intermitente hacia el gateway'
+      opdata: 'Pérdida actual: {ITEM.LASTVALUE1}'
+      priority: WARNING
+      description: 'Al menos {$ISP.LOSS.CHECKS} comprobaciones con pérdida de paquetes en 5 minutos: enlace del proveedor inestable. Se resuelve tras 5 minutos sin pérdida.'
+      dependencies:
+        - name: 'Corte del proveedor: el gateway no responde'
+          expression: 'max(/ISP gateway fast ping/icmpping[,{$ISP.PING.COUNT},200,,500],#2)=0'
+          recovery_expression: 'min(/ISP gateway fast ping/icmpping[,{$ISP.PING.COUNT},200,,500],#3)=1'
+      tags:
+        - tag: scope
+          value: performance

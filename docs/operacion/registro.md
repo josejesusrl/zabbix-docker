@@ -41,6 +41,7 @@ Avisos reales que se mantienen a propósito. No son falsos positivos.
 | Traps y agentes usan `192.168.0.191`, no `zabbix.likson.com` | El nombre apunta a Cloudflare, que solo lleva la web |
 | Ajustes de rendimiento (caché de configuración 128M, 3 pingers, memoria de PostgreSQL) (2026-09-29) | Recomendaciones de Zabbix revisadas: caché al 73 % y pinger al 63 %. Detalle en [mantenimiento](../despliegue/mantenimiento.md#ajustes-de-rendimiento). Descartados por ahora: TimescaleDB (solo 90 valores/s), CSP estricta (puede romper la interfaz), `SameSite` en la cookie (Access ya protege) |
 | Cámaras con esquema `SITIO-CAM-NN` (2026-10-02) | Las de Main Site son MAIN-CAM-01 a 05 (192.168.60.10 – .14, en orden de IP) y la de Cañadas, CANADAS-CAM-01. En las cámaras, el *Device name* aún es el de fábrica (`Torre`, `IP CAMERA`, `Camera 05`); conviene cambiarlo por el mismo nombre. La .13 (MAIN-CAM-04) transmite a 1280×720 |
+| Ping rápido (cada 10 s) a los gateways de proveedores (2026-10-02) | El corte de Coefi01 del 2026-10-01 a las 22:56 duró menos de un minuto y no se vio: *ICMP Ping* comprueba cada minuto y avisa tras 3 fallos. Plantilla *ISP gateway fast ping*: aviso High con unos 20 s sin respuesta ([plantillas](plantillas.md#isp-gateway-fast-ping--isp_gateway_fast_pingyaml)) |
 | Sin MFA en Zabbix | Cloudflare Access ya exige un código enviado al correo autorizado antes del login de Zabbix. El acceso por la LAN no pasa por Access y queda protegido solo por la contraseña |
 
 ## Pendientes

@@ -51,6 +51,7 @@ Tablas generadas con `agents/scripts/zbx_inventory.py --markdown` y pegadas aquÃ
 
 
 
+
 #### Access Points PPPoE Clients
 
 | Host | Interfaz | Plantillas | Macros de host | Etiquetas | Depende de |
@@ -127,7 +128,7 @@ Tablas generadas con `agents/scripts/zbx_inventory.py --markdown` y pegadas aquÃ
 
 | Host | Interfaz | Plantillas | Macros de host | Etiquetas | Depende de |
 |---|---|---|---|---|---|
-| ISP-COEFI01-GW | agent 170.80.29.30 | ICMP Ping | â€” | proveedor=Coefi01, uplink=EDGE 01 | EDGE 01 |
+| ISP-COEFI01-GW | agent 170.80.29.30 | ISP gateway fast ping, ICMP Ping | â€” | proveedor=Coefi01, uplink=EDGE 01 | EDGE 01 |
 
 #### Routers & Switches Likson
 

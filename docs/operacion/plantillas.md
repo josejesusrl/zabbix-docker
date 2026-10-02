@@ -113,6 +113,18 @@ Sus fórmulas usan el grupo *Access Points PPPoE Clients* y el ***Host name* té
 
 Macros: `{$CLOUDFLARED.METRICS.URL}` (`http://cloudflared:2000`) y `{$CLOUDFLARED.CONN.MIN}` (4). Si cae Internet, las alertas por Telegram y Gmail tampoco salen hasta que vuelva.
 
+### ISP gateway fast ping — `isp_gateway_fast_ping.yaml`
+**Para:** los gateways de los proveedores de internet (grupo *Proveedores de internet*), **junto con** *ICMP Ping*. Detecta cortes de menos de un minuto: *ICMP Ping* solo comprueba una vez por minuto y avisa tras 3 fallos, así que un corte de 30 s entre dos comprobaciones no se ve (pasó el 2026-10-01 a las 22:56 con Coefi01).
+
+Items: ping de `{$ISP.PING.COUNT}` (3) paquetes cada `{$ISP.PING.INTERVAL}` (10 s), y su pérdida.
+
+| Trigger | Severidad | Cuándo |
+|---|---|---|
+| Corte del proveedor: el gateway no responde | High | 2 comprobaciones seguidas sin ninguna respuesta (unos 20 s). Se resuelve con 3 correctas. Depende de *EDGE 01: Unavailable by ICMP ping* |
+| Pérdida intermitente hacia el gateway | Warning | `{$ISP.LOSS.CHECKS}` (3) comprobaciones con pérdida en 5 min. Depende del anterior y de EDGE 01 |
+
+*ICMP Ping: Unavailable by ICMP ping* del gateway depende de *Corte del proveedor*, para que un corte largo no avise dos veces. El número de comprobaciones de *Corte* es fijo (`#2`): Zabbix no admite una macro en ese parámetro.
+
 ## Plantillas oficiales en uso y ajustes necesarios
 
 | Plantilla | Para | Ajustes |
@@ -144,6 +156,6 @@ Resumen de lo que hay que recordar al dar de alta cada tipo de equipo. El detall
 | Problemas de objetos ya no descubiertos o desactivados | Zabbix no los cierra: cerrarlos con comentario (`zbx_close_problems.py`). Cada objeto desactivado a propósito se registra en el [registro](registro.md) |
 | Enlaces con problemas largos y conocidos (lluvia) | Etiqueta de host `escalation=off`: la acción de escalada no repite sus *High*. Señal crítica con `{$UBNT.STA.SIGNAL.MIN.CRIT}` y la histéresis `{$UBNT.STA.SIGNAL.HYST}` de la plantilla |
 | Hikvision (cámaras, NVR) | Sin SNMP: plantilla HTTP + *ICMP Ping* con interfaz *Agent* solo para el ping. Contraseña en `{$PASSWORD}` como *Secret text*. Etiqueta `notificar=no` mientras se completa el alta. *Error receiving data* depende del ping propio |
-| Gateway de proveedor | *ICMP Ping* y una ruta *blackhole* de distancia 254 en EDGE 01 para que el ping solo salga por la interfaz de ese proveedor ([procedimiento](procedimientos/anadir-gateway-proveedor.md)) |
+| Gateway de proveedor | *ICMP Ping* + *ISP gateway fast ping* (cortes breves) y una ruta *blackhole* de distancia 254 en EDGE 01 para que el ping solo salga por la interfaz de ese proveedor ([procedimiento](procedimientos/anadir-gateway-proveedor.md)) |
 | *Switch port changes* | Requiere SNMPv2 (`ifXTable`): no usar en airOS (SNMPv1), cuyas plantillas ya vigilan la velocidad de `eth0` |
 | Cualquier radio con *Switch port changes* | Nunca vigilar interfaces inalámbricas (`wifi*`, `wlan*`, `ath*`): su velocidad es adaptativa. La plantilla ya las excluye por defecto |

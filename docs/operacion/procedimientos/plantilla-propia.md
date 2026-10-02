@@ -8,6 +8,8 @@
 3. *Data collection → Templates → Import* → elegir el YAML. Marcar **Update existing** y **Create new**. Para que se eliminen items, triggers o prototipos que ya no están en el YAML, marcar también **Delete missing** en *Items*, *Discovery rules* y *Triggers*.
 4. Verificar en un host que la usa: items con datos y sin no soportados nuevos.
 
+En las expresiones de trigger, el número de valores de una función (`#3`) debe ser un número fijo: `#{$MACRO}` no es válido. Al importar, Zabbix descarta sin error los triggers con expresión no válida; `zbx_import_template.py` lo comprueba y avisa.
+
 No editar las plantillas propias desde la interfaz: el cambio se perdería al reimportar el YAML. Las plantillas oficiales tampoco se editan; se ajustan con macros de host.
 
 ## Con scripts (opcional)
