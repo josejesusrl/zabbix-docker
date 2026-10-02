@@ -1,0 +1,26 @@
+{
+  "_comment": "Operations of the escalation action, one custom message per media type so reminders differ from the first notification. Applied with agents/scripts/zbx_action_operations.py (docs/operacion/alertas.md). Replaces all operations of the action.",
+  "action": "Escalate unacknowledged High/Disaster",
+  "operations": [
+    {
+      "esc_step_from": 2,
+      "esc_step_to": 0,
+      "users": [
+        "jjrl"
+      ],
+      "mediatype": "Telegram",
+      "subject": "🔔 RECORDATORIO: {EVENT.NAME}",
+      "message": "🔔 <b>ZABBIX · RECORDATORIO</b>\n<b>{EVENT.NAME}</b>\n\n🖥 <b>Host:</b> {HOST.NAME} · {HOST.IP}\n⚠️ <b>Severidad:</b> {EVENT.SEVERITY}\n⏳ <b>Sin reconocer desde hace:</b> {EVENT.AGE}\n📊 <b>Datos:</b> {EVENT.OPDATA}\n\n✔️ <a href=\"https://zabbix.likson.com/tr_events.php?triggerid={TRIGGER.ID}&eventid={EVENT.ID}\">Reconocer en Zabbix</a>"
+    },
+    {
+      "esc_step_from": 2,
+      "esc_step_to": 0,
+      "users": [
+        "jjrl"
+      ],
+      "mediatype": "Gmail",
+      "subject": "🔔 [Zabbix] Recordatorio sin reconocer ({EVENT.AGE}): {EVENT.NAME} · {HOST.NAME}",
+      "message": "<html><head><meta charset=\"utf-8\"><style>.sev0{background:#97AAB3!important}.sev1{background:#7499FF!important}.sev2{background:#FFC859!important;color:#1F2C33!important}.sev3{background:#FFA059!important}.sev4{background:#E97659!important}.sev5{background:#E45959!important}</style></head><body style=\"margin:0;padding:16px;background:#f2f4f5;font-family:Arial,Helvetica,sans-serif;color:#1f2c33\"><table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"max-width:600px;margin:0 auto;background:#ffffff;border-radius:8px;border-collapse:separate;overflow:hidden\"><tr><td class=\"sev{EVENT.NSEVERITY}\" style=\"padding:16px 20px;color:#ffffff;font-size:18px;font-weight:bold;background:#1f2c33\">🔔 ZABBIX · RECORDATORIO · SIN RECONOCER</td></tr><tr><td style=\"padding:20px\"><div style=\"font-size:16px;font-weight:bold;margin-bottom:6px\">{{EVENT.NAME}.htmlencode()}</div><div style=\"font-size:14px;color:#a8392b;margin-bottom:14px\">Sigue abierto hace {EVENT.AGE} y nadie lo ha reconocido. Reconócelo en Zabbix para detener los recordatorios.</div><table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" style=\"font-size:14px;border-collapse:collapse\" width=\"100%\"><tr><td style=\"padding:6px 12px 6px 0;width:150px;color:#768d99;vertical-align:top\">🖥 Host</td><td style=\"padding:6px 0;vertical-align:top\">{{HOST.NAME}.htmlencode()} · {HOST.IP}</td></tr><tr><td style=\"padding:6px 12px 6px 0;width:150px;color:#768d99;vertical-align:top\">⚠️ Severidad</td><td style=\"padding:6px 0;vertical-align:top\">{EVENT.SEVERITY}</td></tr><tr><td style=\"padding:6px 12px 6px 0;width:150px;color:#768d99;vertical-align:top\">📊 Datos</td><td style=\"padding:6px 0;vertical-align:top\">{{EVENT.OPDATA}.htmlencode()}</td></tr><tr><td style=\"padding:6px 12px 6px 0;width:150px;color:#768d99;vertical-align:top\">🕒 Inicio</td><td style=\"padding:6px 0;vertical-align:top\">{EVENT.DATE} {EVENT.TIME}</td></tr><tr><td style=\"padding:6px 12px 6px 0;width:150px;color:#768d99;vertical-align:top\">🆔 Evento</td><td style=\"padding:6px 0;vertical-align:top\">{EVENT.ID}</td></tr></table><div style=\"margin:18px 0 0;padding:12px 14px;background:#f2f4f5;border-left:4px solid #768d99;font-size:13px;line-height:1.5\"><div style=\"font-weight:bold;margin-bottom:4px\">📜 Historial de la escalada</div><div style=\"white-space:pre-line\">{{ESC.HISTORY}.htmlencode()}</div></div><p style=\"margin:22px 0 0\"><a href=\"https://zabbix.likson.com/tr_events.php?triggerid={TRIGGER.ID}&eventid={EVENT.ID}\" style=\"display:inline-block;background:#0275b8;color:#ffffff;padding:10px 16px;border-radius:4px;text-decoration:none;font-size:14px\">✔️ Reconocer en Zabbix</a></p></td></tr><tr><td style=\"padding:12px 20px;font-size:12px;color:#768d99;border-top:1px solid #ebeef0\">Notificación automática de Zabbix · zabbix.likson.com</td></tr></table></body></html>"
+    }
+  ]
+}

@@ -5,19 +5,19 @@
       "eventsource": "0",
       "recovery": "0",
       "subject": "{SEV.EMOJI} <b>ZABBIX · PROBLEMA</b>",
-      "message": "<b>{EVENT.NAME}</b>\n\n🖥 <b>Host:</b> {HOST.NAME}\n⚠️ <b>Severidad:</b> {EVENT.SEVERITY}\n📊 <b>Datos:</b> {EVENT.OPDATA}\n🕒 <b>Inicio:</b> {EVENT.DATE} {EVENT.TIME}\n🆔 <b>Evento:</b> <code>{EVENT.ID}</code>\n\n🔗 <a href=\"https://zabbix.likson.com/tr_events.php?triggerid={TRIGGER.ID}&eventid={EVENT.ID}\">Ver en Zabbix</a>"
+      "message": "{SEV.EMOJI} <b>ZABBIX · PROBLEMA</b>\n<b>{EVENT.NAME}</b>\n\n🖥 <b>Host:</b> {HOST.NAME} · {HOST.IP}\n⚠️ <b>Severidad:</b> {EVENT.SEVERITY}\n📊 <b>Datos:</b> {EVENT.OPDATA}\n⬆️ <b>Depende de:</b> {EVENT.TAGS.uplink}\n🔁 <b>Abiertos sin reconocer:</b> {TRIGGER.EVENTS.PROBLEM.UNACK}\n🕒 <b>Inicio:</b> {EVENT.DATE} {EVENT.TIME}\n\n🔗 <a href=\"https://zabbix.likson.com/tr_events.php?triggerid={TRIGGER.ID}&eventid={EVENT.ID}\">Ver problema</a> · <a href=\"https://zabbix.likson.com/zabbix.php?action=latest.view&hostids%5B%5D={HOST.ID}&filter_set=1\">Datos del host</a>"
     },
     {
       "eventsource": "0",
       "recovery": "1",
       "subject": "{SEV.EMOJI} <b>ZABBIX · RESUELTO</b>",
-      "message": "<b>{EVENT.NAME}</b>\n\n🖥 <b>Host:</b> {HOST.NAME}\n⚠️ <b>Severidad:</b> {EVENT.SEVERITY}\n⏱ <b>Duración:</b> {EVENT.DURATION}\n🕒 <b>Resuelto:</b> {EVENT.RECOVERY.DATE} {EVENT.RECOVERY.TIME}\n🆔 <b>Evento:</b> <code>{EVENT.ID}</code>\n\n🔗 <a href=\"https://zabbix.likson.com/tr_events.php?triggerid={TRIGGER.ID}&eventid={EVENT.ID}\">Ver en Zabbix</a>"
+      "message": "{SEV.EMOJI} <b>ZABBIX · RESUELTO</b>\n<b>{EVENT.NAME}</b>\n\n🖥 <b>Host:</b> {HOST.NAME} · {HOST.IP}\n⚠️ <b>Severidad:</b> {EVENT.SEVERITY}\n📊 <b>Datos al resolverse:</b> {EVENT.OPDATA}\n⏱ <b>Duración:</b> {EVENT.DURATION}\n🕒 <b>Resuelto:</b> {EVENT.RECOVERY.DATE} {EVENT.RECOVERY.TIME}\n\n🔗 <a href=\"https://zabbix.likson.com/tr_events.php?triggerid={TRIGGER.ID}&eventid={EVENT.ID}\">Ver en Zabbix</a>"
     },
     {
       "eventsource": "0",
       "recovery": "2",
       "subject": "{SEV.EMOJI} <b>ZABBIX · ACTUALIZACIÓN</b>",
-      "message": "<b>{EVENT.NAME}</b>\n\n👤 <b>Usuario:</b> {USER.FULLNAME}\n📝 <b>Acción:</b> {EVENT.UPDATE.ACTION}\n💬 <b>Comentario:</b> {EVENT.UPDATE.MESSAGE}\n🖥 <b>Host:</b> {HOST.NAME}\n📌 <b>Estado:</b> {EVENT.STATUS} · reconocido: {EVENT.ACK.STATUS} · edad: {EVENT.AGE}\n\n🔗 <a href=\"https://zabbix.likson.com/tr_events.php?triggerid={TRIGGER.ID}&eventid={EVENT.ID}\">Ver en Zabbix</a>"
+      "message": "{SEV.EMOJI} <b>ZABBIX · ACTUALIZACIÓN</b>\n<b>{EVENT.NAME}</b>\n\n👤 <b>Usuario:</b> {USER.FULLNAME}\n📝 <b>Acción:</b> {EVENT.UPDATE.ACTION}\n💬 <b>Comentario:</b> {EVENT.UPDATE.MESSAGE}\n🖥 <b>Host:</b> {HOST.NAME} · {HOST.IP}\n📌 <b>Estado:</b> {EVENT.STATUS} · reconocido: {EVENT.ACK.STATUS} · edad: {EVENT.AGE}\n\n🔗 <a href=\"https://zabbix.likson.com/tr_events.php?triggerid={TRIGGER.ID}&eventid={EVENT.ID}\">Ver en Zabbix</a>"
     }
   ]
 }

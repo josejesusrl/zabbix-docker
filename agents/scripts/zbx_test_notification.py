@@ -39,13 +39,18 @@ def main():
     if api.call("host.get", {"filter": {"host": [HOST]}}):
         raise SystemExit(f"'{HOST}' already exists: delete it first")
     group = api.call("hostgroup.get", {"filter": {"name": [args.group]}, "output": ["groupid"]})[0]["groupid"]
+    # Interface, tags and trigger description so that every macro of the message templates is filled
+    # ({HOST.IP}, {EVENT.TAGS.uplink}, {TRIGGER.DESCRIPTION}); the interface is never polled (trapper item).
     hostid = api.call("host.create", {"host": HOST, "groups": [{"groupid": group}],
+                                      "interfaces": [{"type": 1, "main": 1, "useip": 1, "ip": "127.0.0.1", "dns": "", "port": "10050"}],
+                                      "tags": [{"tag": "uplink", "value": "ZZ-TEST padre"}, {"tag": "scope", "value": "test"}],
                                       "description": "Temporary host of agents/scripts/zbx_test_notification.py"})["hostids"][0]
     try:
         itemid = api.call("item.create", {"hostid": hostid, "name": "Test alert", "key_": KEY, "type": 2, "value_type": 3})["itemids"][0]
         api.call("trigger.create", {"description": "Prueba de notificaciones <test> & formato", "priority": args.severity,
                                     "expression": f"last(/{HOST}/{KEY})=1", "manual_close": 1,
-                                    "opdata": "Valor: {ITEM.LASTVALUE1}"})
+                                    "opdata": "Valor: {ITEM.LASTVALUE1}",
+                                    "comments": "Mensaje de prueba de zbx_test_notification.py.\nSegunda línea: <b>no</b> debe verse en negrita."})
         time.sleep(15)  # configuration cache sync
         api.call("history.push", [{"itemid": itemid, "value": "1"}])
         event = wait_for(lambda: api.call("problem.get", {"hostids": hostid, "output": ["eventid", "name"]}))

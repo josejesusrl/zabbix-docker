@@ -41,6 +41,7 @@ printf '%s\n' "$TOKEN" | agents/scripts/run_remote.sh -f zabbix_templates/X.yaml
 | `zbx_add_dependency.py` | Escritura | Añade una dependencia a cualquier trigger (p. ej. equipos raíz → enlace de red del Zabbix server), conservando las existentes |
 | `zbx_set_status.py` | Escritura | Activa o desactiva items o triggers por nombre (registrar el motivo en el [registro](../../docs/operacion/registro.md)) |
 | `zbx_mediatype_update.py` | Escritura | Aplica a un medio el script, las plantillas y parámetros concretos desde `zabbix_media/`, sin tocar ni mostrar el token |
+| `zbx_action_operations.py` | Escritura | Reemplaza las operaciones de mensaje de una acción desde un JSON (p. ej. los recordatorios de la escalada en `zabbix_media/escalation.json`), con un mensaje propio por medio |
 | `zbx_test_notification.py` | Escritura | Prueba real de extremo a extremo: host temporal que abre, actualiza y resuelve un problema, muestra el estado de entrega de cada notificación y se borra |
 | `zbx_dashboard_apply.py` | Escritura | Crea o actualiza un dashboard desde `zabbix_dashboards/*.json` (hosts, grupos e items por nombre) |
 | `zbx_users.py` | Lectura | Roles (UI, acciones, API), grupos de usuarios con permisos por grupo de hosts, usuarios y, con `--dashboards`, con quién se comparte cada dashboard |

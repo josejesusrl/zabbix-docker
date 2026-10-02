@@ -3,7 +3,8 @@
 // Changes against the official script are marked with "CUSTOM":
 //   - HTML parse mode: macro values are escaped and only Telegram tags from the templates are kept.
 //   - {SEV.EMOJI} in templates is replaced by an emoji for severity / recovery / update.
-//   - "<b>Label:</b>" lines with an empty value are removed.
+//   - "<b>Label:</b>" lines with an empty, *UNKNOWN* or unresolved {MACRO} value are removed.
+//   - Text longer than the Telegram limit (4096 characters) is truncated.
 const CLogger = function(serviceName) {
 	this.serviceName = serviceName;
 	this.INFO = 4
@@ -462,11 +463,24 @@ function severityEmoji(params) {
 function prepareText(text, params) {
 	return text.replace(/\{SEV\.EMOJI\}/g, severityEmoji(params))
 		.split('\n')
-		// Drop "<b>Label:</b>" lines whose value is empty or unresolved (e.g. no operational data)
+		// Drop "<b>Label:</b>" lines whose value is empty or unresolved (e.g. no operational data,
+		// {EVENT.TAGS.uplink} on a host without that tag)
 		.filter(function (line) {
-			return !/:<\/b>\s*(\*UNKNOWN\*)?\s*$/.test(line);
+			return !/:<\/b>\s*(\*UNKNOWN\*|\{[A-Z0-9_.]+\})?\s*$/.test(line);
 		})
 		.join('\n');
+}
+
+// CUSTOM: Telegram rejects messages over 4096 characters (after entity parsing). Cut the raw text
+// with margin and close the message with an ellipsis; tags are not split because they are short.
+function limitLength(text) {
+	const max = 3900;
+	if (text.length <= max) {
+		return text;
+	}
+	var cut = text.substring(0, max);
+	cut = cut.substring(0, Math.max(cut.lastIndexOf('\n'), max - 200));
+	return cut + '\n…';
 }
 
 Telegram.prototype.getMessageID = function (chat_id, message_thread_id) {
@@ -507,7 +521,7 @@ Telegram.prototype.onCheckParams = function () {
 		this.data['message_thread_id'] = match[2];
 	}
 	this.data['text'] = ((this.params.alert_subject !== '') ? this.params.alert_subject + '\n' : '') + this.params.alert_message;
-	this.data['text'] = prepareText(this.data['text'], this.params); // CUSTOM
+	this.data['text'] = limitLength(prepareText(this.data['text'], this.params)); // CUSTOM
 	if (['markdown', 'html', 'markdownv2'].indexOf(this.params.api_parse_mode.toLowerCase()) !== -1) {
 		this.data['parse_mode'] = this.params.api_parse_mode.toLowerCase();
 		this.data['text'] = escapeMarkup(this.data['text'], this.data['parse_mode']);

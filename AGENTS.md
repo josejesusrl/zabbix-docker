@@ -73,7 +73,7 @@ El respaldo de la base de datos (`pg_dump`) contiene hosts, plantillas importada
 | Perfiles de acceso (rol, grupo de usuarios, dashboards compartidos) | `zabbix_access/*.json` | Están también en la BD; si se pierde, `zbx_access_apply.py` |
 | Mapas de red (se generan desde las dependencias) | `zabbix_maps/*.json` | Están también en la BD; si se pierde, `zbx_map_apply.py` |
 | Dashboards | `zabbix_dashboards/*.json` (por nombres) | Están también en la BD; si se pierde, `zbx_dashboard_apply.py` |
-| Script y plantillas de mensajes de los medios (Telegram…) | `zabbix_media/` (sin tokens: el token del bot está solo en la BD) | Están también en la BD; si se pierde, `zbx_mediatype_update.py` desde aquí |
+| Script y plantillas de mensajes de los medios (Telegram…) y mensajes de la escalada | `zabbix_media/` (sin tokens: el token del bot está solo en la BD) | Están también en la BD; si se pierde, `zbx_mediatype_update.py` y `zbx_action_operations.py` desde aquí |
 | **Secretos**: contraseña de PostgreSQL, token del túnel (`env_vars/.CLOUDFLARE_TUNNEL_TOKEN`), comunidad de traps, `server.env` | **Nunca en git.** En el archivo `zabbix-config-*.tar.gz` del respaldo | `server_restore.sh` o `server_setup.sh` |
 | Certificado TLS autofirmado del origen y `dhparam` | `zbx_env/etc/ssl/nginx` (en el respaldo) | `server_restore.sh` o `server_certificate.sh selfsigned` |
 | MIBs de fabricantes | `zbx_env/var/lib/zabbix/mibs` (en el respaldo) | `server_restore.sh` |
