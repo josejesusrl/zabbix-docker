@@ -54,6 +54,7 @@ Tablas generadas con `agents/scripts/zbx_inventory.py --markdown` y pegadas aqu�
 
 
 
+
 #### Access Points PPPoE Clients
 
 | Host | Interfaz | Plantillas | Macros de host | Etiquetas | Depende de |
@@ -140,7 +141,7 @@ Tablas generadas con `agents/scripts/zbx_inventory.py --markdown` y pegadas aqu�
 | EDGE 01 | snmpv2 192.168.200.1 | MikroTik link traps by SNMP, MikroTik CCR2004-16G-2S by SNMP | — | — | Zabbix server |
 | MAIN-SW-01 | snmpv2 172.16.100.2 | Switch port changes by SNMP, TP-LINK by SNMP | {$IFCONTROL}=0, {$PORT.IFNAME.NOT_MATCHES}=^(<\|Vlan-interface) | — | NAS-01 |
 | NAS-01 | snmpv2 192.168.200.2 | MikroTik link traps by SNMP, MikroTik CCR2004-16G-2S by SNMP | {$NET.IF.IFNAME.NOT_MATCHES} (regex) | — | EDGE 01 |
-| NAS-03 | snmpv2 192.168.200.10 | MikroTik link traps by SNMP, MikroTik RB2011iL-RM by SNMP | {$NET.IF.IFNAME.NOT_MATCHES} (regex) | — | EDGE 01 |
+| NAS-03 | snmpv2 192.168.200.10 | MikroTik link traps by SNMP, MikroTik RB2011iL-RM by SNMP | {$NET.IF.IFNAME.NOT_MATCHES} (regex), {$CPU.UTIL.CRIT}=97 | — | EDGE 01 |
 
 #### Zabbix servers
 

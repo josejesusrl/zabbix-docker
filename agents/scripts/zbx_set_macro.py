@@ -1,7 +1,11 @@
-"""Set host macros (text values) on selected hosts, creating or updating them.
+"""Set host macros, or global macros with --global (text values), creating or updating them.
 
 Usage (token on stdin, see README.md). Requires a recent backup (AGENTS.md, rule 1):
   zbx_set_macro.py (--host NAME ... | --group GROUP | --tag TAG=VALUE) --macro '{$M}=VALUE' ... [--dry-run]
+  zbx_set_macro.py --global --macro '{$M}=VALUE' ... [--dry-run]
+
+Template macros take precedence over global ones, so a global macro only fills in macros that the
+templates use without defining them (e.g. {$VFS.FS.FREE.MIN.WARN} of the MikroTik templates).
 
 Only for non-secret values: passwords and other secrets are entered by a person in the web interface
 as "Secret text" (AGENTS.md, rule 4), so this script refuses macros named like a secret.
@@ -28,13 +32,30 @@ def main():
     parser.add_argument("--host", nargs="*", default=[])
     parser.add_argument("--group")
     parser.add_argument("--tag")
+    parser.add_argument("--global", dest="global_", action="store_true", help="global macros (Administration -> Macros)")
     parser.add_argument("--macro", nargs="+", type=macro_value, required=True)
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
-    if not (args.host or args.group or args.tag):
-        parser.error("select hosts with --host, --group or --tag")
+    if args.global_ == bool(args.host or args.group or args.tag):
+        parser.error("select hosts with --host, --group or --tag, or use --global")
 
     api = api_from_stdin()
+    if args.global_:
+        current = {m["macro"]: m for m in api.call("usermacro.get", {"globalmacro": True, "output": ["globalmacroid", "macro", "value", "type"]})}
+        for macro, value in args.macro:
+            old = current.get(macro)
+            if old and old.get("value") == value:
+                print(f"global: {macro} ya es {value}")
+                continue
+            if old and old["type"] != "0":
+                raise SystemExit(f"{macro} is a secret global macro, change it in the web interface")
+            print(f"global: {macro} {old['value'] if old else '(no existe)'} -> {value}{' (dry-run)' if args.dry_run else ''}")
+            if not args.dry_run:
+                if old:
+                    api.call("usermacro.updateglobal", {"globalmacroid": old["globalmacroid"], "value": value})
+                else:
+                    api.call("usermacro.createglobal", {"macro": macro, "value": value})
+        return
     for host in find_hosts(api, args.host, args.group, args.tag, selectMacros=["macro", "value"]):
         current = {m["macro"]: m.get("value") for m in host["macros"]}
         for macro, value in args.macro:

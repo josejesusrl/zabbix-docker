@@ -16,7 +16,7 @@ Las dependencias evitan recibir decenas de alertas cuando cae un equipo del que 
    - Para **cambiar** de padre: *Mass update* → **Remove** con el trigger del padre anterior, y después **Add** con el nuevo.
 4. En APs Ubiquiti, además: el trigger **"Wireless: AP has no connected clients"** depende del *Unavailable by ICMP ping* **del propio AP**, para que un AP caído no avise también por "sin clientes".
 5. Añadir la etiqueta `uplink = <host padre>` en la pestaña *Tags* del host.
-6. **Equipos raíz** (sin padre en la red, p. ej. EDGE 01 o un servidor directo): su trigger de disponibilidad (*Unavailable by ICMP ping* o *Zabbix agent is not available*) depende de **Zabbix server: Interface enp2s0: Link down**. Si cae la red del propio servidor Zabbix, no se reporta toda la red como caída.
+6. **Equipos raíz** (sin padre en la red, p. ej. EDGE 01 o un servidor directo): su trigger de disponibilidad (*Unavailable by ICMP ping* o *Zabbix agent is not available*) depende de **Zabbix server: Interface enp2s0: Link down** y de *Zabbix server: Interface enp2s0: link not stable in the last 5m (topology root)*. Si cae la red del propio servidor Zabbix, no se reporta toda la red como caída. El segundo sigue activo 5 min después del corte: el ping necesita unos 3 min de fallos y, cuando se evalúa, el *Link down* ya se ha resuelto (falso aviso del 2026-09-29).
 
 7. **Actualizar los mapas de red**, que se dibujan a partir de estas dependencias ([mapas](../mapas.md#actualizar-los-mapas-después-de-un-alta-una-baja-o-un-cambio-de-padre)).
 

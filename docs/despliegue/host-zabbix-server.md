@@ -34,7 +34,12 @@ El host "Zabbix server" monitorea el propio servidor: el Agent 2 en red de host 
    ```
    El agente se conecta a `127.0.0.1:443` con el nombre `zabbix.likson.com`, sin depender del DNS ni del túnel. Con el certificado autofirmado el resultado es `valid-but-self-signed`, sin alerta, y avisa 14 días antes de que caduque (dura 10 años). El certificado público lo renueva Cloudflare.
 6. **Túnel:** importar `zabbix_templates/cloudflared_tunnel.yaml` y enlazar *Cloudflare Tunnel by HTTP*.
-7. **Raíz de la topología:** el trigger de disponibilidad de los equipos raíz (EDGE 01, server-04) depende de *Zabbix server: Interface enp2s0: Link down*. Así, si cae la red del propio servidor, no se reporta toda la red como caída ([dependencias](../operacion/procedimientos/dependencias.md), paso 6).
+7. **Raíz de la topología:** crear en el host el trigger que sigue activo 5 min después de un corte del enlace. En *Triggers → Create trigger*:
+   - *Name:* `Interface enp2s0: link not stable in the last 5m (topology root)`.
+   - *Severity:* **Information** (no notifica).
+   - *Expression:* `count(/Zabbix server/vfs.file.contents["/sys/class/net/enp2s0/operstate"],5m,"ne",6)>0` (6 = `up`).
+
+   El trigger de disponibilidad de los equipos raíz (EDGE 01, server-04) depende de este y de *Interface enp2s0: Link down*. Así, si cae la red del propio servidor, no se reporta toda la red como caída, ni durante el corte ni justo al volver ([dependencias](../operacion/procedimientos/dependencias.md), paso 6). Si el servidor nuevo tiene otra interfaz, cambiar `enp2s0`.
 
 ## Verificar
 
@@ -51,5 +56,7 @@ printf '%s\n' "$TOKEN" | $S zbx_link_template.py --host "Zabbix server" --templa
 printf '%s\n' "$TOKEN" | $S zbx_set_macro.py --host "Zabbix server" --macro '{$CERT.WEBSITE.HOSTNAME}=zabbix.likson.com' '{$CERT.WEBSITE.IP}=127.0.0.1' '{$CERT.EXPIRY.WARN}=14'
 printf '%s\n' "$TOKEN" | $S zbx_set_status.py --host "Zabbix server" --item "Checksum of /etc/passwd" "Number of logged in users" --disable
 printf '%s\n' "$TOKEN" | $S zbx_add_dependency.py --host "EDGE 01" --trigger "Unavailable by ICMP ping" --parent-host "Zabbix server" --parent-trigger "enp2s0: Link down" --dry-run
+printf '%s\n' "$TOKEN" | $S zbx_add_dependency.py --host "EDGE 01" --trigger "Unavailable by ICMP ping" --parent-host "Zabbix server" --parent-trigger "link not stable" --dry-run
 printf '%s\n' "$TOKEN" | $S zbx_add_dependency.py --host server-04 --trigger "Zabbix agent is not available" --parent-host "Zabbix server" --parent-trigger "enp2s0: Link down" --dry-run
+printf '%s\n' "$TOKEN" | $S zbx_add_dependency.py --host server-04 --trigger "Zabbix agent is not available" --parent-host "Zabbix server" --parent-trigger "link not stable" --dry-run
 ```

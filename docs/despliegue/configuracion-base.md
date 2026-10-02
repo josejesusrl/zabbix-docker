@@ -68,6 +68,7 @@ Las dos acciones activas tienen marcado **Pause operations for suppressed proble
 | Macro | Tipo | Uso |
 |---|---|---|
 | `{$SNMP_COMMUNITY}` | Texto | Comunidad SNMP de lectura de todos los equipos. Es de tipo texto a propósito: los scripts `snmp_probe.py` y `snmp_walk.py` la leen por la API sin mostrarla |
+| `{$VFS.FS.FREE.MIN.WARN}` / `{$VFS.FS.FREE.MIN.CRIT}` | Texto | `1073741824` (1 GB). Las plantillas oficiales de MikroTik las usan en sus avisos de disco sin definirlas; sin estas macros, esos avisos quedan en error. Con 1 GB (más que la flash de un router) solo cuenta el % de uso: aviso al 80 %, crítico al 90 %. Las plantillas Linux no las usan |
 
 ## Ajustes generales (*Administration → General*)
 
