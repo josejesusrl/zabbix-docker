@@ -25,7 +25,7 @@ Al empezar:
 Antes de cada cambio en producción: respaldo de menos de 60 min (regla 1).
 
 Al terminar:
-1. Documentación actualizada en el mismo commit que el cambio (regla 7): inventario, plantillas, procedimientos, configuración base o registro según corresponda.
+1. Documentación actualizada en el mismo commit que el cambio (regla 7): inventario, plantillas, procedimientos, configuración base o registro según corresponda. Si el cambio vive solo en la BD (acciones, usuarios, macros globales, ajustes de hosts), también la tabla de reconstrucción del [plan de restauración](docs/despliegue/restauracion-y-migracion.md#sin-respaldo-de-la-bd).
 2. `python3 agents/scripts/docs_check.py` sin errores (y `--zabbix` si cambiaron hosts, regla 7).
 3. Commit de `agents/scripts/` y del resto (reglas 3 y 8), push y, con respaldo, `git pull` en el servidor.
 4. Recordar a la persona que revoque el token.
@@ -74,6 +74,7 @@ El respaldo de la base de datos (`pg_dump`) contiene hosts, plantillas importada
 | Mapas de red (se generan desde las dependencias) | `zabbix_maps/*.json` | Están también en la BD; si se pierde, `zbx_map_apply.py` |
 | Dashboards | `zabbix_dashboards/*.json` (por nombres) | Están también en la BD; si se pierde, `zbx_dashboard_apply.py` |
 | Script y plantillas de mensajes de los medios (Telegram…) y mensajes de la escalada | `zabbix_media/` (sin tokens: el token del bot está solo en la BD) | Están también en la BD; si se pierde, `zbx_mediatype_update.py` y `zbx_action_operations.py` desde aquí |
+| Datos personales y del contrato del proveedor (contrato, ticket, contacto, correos del aviso al proveedor) | **Solo en la BD**: macros globales y medio de `coefi01-noc`. No en git, porque el repositorio es público | Respaldo de la BD; si se pierde, los aporta la persona ([plan de restauración](docs/despliegue/restauracion-y-migracion.md#sin-respaldo-de-la-bd), paso 7) |
 | **Secretos**: contraseña de PostgreSQL, token del túnel (`env_vars/.CLOUDFLARE_TUNNEL_TOKEN`), comunidad de traps, `server.env` | **Nunca en git.** En el archivo `zabbix-config-*.tar.gz` del respaldo | `server_restore.sh` o `server_setup.sh` |
 | Certificado TLS autofirmado del origen y `dhparam` | `zbx_env/etc/ssl/nginx` (en el respaldo) | `server_restore.sh` o `server_certificate.sh selfsigned` |
 | MIBs de fabricantes | `zbx_env/var/lib/zabbix/mibs` (en el respaldo) | `server_restore.sh` |
@@ -81,7 +82,7 @@ El respaldo de la base de datos (`pg_dump`) contiene hosts, plantillas importada
 Al añadir cualquier configuración nueva fuera de la base de datos (un script, un MIB, un fichero montado en un contenedor, una tarea de cron, un paquete del host):
 
 1. Añadirla al repositorio. Si es un secreto, añadir la ruta a `server_backup.sh` y a `server_restore.sh`.
-2. Actualizar la tabla anterior y [la guía de instalación](docs/despliegue/instalacion.md).
+2. Actualizar la tabla anterior, [la guía de instalación](docs/despliegue/instalacion.md) y el **plan de restauración** ([restauración y migración](docs/despliegue/restauracion-y-migracion.md), incluida la reconstrucción *sin respaldo de la BD*).
 3. Si hace falta en el host, que `server_setup.sh` la instale de forma idempotente.
 
 ## Regla 3 — Flujo de cambios

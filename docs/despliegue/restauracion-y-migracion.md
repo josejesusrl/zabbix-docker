@@ -52,10 +52,24 @@ Para reconstruir este despliegue en un disco o servidor nuevo a partir de los re
 
 ### Sin respaldo de la BD
 
-Se recupera todo lo que está en git (stack, plantillas propias, UserParameters, scripts), pero **los hosts, macros de host, acciones, usuarios e historial se pierden**. Por eso los respaldos deben copiarse fuera del servidor. Para reconstruir:
+Se recupera todo lo que está en git (stack, plantillas, mensajes, dashboard, mapas, perfiles de acceso, scripts), pero **los hosts, macros de host, acciones, usuarios, macros globales e historial se pierden**. Por eso los respaldos deben copiarse fuera del servidor. Reconstruir en este orden: cada paso necesita los anteriores.
 
-0. Instalar con las secciones 1 a 5 de [instalación](instalacion.md). El token del túnel se copia del panel de Cloudflare, donde el túnel y Access siguen configurados ([acceso externo](acceso-externo.md#servidor-nuevo-o-reinstalado)); la contraseña de PostgreSQL y la comunidad de traps son nuevas (configurar la comunidad nueva en los equipos).
-1. Importar `zabbix_templates/*.yaml` (*Data collection → Templates → Import*, o `zbx_import_template.py`) y enlazar las del host "Zabbix server" según [configurar el host Zabbix server](host-zabbix-server.md), incluida *Cloudflare Tunnel by HTTP* (`zbx_link_template.py`).
-2. Rehacer lo descrito en [configuración base](configuracion-base.md): medios Telegram y Gmail (con `zbx_mediatype_update.py` se cargan el script y las plantillas de `zabbix_media/`), usuarios, acciones, macro global y ajustes.
-3. Volver a dar de alta los equipos según el [inventario](../operacion/inventario.md) y los [procedimientos](../README.md#añadir-o-cambiar-equipos).
-4. Crear el dashboard con `zbx_dashboard_apply.py` desde `zabbix_dashboards/likson_noc.json` y los mapas con `zbx_map_apply.py` desde `zabbix_maps/likson_red.json`, después de las dependencias ([mapas](../operacion/mapas.md)).
+| # | Qué | Cómo | Fuente |
+|---|---|---|---|
+| 0 | Instalación | Secciones 1 a 5 de [instalación](instalacion.md). El token del túnel se copia del panel de Cloudflare, donde el túnel y Access siguen configurados ([acceso externo](acceso-externo.md#servidor-nuevo-o-reinstalado)). La contraseña de PostgreSQL y la comunidad de traps son nuevas: configurar la comunidad nueva en los equipos | git + persona |
+| 1 | Plantillas propias | Importar todas: *Data collection → Templates → Import*, o `zbx_import_template.py` (avisa si falta algún trigger) | `zabbix_templates/*.yaml` |
+| 2 | Configuración base | Medios Telegram y Gmail (`zbx_mediatype_update.py`; el token del bot y la contraseña SMTP los introduce la persona), usuario `jjrl`, ajustes, grupos de hosts y macros globales `{$SNMP_COMMUNITY}` y `{$VFS.FS.FREE.MIN.*}` | [configuración base](configuracion-base.md), `zabbix_media/` |
+| 3 | Host "Zabbix server" | Plantillas, macros, items desactivados y **trigger raíz** de la topología | [host Zabbix server](host-zabbix-server.md) |
+| 4 | Equipos | Alta de cada host con su interfaz, plantillas, **macros de host**, etiquetas (`uplink`, `notificar`, `escalation`, `proveedor`) y dependencias. Las macros de cada host están en las tablas del inventario. Las contraseñas de las cámaras (`{$PASSWORD}`, *Secret text*) las introduce la persona | [inventario](../operacion/inventario.md), [procedimientos](../README.md#añadir-o-cambiar-equipos) |
+| 5 | Ajustes hechos en hosts, no en plantillas | Volver a aplicar lo registrado: objetos desactivados (tabla del registro), `{$CPU.UTIL.CRIT}=97` en NAS-03, memoria de CANADAS-CAM-01, resolución de las cámaras, y el trigger **bajada degradada** de Coefi01 en EDGE 01 con sus macros | [registro](../operacion/registro.md), [vigilar un proveedor, sección 4](../operacion/procedimientos/anadir-gateway-proveedor.md#4-degradación-bajada-por-debajo-de-un-mínimo) |
+| 6 | Acciones | *Alert by severity* y *Escalate…* con sus condiciones (`escalation`, `notificar`); mensajes de la escalada (`zbx_action_operations.py escalation.json`) | [configuración base](configuracion-base.md#acciones-de-trigger-alerts--actions--trigger-actions), `zabbix_media/escalation.json` |
+| 7 | Aviso al proveedor | Macros globales del contrato, ticket, IPs y contacto (**valores solo en Zabbix: los aporta la persona**), usuario `coefi01-noc` (`zbx_notify_user.py`) y acción (`zbx_action_apply.py proveedor_coefi01.json`) | [avisar al proveedor](../operacion/procedimientos/avisar-proveedor.md), `zabbix_media/proveedor_coefi01.json` |
+| 8 | Usuarios de solo lectura | Rol, grupo y dashboard compartido (`zbx_access_apply.py solo_lectura.json`); crear los usuarios (`melb`…) y su correo en Access | [dar acceso de solo lectura](../operacion/procedimientos/dar-acceso-lectura.md), `zabbix_access/` |
+| 9 | Dashboard y mapas | `zbx_dashboard_apply.py likson_noc.json` y, **después de las dependencias**, `zbx_map_apply.py likson_red.json` | `zabbix_dashboards/`, `zabbix_maps/` ([mapas](../operacion/mapas.md)) |
+
+**Verificar la reconstrucción:**
+- `docs_check.py --zabbix inventario.md`: los hosts coinciden con el inventario.
+- `zbx_host_status.py` por grupos: sin items no soportados inesperados.
+- `zbx_inventory.py --markdown`: comparar macros y dependencias con las tablas del inventario.
+- `zbx_test_notification.py`: llegan Telegram y Gmail. Con `--tag proveedor=Coefi01 "aviso_proveedor=Prueba" --hold 330` y el correo del NOC en `coefi01-noc`, llega el aviso al proveedor; después, volver a poner el correo del proveedor.
+- *Monitoring → Maps* y el dashboard muestran datos.
