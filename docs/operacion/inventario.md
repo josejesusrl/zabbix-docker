@@ -7,7 +7,7 @@ Qué se monitorea y de quién depende cada equipo. **Es lo que más cambia:** al
 | Elemento | Convención |
 |---|---|
 | Nombre del host | El nombre de sistema del equipo (`sysName` o *Device Name*), idéntico en *Host name* y *Visible name*. Si el equipo no tiene nombre, se le pone primero en el propio equipo. El *Host name* solo admite letras, dígitos, espacios, `.`, `-` y `_`: si el nombre lleva otros caracteres (p. ej. `[AP]-…`), el *Host name* los omite y el *Visible name* conserva el nombre exacto. **Nunca la IP como Host name**: las fórmulas de los items calculados (host *KPI Likson*) usan el *Host name*. Para corregir un host: `zbx_align_host_name.py` |
-| Nombre de equipos de infraestructura nuevos | `SITIO-ROL-NN` en mayúsculas, p. ej. `MAIN-SW-01` (switch administrable 1 del sitio Main Site). Roles: `SW` switch, `RTR` router, `NAS` concentrador PPPoE. Primero se cambia en el equipo y después en Zabbix (`zbx_align_host_name.py --rename`, y `zbx_set_uplink.py` para la etiqueta `uplink` de los hijos) |
+| Nombre de equipos de infraestructura nuevos | `SITIO-ROL-NN` en mayúsculas, p. ej. `MAIN-SW-01` (switch administrable 1 del sitio Main Site). Roles: `SW` switch, `RTR` router, `NAS` concentrador PPPoE, `CAM` cámara (p. ej. `MAIN-CAM-01`, `CANADAS-CAM-01`). Primero se cambia en el equipo y después en Zabbix (`zbx_align_host_name.py --rename`, y `zbx_set_uplink.py` para la etiqueta `uplink` de los hijos) |
 | Grupos de hosts | `Routers & Switches Likson` (MikroTik, switches), `Access Points PPPoE Clients` (APs Ubiquiti), `Enlaces PTP Troncales` y `Enlaces PTP Backhaul` (radios PTP), `Linux servers`, `Zabbix servers`, `Likson KPIs` (host de indicadores), `CCTV` (NVR y cámaras Hikvision), `Proveedores de internet` (gateways de los proveedores) |
 | Etiqueta `uplink` | Nombre del equipo del que depende (p. ej. `uplink = EDGE 01`). Sirve para filtrar y como documentación de la dependencia |
 | Interfaz SNMP | Comunidad `{$SNMP_COMMUNITY}` (macro global). MikroTik, TP-Link y Mimosa: SNMPv2. **Ubiquiti: SNMPv1**. La macro es de tipo **texto** a propósito: `snmp_probe.py` y `snmp_walk.py` la leen por la API para sondear equipos sin mostrarla. Si se cambia a *Secret text*, esos scripts dejan de funcionar |
@@ -22,7 +22,7 @@ KPI Likson                                    host sin interfaz: indicadores cal
 EDGE 01 (192.168.200.1)  MikroTik CCR2004  depende del enlace de red del Zabbix server
 ├── ISP-COEFI01-GW (170.80.29.30)  gateway del proveedor Coefi01 (ping por ether1)
 ├── NVR 01 (192.168.60.2)  NVR Hikvision
-│   └── CAM 192.168.60.10 – .14  cámaras Hikvision (nombre provisional hasta leer su Device name)
+│   └── MAIN-CAM-01 – MAIN-CAM-05 (192.168.60.10 – .14)  cámaras Hikvision de Main Site
 ├── STA-Lk_Trunk_01_A (10.100.0.3)  Mimosa C5C, extremo del troncal conectado a EDGE 01
 │   └── AP-Lk_Trunk_01_A (10.100.0.2)  Mimosa C5C, extremo lejano (solo se alcanza a través del enlace)
 ├── NAS-01 (192.168.200.2)  CCR2004, concentrador PPPoE
@@ -39,7 +39,7 @@ EDGE 01 (192.168.200.1)  MikroTik CCR2004  depende del enlace de red del Zabbix 
 │   └── Sector_3, Sector_4, Sector_5 (172.16.2.x, uplink = NAS-01)
 └── NAS-03 (192.168.200.10)  RB2011iL-RM, concentrador PPPoE
     ├── LIKSON_CANADAS_A/B/C/D_01 (172.16.3.10 – .13, uplink = NAS-03)
-    └── CAM 05 Canadas del bosque (192.168.60.30)  cámara Hikvision, notificar=no
+    └── CANADAS-CAM-01 (192.168.60.30)  cámara Hikvision, notificar=no
 ```
 
 Los sectores `172.16.2.x` están conectados físicamente a NAS-02, que se va a retirar y no está dado de alta en Zabbix. Por eso dependen de NAS-01.
@@ -47,6 +47,7 @@ Los sectores `172.16.2.x` están conectados físicamente a NAS-02, que se va a r
 ### Inventario (generado desde Zabbix)
 
 Tablas generadas con `agents/scripts/zbx_inventory.py --markdown` y pegadas aquí; no editarlas a mano. Para regenerarlas, ver [agents/scripts/README.md](../../agents/scripts/README.md). Las macros con regex largas se muestran solo por nombre.
+
 
 
 
@@ -82,12 +83,12 @@ Tablas generadas con `agents/scripts/zbx_inventory.py --markdown` y pegadas aqu�
 
 | Host | Interfaz | Plantillas | Macros de host | Etiquetas | Depende de |
 |---|---|---|---|---|---|
-| CAM 05 Canadas del bosque | agent 192.168.60.30 | Hikvision camera by HTTP, ICMP Ping | {$HIKVISION_ISAPI_HOST}=192.168.60.30, {$PASSWORD}=<secret>, {$USER}=admin, {$HIKVISION_STREAM_HEIGHT}=1440, {$HIKVISION_STREAM_WIDTH}=2560, {$MEMORY.UTIL.MAX}=95 | uplink=NAS-03, notificar=no | NAS-03 |
-| CAM 192.168.60.10 | agent 192.168.60.10 | Hikvision camera by HTTP, ICMP Ping | {$HIKVISION_ISAPI_HOST}=192.168.60.10, {$PASSWORD}=<secret>, {$HIKVISION_STREAM_WIDTH}=2560, {$HIKVISION_STREAM_HEIGHT}=1440 | uplink=NVR 01, notificar=no | NVR 01 |
-| CAM 192.168.60.11 | agent 192.168.60.11 | Hikvision camera by HTTP, ICMP Ping | {$HIKVISION_ISAPI_HOST}=192.168.60.11, {$PASSWORD}=<secret>, {$HIKVISION_STREAM_WIDTH}=2560, {$HIKVISION_STREAM_HEIGHT}=1440 | uplink=NVR 01, notificar=no | NVR 01 |
-| CAM 192.168.60.12 | agent 192.168.60.12 | Hikvision camera by HTTP, ICMP Ping | {$HIKVISION_ISAPI_HOST}=192.168.60.12, {$PASSWORD}=<secret> | uplink=NVR 01, notificar=no | NVR 01 |
-| CAM 192.168.60.13 | agent 192.168.60.13 | Hikvision camera by HTTP, ICMP Ping | {$HIKVISION_ISAPI_HOST}=192.168.60.13, {$PASSWORD}=<secret>, {$HIKVISION_STREAM_WIDTH}=1280, {$HIKVISION_STREAM_HEIGHT}=720 | uplink=NVR 01, notificar=no | NVR 01 |
-| CAM 192.168.60.14 | agent 192.168.60.14 | Hikvision camera by HTTP, ICMP Ping | {$HIKVISION_ISAPI_HOST}=192.168.60.14, {$PASSWORD}=<secret>, {$HIKVISION_STREAM_WIDTH}=2560, {$HIKVISION_STREAM_HEIGHT}=1440 | uplink=NVR 01, notificar=no | NVR 01 |
+| CANADAS-CAM-01 | agent 192.168.60.30 | Hikvision camera by HTTP, ICMP Ping | {$HIKVISION_ISAPI_HOST}=192.168.60.30, {$PASSWORD}=<secret>, {$USER}=admin, {$HIKVISION_STREAM_HEIGHT}=1440, {$HIKVISION_STREAM_WIDTH}=2560, {$MEMORY.UTIL.MAX}=95 | uplink=NAS-03, notificar=no | NAS-03 |
+| MAIN-CAM-01 | agent 192.168.60.10 | Hikvision camera by HTTP, ICMP Ping | {$HIKVISION_ISAPI_HOST}=192.168.60.10, {$PASSWORD}=<secret>, {$HIKVISION_STREAM_WIDTH}=2560, {$HIKVISION_STREAM_HEIGHT}=1440 | uplink=NVR 01 | NVR 01 |
+| MAIN-CAM-02 | agent 192.168.60.11 | Hikvision camera by HTTP, ICMP Ping | {$HIKVISION_ISAPI_HOST}=192.168.60.11, {$PASSWORD}=<secret>, {$HIKVISION_STREAM_WIDTH}=2560, {$HIKVISION_STREAM_HEIGHT}=1440 | uplink=NVR 01 | NVR 01 |
+| MAIN-CAM-03 | agent 192.168.60.12 | Hikvision camera by HTTP, ICMP Ping | {$HIKVISION_ISAPI_HOST}=192.168.60.12, {$PASSWORD}=<secret>, {$HIKVISION_STREAM_WIDTH}=2560, {$HIKVISION_STREAM_HEIGHT}=1440 | uplink=NVR 01 | NVR 01 |
+| MAIN-CAM-04 | agent 192.168.60.13 | Hikvision camera by HTTP, ICMP Ping | {$HIKVISION_ISAPI_HOST}=192.168.60.13, {$PASSWORD}=<secret>, {$HIKVISION_STREAM_WIDTH}=1280, {$HIKVISION_STREAM_HEIGHT}=720 | uplink=NVR 01 | NVR 01 |
+| MAIN-CAM-05 | agent 192.168.60.14 | Hikvision camera by HTTP, ICMP Ping | {$HIKVISION_ISAPI_HOST}=192.168.60.14, {$PASSWORD}=<secret>, {$HIKVISION_STREAM_WIDTH}=2560, {$HIKVISION_STREAM_HEIGHT}=1440 | uplink=NVR 01 | NVR 01 |
 | NVR 01 | snmpv2 192.168.60.2 | Hikvision camera by HTTP, ICMP Ping | {$HIKVISION_ISAPI_HOST}=192.168.60.2, {$PASSWORD}=<secret>, {$HIKVISION_STREAM_WIDTH}=2560, {$HIKVISION_STREAM_HEIGHT}=1440 | uplink=EDGE 01 | EDGE 01 |
 
 #### Enlaces PTP Backhaul

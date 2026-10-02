@@ -15,7 +15,7 @@ Las cámaras Hikvision no tienen SNMP activado. Se monitorean con dos plantillas
 ## 1. En la cámara o el NVR
 
 1. Asignar IP fija dentro de `192.168.60.0/28`, la red de CCTV de EDGE 01, o la red del sitio.
-2. *Configuración → Sistema → Configuración del sistema → Información básica → Nombre del dispositivo*: el nombre definitivo, con la convención `CAM NN <ubicación>` (p. ej. `CAM 05 Canadas del bosque`) o `NVR NN`. Es el que se usa en Zabbix.
+2. *Configuración → Sistema → Configuración del sistema → Información básica → Nombre del dispositivo*: el nombre definitivo, con el esquema `SITIO-CAM-NN` (p. ej. `MAIN-CAM-01`, `CANADAS-CAM-01`; [convenciones](../inventario.md#convenciones)). Es el que se usa en Zabbix. El NVR existente se llama `NVR 01`.
 3. Usar un usuario con permiso de lectura de configuración. Por defecto, `admin`.
 
 ## 2. En Zabbix
@@ -67,15 +67,15 @@ Si una cámara se cae a menudo por un enlace débil y sus alertas no son acciona
 ```sh
 S=agents/scripts/run_remote.sh
 # Alta (con la etiqueta notificar=no desde el principio)
-printf '%s\n' "$TOKEN" | $S zbx_create_snmp_host.py --name "CAM 06 Patio" --ip 192.168.60.15 --group CCTV --interface ping \
+printf '%s\n' "$TOKEN" | $S zbx_create_snmp_host.py --name "MAIN-CAM-06" --ip 192.168.60.15 --group CCTV --interface ping \
     --template "Hikvision camera by HTTP" "ICMP Ping" --macro '{$HIKVISION_ISAPI_HOST}=192.168.60.15' \
     --tag notificar=no --uplink "NVR 01" --self-dependency "Error receiving data" --dry-run
 # La contraseña la pone una persona en la interfaz (Secret text). Después, nombre desde la cámara y etiqueta:
 printf '%s\n' "$TOKEN" | $S zbx_latest.py --group CCTV --name "Device name"
-printf '%s\n' "$TOKEN" | $S zbx_align_host_name.py --host "CAM 192.168.60.15" --rename "CAM 06 Patio"
-printf '%s\n' "$TOKEN" | $S zbx_set_tag.py --host "CAM 06 Patio" --remove notificar
+printf '%s\n' "$TOKEN" | $S zbx_align_host_name.py --host "CAM 192.168.60.15" --rename MAIN-CAM-06
+printf '%s\n' "$TOKEN" | $S zbx_set_tag.py --host "MAIN-CAM-06" --remove notificar
 # Resolución del canal principal (no secreto)
 printf '%s\n' "$TOKEN" | $S zbx_set_macro.py --host "NVR 01" --macro '{$HIKVISION_STREAM_WIDTH}=2560' '{$HIKVISION_STREAM_HEIGHT}=1440'
 # Equipo ya creado sin interfaz: añadir la de ping
-printf '%s\n' "$TOKEN" | $S zbx_add_interface.py --host "CAM 06 Patio" --ip 192.168.60.15 --type ping
+printf '%s\n' "$TOKEN" | $S zbx_add_interface.py --host "MAIN-CAM-06" --ip 192.168.60.15 --type ping
 ```
