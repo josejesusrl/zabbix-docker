@@ -9,8 +9,8 @@
         "jjrl"
       ],
       "mediatype": "Telegram",
-      "subject": "🔔 RECORDATORIO: {EVENT.NAME}",
-      "message": "🔔 <b>ZABBIX · RECORDATORIO</b>\n<b>{EVENT.NAME}</b>\n\n🖥 <b>Host:</b> {HOST.NAME} · {HOST.IP}\n⚠️ <b>Severidad:</b> {EVENT.SEVERITY}\n⏳ <b>Sin reconocer desde hace:</b> {EVENT.AGE}\n📊 <b>Datos:</b> {EVENT.OPDATA}\n\n✔️ <a href=\"https://zabbix.likson.com/tr_events.php?triggerid={TRIGGER.ID}&eventid={EVENT.ID}\">Reconocer en Zabbix</a>"
+      "subject": "🔔 <b>ZABBIX · RECORDATORIO</b>",
+      "message": "<b>{EVENT.NAME}</b>\n\n🖥 <b>Host:</b> {HOST.NAME} · {HOST.IP}\n⚠️ <b>Severidad:</b> {EVENT.SEVERITY}\n⏳ <b>Sin reconocer desde hace:</b> {EVENT.AGE}\n📊 <b>Datos:</b> {EVENT.OPDATA}\n\n✔️ <a href=\"https://zabbix.likson.com/tr_events.php?triggerid={TRIGGER.ID}&eventid={EVENT.ID}\">Reconocer en Zabbix</a>"
     },
     {
       "esc_step_from": 2,
