@@ -12,3 +12,5 @@ Items: ping de `{$ISP.PING.COUNT}` (3) paquetes cada `{$ISP.PING.INTERVAL}` (10 
 | Pérdida intermitente hacia el gateway | Warning | `{$ISP.LOSS.CHECKS}` (3) comprobaciones con pérdida en 5 min. Depende del anterior y de EDGE 01 |
 
 *ICMP Ping: Unavailable by ICMP ping* del gateway depende de *Corte del proveedor*, para que un corte largo no avise dos veces. El número de comprobaciones de *Corte* es fijo (`#2`): Zabbix no admite una macro en ese parámetro.
+
+Los dos triggers llevan la etiqueta `aviso_proveedor` con el texto que recibe el proveedor ([avisar al proveedor](../procedimientos/avisar-proveedor.md)).

@@ -37,9 +37,12 @@ Formato de los mensajes de ambos medios: [alertas](../operacion/alertas.md).
 |---|---|---|---|
 | `jjrl` | Super admin | Gmail: Warning y superiores. Telegram: High y superiores. Ambos 1-7, 00:00-24:00 | Cierre automático de sesión `60m` |
 | `guest` | — | — | Desactivado |
+| `coefi01-noc` (Coefi01, proveedor) | Solo lectura, grupo `Proveedores externos` (**sin acceso web**) | Gmail: soporte del proveedor + `servicio_clientes@likson.com` | Solo recibe los avisos de la acción *Aviso a proveedor Coefi01* ([procedimiento](../operacion/procedimientos/avisar-proveedor.md)) |
 | `melb` (Maria Elena Lopez Balderas) | Solo lectura (grupo `Solo lectura`) | — | Consulta. Auto-logout `15m` |
 
 ### Roles y grupos de usuarios
+
+Grupo `Proveedores externos`: *Frontend access: Disabled*, lectura en *Proveedores de internet* y *Routers & Switches Likson*. Solo para usuarios que reciben avisos (proveedores).
 
 Definidos en `zabbix_access/solo_lectura.json` y aplicados con `zbx_access_apply.py`, o a mano según [dar acceso de solo lectura](../operacion/procedimientos/dar-acceso-lectura.md).
 
@@ -57,6 +60,7 @@ Al crear un grupo de hosts nuevo, añadirlo al grupo `Solo lectura` y al JSON.
 |---|---|---|---|
 | Alert by severity | Activa | Severidad ≥ Warning **y** valor de la etiqueta `notificar` distinto de `no` | Paso 1: enviar a `jjrl` (todos los medios). Recuperación: avisar. Actualización: avisar a todos los implicados |
 | Escalate unacknowledged High/Disaster | Activa | Severidad ≥ High **y** no existe la etiqueta `escalation` **y** valor de la etiqueta `notificar` distinto de `no` | Paso de 30 min. Pasos 2 → ∞: reenviar a `jjrl` mientras el problema **no esté reconocido**, con dos operaciones (*Send only to* Telegram y Gmail) y *Custom message* de recordatorio desde `zabbix_media/escalation.json` ([alertas](../operacion/alertas.md#recordatorios-de-la-escalada)) |
+| Aviso a proveedor Coefi01 | Activa | Etiqueta `proveedor` = `Coefi01` **y** existe la etiqueta `aviso_proveedor` **y** `notificar` distinto de `no` | Paso de 5 min. Paso 2: enviar a `coefi01-noc` por Gmail (mensaje propio de `zabbix_media/proveedor_coefi01.json`). Recuperación: avisar a los implicados |
 | Report problems to Zabbix administrators | Desactivada | (la acción por defecto) | — |
 
 Condición `notificar` en la interfaz: acción → pestaña *Action* → *Conditions → Add* → *Type: Tag value*, *Tag:* `notificar`, *Operator: does not equal*, *Value:* `no` ([alertas](../operacion/alertas.md#solo-dashboard-etiqueta-notificarno)).
@@ -68,6 +72,7 @@ Las dos acciones activas tienen marcado **Pause operations for suppressed proble
 | Macro | Tipo | Uso |
 |---|---|---|
 | `{$SNMP_COMMUNITY}` | Texto | Comunidad SNMP de lectura de todos los equipos. Es de tipo texto a propósito: los scripts `snmp_probe.py` y `snmp_walk.py` la leen por la API sin mostrarla |
+| `{$ISP.COEFI01.CONTRACT}`, `{$ISP.COEFI01.TICKET}`, `{$ISP.COEFI01.WAN.IP}`, `{$ISP.COEFI01.GW.IP}`, `{$NOC.CONTACT}` | Texto | Datos de los correos al proveedor: contrato, ticket abierto (`No asignado` si no hay), IPs del servicio y contacto del NOC. Los valores solo están en Zabbix ([avisar al proveedor](../operacion/procedimientos/avisar-proveedor.md)) |
 | `{$VFS.FS.FREE.MIN.WARN}` / `{$VFS.FS.FREE.MIN.CRIT}` | Texto | `1073741824` (1 GB). Las plantillas oficiales de MikroTik las usan en sus avisos de disco sin definirlas; sin estas macros, esos avisos quedan en error. Con 1 GB (más que la flash de un router) solo cuenta el % de uso: aviso al 80 %, crítico al 90 %. Las plantillas Linux no las usan |
 
 ## Ajustes generales (*Administration → General*)

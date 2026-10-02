@@ -75,7 +75,7 @@ En EDGE 01:
    - *Expression:* `max(/EDGE 01/net.if.in[ifHCInOctets.2],5m)<{$ISP.COEFI01.MIN.DOWN} and last(/EDGE 01/net.if.status[ifOperStatus.2])=1`. Todas las muestras de 5 min bajo el umbral y el puerto arriba (si el puerto cae, ya avisa *Link down*).
    - *OK event generation:* **Recovery expression**: `avg(/EDGE 01/net.if.in[ifHCInOctets.2],5m)>{$ISP.COEFI01.RECOVERY.DOWN}`. Se resuelve cuando la media de 5 min supera 50 Mbps; el margen evita que se abra y cierre alrededor del umbral.
    - *Operational data:* `Bajada: {ITEM.LASTVALUE1}`.
-   - *Tags:* `proveedor` = `Coefi01`, `scope` = `performance`.
+   - *Tags:* `proveedor` = `Coefi01`, `scope` = `performance` y `aviso_proveedor` = `Enlace conectado, pero con capacidad de bajada inferior a 20 Mbps durante 5 minutos` (texto para el [aviso al proveedor](avisar-proveedor.md)).
 3. **Dependencias:** *ISP-COEFI01-GW: Corte del proveedor* y *ISP-COEFI01-INTERNET: Sin salida a Internet por el proveedor*. En un corte total solo llega el aviso de corte.
 
 **Límite:** mide el tráfico que pasa, no la capacidad. Una demanda real por debajo del umbral durante 5 min también avisaría; con los datos de Coefi01 no ha ocurrido.

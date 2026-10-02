@@ -42,7 +42,9 @@ printf '%s\n' "$TOKEN" | agents/scripts/run_remote.sh -f zabbix_templates/X.yaml
 | `zbx_set_status.py` | Escritura | Activa o desactiva items o triggers por nombre (registrar el motivo en el [registro](../../docs/operacion/registro.md)) |
 | `zbx_mediatype_update.py` | Escritura | Aplica a un medio el script, las plantillas y parámetros concretos desde `zabbix_media/`, sin tocar ni mostrar el token |
 | `zbx_action_operations.py` | Escritura | Reemplaza las operaciones de mensaje de una acción desde un JSON (p. ej. los recordatorios de la escalada en `zabbix_media/escalation.json`), con un mensaje propio por medio |
-| `zbx_test_notification.py` | Escritura | Prueba real de extremo a extremo: host temporal que abre, actualiza y resuelve un problema, muestra el estado de entrega de cada notificación y se borra |
+| `zbx_notify_user.py` | Escritura | Crea o actualiza un usuario que solo recibe avisos (proveedor): grupo sin acceso web, lectura en grupos de hosts, medio con varios destinatarios. Contraseña aleatoria que no se muestra |
+| `zbx_action_apply.py` | Escritura | Crea o actualiza una acción completa desde un JSON: condiciones por etiquetas, operaciones con mensaje propio por medio y recuperación |
+| `zbx_test_notification.py` | Escritura | Prueba real de extremo a extremo: host temporal que abre, actualiza y resuelve un problema, muestra el estado de entrega de cada notificación y se borra. `--tag` y `--hold` prueban acciones filtradas por etiquetas y con retraso (aviso al proveedor) |
 | `zbx_dashboard_apply.py` | Escritura | Crea o actualiza un dashboard desde `zabbix_dashboards/*.json` (hosts, grupos e items por nombre) |
 | `zbx_users.py` | Lectura | Roles (UI, acciones, API), grupos de usuarios con permisos por grupo de hosts, usuarios y, con `--dashboards`, con quién se comparte cada dashboard |
 | `zbx_access_apply.py` | Escritura | Crea o actualiza un perfil de acceso desde `zabbix_access/*.json`: rol de tipo *User*, grupo de usuarios con lectura en grupos de hosts y dashboards compartidos |

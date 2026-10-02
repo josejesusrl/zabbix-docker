@@ -95,6 +95,8 @@ zabbix_export:
       priority: HIGH
       description: 'Ninguna de las dos direcciones de Internet respondió en 2 comprobaciones seguidas (unos 20 s), aunque se enrutan solo por este proveedor. Si el gateway del proveedor sí responde, la falla está en la red del proveedor más allá de su gateway. Se resuelve cuando una de las dos responde 3 veces seguidas.'
       tags:
+        - tag: aviso_proveedor
+          value: 'El gateway responde, pero no hay salida a Internet a través del servicio'
         - tag: scope
           value: availability
     - uuid: 5c58f264789b4dfa9c88ab14b6d98786
@@ -109,5 +111,7 @@ zabbix_export:
           expression: 'max(/ISP internet fast ping/icmpping[{$ISP.INET.TARGET1},{$ISP.PING.COUNT},200,,500],#2)=0 and max(/ISP internet fast ping/icmpping[{$ISP.INET.TARGET2},{$ISP.PING.COUNT},200,,500],#2)=0'
           recovery_expression: 'min(/ISP internet fast ping/icmpping[{$ISP.INET.TARGET1},{$ISP.PING.COUNT},200,,500],#3)=1 or min(/ISP internet fast ping/icmpping[{$ISP.INET.TARGET2},{$ISP.PING.COUNT},200,,500],#3)=1'
       tags:
+        - tag: aviso_proveedor
+          value: 'Pérdida de paquetes intermitente hacia Internet a través del servicio'
         - tag: scope
           value: performance

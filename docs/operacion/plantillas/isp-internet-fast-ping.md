@@ -10,3 +10,5 @@
 | Pérdida intermitente hacia Internet por el proveedor | Warning | Pérdida en las dos direcciones en `{$ISP.LOSS.CHECKS}` (3) comprobaciones en 5 min |
 
 Lectura junto con el gateway: si *Corte del proveedor* está activo, falla el primer salto; si solo está *Sin salida a Internet*, el gateway responde pero la red del proveedor no da salida. **Límite:** con el puerto WAN del proveedor desconectado, EDGE 01 alcanza esas direcciones por el otro proveedor y este aviso no salta; en ese caso avisan *Corte del proveedor* y el *Link down* del puerto. El host no tiene *ICMP Ping*: su interfaz solo existe porque los chequeos simples la requieren.
+
+Los dos triggers llevan la etiqueta `aviso_proveedor` con el texto que recibe el proveedor ([avisar al proveedor](../procedimientos/avisar-proveedor.md)).

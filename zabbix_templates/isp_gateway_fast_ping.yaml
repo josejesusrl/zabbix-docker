@@ -65,6 +65,8 @@ zabbix_export:
       priority: HIGH
       description: 'Ningún paquete respondió en 2 comprobaciones seguidas (unos 20 s). Cruzar con el estado del puerto WAN de EDGE 01: si el puerto sigue arriba, la falla es del proveedor. Se resuelve con 3 comprobaciones correctas. Duración y hora exactas: Monitoring → Problems.'
       tags:
+        - tag: aviso_proveedor
+          value: 'El gateway del servicio no responde al ping (pérdida total de paquetes)'
         - tag: scope
           value: availability
     - uuid: 6da8771c29134522a01f00459ac631a3
@@ -80,5 +82,7 @@ zabbix_export:
           expression: 'max(/ISP gateway fast ping/icmpping[,{$ISP.PING.COUNT},200,,500],#2)=0'
           recovery_expression: 'min(/ISP gateway fast ping/icmpping[,{$ISP.PING.COUNT},200,,500],#3)=1'
       tags:
+        - tag: aviso_proveedor
+          value: 'Pérdida de paquetes intermitente hacia el gateway del servicio'
         - tag: scope
           value: performance

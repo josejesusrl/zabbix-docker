@@ -13,6 +13,7 @@ Acciones (*Alerts → Actions → Trigger actions*; su configuración exacta, en
 - **Alert by severity:** severidad ≥ Warning. Primer aviso, aviso de "Resuelto" y avisos de reconocimientos y comentarios.
 - **Escalate unacknowledged High/Disaster:** repite los *High/Disaster* no reconocidos cada 30 min, **excepto** los problemas con la etiqueta `escalation` (condición *Tag name does not equal escalation*).
 - *Report problems to Zabbix administrators:* **desactivada** a propósito (duplicaba los avisos).
+- **Aviso a proveedor Coefi01:** envía al soporte del proveedor, 5 min después y solo si sigue activa, cada incidencia de su servicio, con un mensaje sin datos internos ([avisar al proveedor](procedimientos/avisar-proveedor.md)).
 
 El reparto por canal se hace en el usuario: *User settings → Profile → Media*, severidades de cada medio.
 

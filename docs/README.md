@@ -38,6 +38,7 @@ Antes de cualquier cambio, respaldo (`sudo ./server_backup.sh`). Leer las [parti
 | Añadir un enlace PTP Ubiquiti | [enlace-ptp-ubiquiti](operacion/procedimientos/enlace-ptp-ubiquiti.md) |
 | Añadir una cámara o NVR Hikvision | [anadir-camara-hikvision](operacion/procedimientos/anadir-camara-hikvision.md) |
 | Vigilar un proveedor de internet (gateway y salida a Internet) | [anadir-gateway-proveedor](operacion/procedimientos/anadir-gateway-proveedor.md) |
+| Avisar automáticamente al proveedor de sus incidencias | [avisar-proveedor](operacion/procedimientos/avisar-proveedor.md) |
 | Configurar dependencias (siempre, en cada alta) | [dependencias](operacion/procedimientos/dependencias.md) |
 | Configurar el envío de traps | [configurar-traps](operacion/procedimientos/configurar-traps.md) |
 | Ajustar umbrales de un equipo | [ajustar-umbrales](operacion/procedimientos/ajustar-umbrales.md) |
@@ -84,6 +85,7 @@ Antes de cualquier cambio, respaldo (`sudo ./server_backup.sh`). Leer las [parti
 | Cámaras, NVR, `{$PASSWORD}`, resolución del canal | [Añadir una cámara](operacion/procedimientos/anadir-camara-hikvision.md) |
 | Certificado TLS, autofirmado | [Instalación, sección 2](despliegue/instalacion.md#2-arrancar-y-crear-el-certificado) · [host Zabbix server](despliegue/host-zabbix-server.md) |
 | Cloudflare Tunnel, Access, token del túnel, `cloudflared` | [Acceso externo](despliegue/acceso-externo.md) · [plantilla del túnel](operacion/plantillas/cloudflare-tunnel.md) |
+| Ticket del proveedor, aviso automático a Coefi01 | [Avisar al proveedor](operacion/procedimientos/avisar-proveedor.md) |
 | Coefi01, gateway, cortes y degradación del proveedor, evidencia, Uptime Kuma | [Vigilar un proveedor](operacion/procedimientos/anadir-gateway-proveedor.md) · [ping rápido al gateway](operacion/plantillas/isp-gateway-fast-ping.md) · [salida a Internet](operacion/plantillas/isp-internet-fast-ping.md) |
 | Contraseñas, secretos, comunidad SNMP | [AGENTS.md, regla 4](../AGENTS.md#regla-4--secretos) · [configuración base](despliegue/configuracion-base.md#macros-globales-administration--macros) |
 | CPU, KPIs del dashboard | [Plantilla Likson KPIs](operacion/plantillas/likson-kpis.md) · [dashboard](operacion/dashboard.md) |

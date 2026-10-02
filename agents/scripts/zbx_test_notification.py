@@ -1,12 +1,15 @@
 """End-to-end test of notifications: fires a real problem, acknowledges it and resolves it.
 
 Usage (token on stdin, see README.md). Requires a recent backup (AGENTS.md, rule 1):
-  zbx_test_notification.py [--severity 0-5] [--group GROUP] [--keep]
+  zbx_test_notification.py [--severity 0-5] [--group GROUP] [--tag TAG=VALUE ...] [--hold SECONDS] [--keep]
 
 Steps: creates a temporary host "ZZ-TEST mensajes" with a trapper item and a trigger, pushes a value
 (history.push) to open a PROBLEM, acknowledges it with a comment (UPDATE), pushes the recovery value
 (RESOLVED), prints the delivery status of every notification (sent / failed + error) and deletes the host
 (unless --keep). The actions of the server decide who receives what (default severity High: Telegram + Gmail).
+--tag adds host tags so that tag-filtered actions match (e.g. the provider notice: --group "Proveedores de internet"
+--tag proveedor=Coefi01 "aviso_proveedor=Prueba"). --hold keeps the problem open longer before it is acknowledged
+and resolved, to reach delayed escalation steps (the provider notice is sent after 5 min: --hold 330).
 """
 import argparse
 import time
@@ -32,6 +35,8 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--severity", type=int, default=4, choices=range(6))
     parser.add_argument("--group", default="Zabbix servers")
+    parser.add_argument("--tag", nargs="*", default=[], help="extra host tags TAG=VALUE")
+    parser.add_argument("--hold", type=int, default=20, help="seconds the problem stays open before the acknowledgement")
     parser.add_argument("--keep", action="store_true")
     args = parser.parse_args()
 
@@ -43,7 +48,8 @@ def main():
     # ({HOST.IP}, {EVENT.TAGS.uplink}, {TRIGGER.DESCRIPTION}); the interface is never polled (trapper item).
     hostid = api.call("host.create", {"host": HOST, "groups": [{"groupid": group}],
                                       "interfaces": [{"type": 1, "main": 1, "useip": 1, "ip": "127.0.0.1", "dns": "", "port": "10050"}],
-                                      "tags": [{"tag": "uplink", "value": "ZZ-TEST padre"}, {"tag": "scope", "value": "test"}],
+                                      "tags": [{"tag": "uplink", "value": "ZZ-TEST padre"}, {"tag": "scope", "value": "test"}]
+                                              + [dict(zip(("tag", "value"), t.split("=", 1))) for t in args.tag],
                                       "description": "Temporary host of agents/scripts/zbx_test_notification.py"})["hostids"][0]
     try:
         itemid = api.call("item.create", {"hostid": hostid, "name": "Test alert", "key_": KEY, "type": 2, "value_type": 3})["itemids"][0]
@@ -57,8 +63,8 @@ def main():
         if not event:
             raise SystemExit("the problem was not created")
         eventid = event[0]["eventid"]
-        print(f"PROBLEMA abierto: evento {eventid} ({SEVERITIES[args.severity]})")
-        time.sleep(20)
+        print(f"PROBLEMA abierto: evento {eventid} ({SEVERITIES[args.severity]}), abierto {args.hold} s", flush=True)
+        time.sleep(args.hold)
         api.call("event.acknowledge", {"eventids": [eventid], "action": 2 | 4, "message": "Prueba de actualización: comentario con <símbolos> & acentos"})
         print("ACTUALIZACIÓN: reconocido con comentario")
         time.sleep(20)
