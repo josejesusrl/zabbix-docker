@@ -56,6 +56,7 @@ Avisos reales que se mantienen a propósito. No son falsos positivos.
 |---|---|
 | **Actualizar a Zabbix 8.0 LTS antes del 2026-12-31** | Zabbix 7.4 deja de tener soporte (ni parches de seguridad) el 31-12-2026; el 2026-09-29, 8.0 LTS seguía en beta. Cuando salga la versión estable, seguir [actualizar, versión mayor](../despliegue/actualizar.md#zabbix-versión-mayor-p-ej-74--80-lts) |
 | Activar los avisos a Coefi01 | Probado el 2026-10-02 con el correo del NOC. Cuando se apruebe el formato, poner en el medio de `coefi01-noc` el correo de soporte de Coefi01 y `servicio_clientes@likson.com` ([procedimiento](procedimientos/avisar-proveedor.md#verificar)) |
+| Propuesta: freno por reconocimiento en el aviso al proveedor | Añadir a la operación de *Aviso a proveedor Coefi01* la condición *Event is not acknowledged*: si se reconoce el problema en sus primeros 5 min (p. ej. desconexión accidental), no se avisa al proveedor, sin tener que desactivar la acción. Pendiente de decidir |
 | Respaldos fuera del servidor | Copiarlos periódicamente ([mantenimiento](../despliegue/mantenimiento.md#copiar-los-respaldos-fuera-del-servidor)) |
 | Token de API de cada sesión de trabajo | Crearlo con caducidad corta y revocarlo al terminar (*User settings → API tokens*) |
 | Cable del Zabbix server a 100 Mbps | Ver *Situaciones conocidas* |

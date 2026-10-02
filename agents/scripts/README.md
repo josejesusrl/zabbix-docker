@@ -50,6 +50,7 @@ printf '%s\n' "$TOKEN" | agents/scripts/run_remote.sh -f zabbix_templates/X.yaml
 | `zbx_access_apply.py` | Escritura | Crea o actualiza un perfil de acceso desde `zabbix_access/*.json`: rol de tipo *User*, grupo de usuarios con lectura en grupos de hosts y dashboards compartidos |
 | `zbx_user_set.py` | Escritura | Asigna a un usuario su rol, añade grupos (conserva los que tiene) y auto-logout. No toca contraseñas |
 | `zbx_map_apply.py` | Escritura | Genera o actualiza los mapas de red (general y un submapa por sitio) desde las dependencias, según `zabbix_maps/*.json` ([mapas](../../docs/operacion/mapas.md)) |
+| `zbx_maintenance.py` | Escritura | Lista, crea (por hosts o grupo, opcionalmente solo para problemas con ciertas etiquetas) o termina mantenimientos de una vez, en hora de Ciudad de México ([trabajos en el router o el rack](../../docs/operacion/procedimientos/mantenimiento-programado.md#trabajos-en-el-router-o-el-rack-no-avisar-al-proveedor)) |
 | `zbx_close_problems.py` | Escritura | Cierra problemas abiertos por nombre con un comentario (falsos positivos, problemas de objetos desactivados) |
 | `docs_check.py` | Local | Comprueba la documentación: enlaces relativos y anclas, referencias a documentos antiguos, que cada plantilla tenga su ficha, que cada script esté en este catálogo y que todos los documentos estén en el índice `docs/README.md`. `--zabbix` (en el servidor, con token) compara el inventario con los hosts de Zabbix |
 | `run_remote.sh` | Envoltorio | Ejecuta un script en el servidor con el token por la entrada estándar |

@@ -52,6 +52,7 @@ Antes de cualquier cambio, respaldo (`sudo ./server_backup.sh`). Leer las [parti
 |---|---|
 | Cambiar el texto de los avisos (Telegram, Gmail, recordatorios) | [cambiar-mensajes](operacion/procedimientos/cambiar-mensajes.md) |
 | Silenciar avisos durante un trabajo planificado | [mantenimiento-programado](operacion/procedimientos/mantenimiento-programado.md) |
+| Trabajar en el router o el rack sin avisar al proveedor | [mantenimiento-programado, trabajos en el router o el rack](operacion/procedimientos/mantenimiento-programado.md#trabajos-en-el-router-o-el-rack-no-avisar-al-proveedor) |
 | Dar acceso de solo lectura a una persona | [dar-acceso-lectura](operacion/procedimientos/dar-acceso-lectura.md) |
 | Dar acceso desde Internet (Cloudflare Access) | [acceso externo, sección 2](despliegue/acceso-externo.md#2-proteger-la-web-con-access) |
 
@@ -97,7 +98,7 @@ Antes de cualquier cambio, respaldo (`sudo ./server_backup.sh`). Leer las [parti
 | Falsos positivos, *flapping* | [Revisar falsos positivos](operacion/procedimientos/revisar-falsos-positivos.md) · [registro](operacion/registro.md) |
 | Firewall, puertos, NAT | [Instalación, requisitos](despliegue/instalacion.md#requisitos) · [acceso externo](despliegue/acceso-externo.md) |
 | Grupos de hosts, convención de nombres (`SITIO-ROL-NN`) | [Inventario, convenciones](operacion/inventario.md#convenciones) |
-| Mantenimiento programado (silenciar avisos) | [Programar un mantenimiento](operacion/procedimientos/mantenimiento-programado.md) |
+| Mantenimiento programado (silenciar avisos), trabajos en el rack, desconexión accidental | [Programar un mantenimiento](operacion/procedimientos/mantenimiento-programado.md) · [sin avisar al proveedor](operacion/procedimientos/mantenimiento-programado.md#trabajos-en-el-router-o-el-rack-no-avisar-al-proveedor) |
 | Mapas, topología | [Mapas de red](operacion/mapas.md) · [inventario](operacion/inventario.md) |
 | Mensajes de Telegram y Gmail | [Alertas](operacion/alertas.md) · [cambiar mensajes](operacion/procedimientos/cambiar-mensajes.md) |
 | MikroTik, PPPoE, traps de enlace | [Añadir un router](operacion/procedimientos/anadir-router-mikrotik.md) · [plantilla de traps](operacion/plantillas/mikrotik-link-traps.md) · [configurar traps](operacion/procedimientos/configurar-traps.md) |

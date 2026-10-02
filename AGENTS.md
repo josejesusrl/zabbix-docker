@@ -105,6 +105,7 @@ Al añadir cualquier configuración nueva fuera de la base de datos (un script, 
 - No ejecutar Docker en el equipo local. Los comandos de Docker se ejecutan solo en el servidor.
 - No escanear la red. Se pide la IP del equipo y solo se consulta ese objetivo.
 - No borrar contenedores, volúmenes, datos ni hosts de Zabbix sin confirmación explícita.
+- No crear, ampliar ni terminar mantenimientos, ni desactivar acciones (silencian avisos reales), sin confirmación de la persona. Antes de trabajar en EDGE 01 o en el rack, ver [trabajos en el router o el rack](docs/operacion/procedimientos/mantenimiento-programado.md#trabajos-en-el-router-o-el-rack-no-avisar-al-proveedor).
 - Si aparece un estado inesperado (restos de otra instalación, cambios que no son propios), se informa y se pregunta antes de actuar.
 
 ## Regla 6 — Plantillas y configuración de Zabbix

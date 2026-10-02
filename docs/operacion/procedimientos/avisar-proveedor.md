@@ -14,7 +14,7 @@ El proveedor recibe un correo **5 minutos** después de que empiece una incidenc
 | **Estado del puerto WAN** de EDGE 01 (conectado o no, velocidad negociada, tráfico): descarta una desconexión de nuestro lado | |
 | Contacto del NOC de Likson | |
 
-No se le avisa si el fallo es nuestro: las dependencias impiden que se abran los avisos si cae EDGE 01 o la red del servidor Zabbix.
+No se le avisa si el fallo es nuestro: las dependencias impiden que se abran los avisos si cae EDGE 01 o la red del servidor Zabbix. **Antes de trabajar en el router o el rack**, crear un mantenimiento: [trabajos en el router o el rack](mantenimiento-programado.md#trabajos-en-el-router-o-el-rack-no-avisar-al-proveedor).
 
 ## Qué incidencias se le envían
 
