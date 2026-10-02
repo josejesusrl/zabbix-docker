@@ -84,7 +84,7 @@ Antes de cualquier cambio, respaldo (`sudo ./server_backup.sh`). Leer las [parti
 | Cámaras, NVR, `{$PASSWORD}`, resolución del canal | [Añadir una cámara](operacion/procedimientos/anadir-camara-hikvision.md) |
 | Certificado TLS, autofirmado | [Instalación, sección 2](despliegue/instalacion.md#2-arrancar-y-crear-el-certificado) · [host Zabbix server](despliegue/host-zabbix-server.md) |
 | Cloudflare Tunnel, Access, token del túnel, `cloudflared` | [Acceso externo](despliegue/acceso-externo.md) · [plantilla del túnel](operacion/plantillas/cloudflare-tunnel.md) |
-| Coefi01, gateway, cortes del proveedor, evidencia, Uptime Kuma | [Vigilar un proveedor](operacion/procedimientos/anadir-gateway-proveedor.md) · [ping rápido al gateway](operacion/plantillas/isp-gateway-fast-ping.md) · [salida a Internet](operacion/plantillas/isp-internet-fast-ping.md) |
+| Coefi01, gateway, cortes y degradación del proveedor, evidencia, Uptime Kuma | [Vigilar un proveedor](operacion/procedimientos/anadir-gateway-proveedor.md) · [ping rápido al gateway](operacion/plantillas/isp-gateway-fast-ping.md) · [salida a Internet](operacion/plantillas/isp-internet-fast-ping.md) |
 | Contraseñas, secretos, comunidad SNMP | [AGENTS.md, regla 4](../AGENTS.md#regla-4--secretos) · [configuración base](despliegue/configuracion-base.md#macros-globales-administration--macros) |
 | CPU, KPIs del dashboard | [Plantilla Likson KPIs](operacion/plantillas/likson-kpis.md) · [dashboard](operacion/dashboard.md) |
 | Dependencias, `uplink`, equipos raíz, corte de red del servidor | [Dependencias](operacion/procedimientos/dependencias.md) · [trigger raíz](operacion/plantillas/likson-topology-root.md) |

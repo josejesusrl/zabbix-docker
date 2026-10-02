@@ -59,11 +59,31 @@ El gateway puede responder aunque el proveedor no dé salida a Internet. Para de
 |---|---|---|
 | *Corte del proveedor* | (no avisa, depende del gateway) | Falla el primer salto: enlace o equipo del proveedor |
 | Responde | *Sin salida a Internet* | El proveedor no da salida más allá de su gateway |
-| Responde | Responde | Sin problema del proveedor |
+| Responde | Responde | Sin problema del proveedor (salvo degradación, sección 4) |
 
-## 4. Evidencia para el proveedor
+## 4. Degradación: bajada por debajo de un mínimo
+
+Un enlace inalámbrico del proveedor puede seguir conectado pero sin capacidad. Sin acceso SNMP a su radio, se detecta por el **tráfico de bajada** del puerto WAN en EDGE 01. La subida no sirve: de madrugada baja de forma normal a unos 8 Mbps.
+
+Antes de elegir el umbral, revisar en *Latest data* → *Interface etherX: Bits received* → *Graph* (7 días) el mínimo normal de madrugada. Con Coefi01 el mínimo normal es de unos 62 Mbps; solo bajó de 20 Mbps en cortes reales.
+
+En EDGE 01:
+1. **Macros de host:** `{$ISP.<PROVEEDOR>.MIN.DOWN}` = umbral (Coefi01: `20M`) y `{$ISP.<PROVEEDOR>.RECOVERY.DOWN}` = valor para resolverse (Coefi01: `50M`).
+2. *Triggers → Create trigger* (Coefi01, `ether1` = índice SNMP 2):
+   - *Name:* `Coefi01: bajada degradada (menos de {$ISP.COEFI01.MIN.DOWN} durante 5 min)`.
+   - *Severity:* **Average** (Gmail).
+   - *Expression:* `max(/EDGE 01/net.if.in[ifHCInOctets.2],5m)<{$ISP.COEFI01.MIN.DOWN} and last(/EDGE 01/net.if.status[ifOperStatus.2])=1`. Todas las muestras de 5 min bajo el umbral y el puerto arriba (si el puerto cae, ya avisa *Link down*).
+   - *OK event generation:* **Recovery expression**: `avg(/EDGE 01/net.if.in[ifHCInOctets.2],5m)>{$ISP.COEFI01.RECOVERY.DOWN}`. Se resuelve cuando la media de 5 min supera 50 Mbps; el margen evita que se abra y cierre alrededor del umbral.
+   - *Operational data:* `Bajada: {ITEM.LASTVALUE1}`.
+   - *Tags:* `proveedor` = `Coefi01`, `scope` = `performance`.
+3. **Dependencias:** *ISP-COEFI01-GW: Corte del proveedor* y *ISP-COEFI01-INTERNET: Sin salida a Internet por el proveedor*. En un corte total solo llega el aviso de corte.
+
+**Límite:** mide el tráfico que pasa, no la capacidad. Una demanda real por debajo del umbral durante 5 min también avisaría; con los datos de Coefi01 no ha ocurrido.
+
+## 5. Evidencia para el proveedor
 
 - **Cada caída, incluidos los cortes breves:** *Monitoring → Problems* → filtro *Hosts* = el gateway, *Show* = *History*, con el periodo. Muestra inicio, fin y duración. Añadir en el filtro el host EDGE 01 para ver si coincidió con un *Link down* del puerto WAN.
+- **Degradación:** lo mismo con el host EDGE 01 y su trigger *Coefi01: bajada degradada*.
 - **Salida a Internet:** lo mismo con el host `ISP-<PROVEEDOR>-INTERNET` y su trigger *Sin salida a Internet por el proveedor*.
 - **Disponibilidad del periodo:** *Reports → Availability report* → *Mode: By trigger template* (o *By host*) → host del gateway, trigger **Corte del proveedor** (incluye los cortes breves; *Unavailable by ICMP ping* solo cuenta los de varios minutos) → periodo. Da el % de tiempo *Problem* y *OK*.
 - **Gráficos:** *Latest data* → `ICMP loss` y `ICMP response time` → *Graph*. Se pueden exportar como imagen.
