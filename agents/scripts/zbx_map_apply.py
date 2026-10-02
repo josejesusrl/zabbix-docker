@@ -3,8 +3,9 @@
 Usage (token on stdin, see README.md). Requires a recent backup (AGENTS.md, rule 1):
   run_remote.sh -f zabbix_maps/likson_red.json zbx_map_apply.py likson_red.json [--dry-run]
 
-The parent of each host is its topological dependency (the same one shown by zbx_inventory.py), so the
-maps follow the inventory without positions kept by hand. Maps are matched by name and their elements
+The parent of each host is its topological dependency (the same one shown by zbx_inventory.py), or its
+'uplink' tag for hosts without ping availability triggers, so the maps follow the inventory without
+positions kept by hand. Maps are matched by name and their elements
 and links are replaced on every run; sysmapids stay the same, so dashboard widgets keep working.
 
 JSON keys:
@@ -31,10 +32,13 @@ READ = 2
 
 def load_topology(api, spec):
     hosts = api.call("host.get", {"output": ["hostid", "name"], "selectInterfaces": ["interfaceid"],
-                                  "selectHostGroups": ["name"], "selectParentTemplates": ["name"]})
+                                  "selectHostGroups": ["name"], "selectParentTemplates": ["name"],
+                                  "selectTags": ["tag", "value"]})
     hosts = {h["name"]: h for h in hosts if h["interfaces"] and h["name"] not in spec.get("exclude", [])}
     for h in hosts.values():
         parents = [p for p in upstream_hosts(api, h["hostid"]) if p in hosts]
+        if not parents:
+            parents = [t["value"] for t in h["tags"] if t["tag"] == "uplink" and t["value"] in hosts]
         if len(parents) > 1:
             print(f"aviso: {h['name']} depende de varios equipos ({', '.join(parents)}), se dibuja bajo {parents[0]}")
         h["parent"] = parents[0] if parents else None

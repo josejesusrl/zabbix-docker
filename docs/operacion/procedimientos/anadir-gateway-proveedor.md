@@ -41,9 +41,30 @@ Con el enlace activo, la ruta directa tiene prioridad y esta no se usa. Sin enla
    - *Unavailable by ICMP ping* del gateway depende también de su propio *Corte del proveedor*, para recibir un solo aviso en un corte largo.
 7. Regenerar el [inventario](../inventario.md) y los [mapas](../mapas.md).
 
-## 3. Evidencia para el proveedor
+## 3. Salida a Internet por ese proveedor
+
+El gateway puede responder aunque el proveedor no dé salida a Internet. Para detectarlo:
+
+1. **En EDGE 01:** dos direcciones de Internet enrutadas **solo** por ese proveedor (Coefi01: `208.67.222.222` y `8.8.4.4`). No usar direcciones que los clientes necesiten con conmutación al otro proveedor: esta ruta afecta a todo el tráfico hacia ellas.
+2. **En Zabbix**, *Create host*:
+   - **Host name:** `ISP-<PROVEEDOR>-INTERNET`.
+   - **Template:** `ISP internet fast ping`.
+   - **Group:** `Proveedores de internet`.
+   - **Interfaz *Agent*** con la primera dirección (solo la requieren los chequeos simples).
+   - **Macros** `{$ISP.INET.TARGET1}` y `{$ISP.INET.TARGET2}` con las dos direcciones.
+   - **Etiquetas:** `proveedor` y `uplink` = el host del gateway.
+3. **Dependencias:** *Sin salida a Internet* y *Pérdida intermitente hacia Internet* dependen de *Corte del proveedor* del gateway. *Sin salida a Internet* depende también de *EDGE 01: Unavailable by ICMP ping*.
+
+| Gateway | Internet por el proveedor | Interpretación |
+|---|---|---|
+| *Corte del proveedor* | (no avisa, depende del gateway) | Falla el primer salto: enlace o equipo del proveedor |
+| Responde | *Sin salida a Internet* | El proveedor no da salida más allá de su gateway |
+| Responde | Responde | Sin problema del proveedor |
+
+## 4. Evidencia para el proveedor
 
 - **Cada caída, incluidos los cortes breves:** *Monitoring → Problems* → filtro *Hosts* = el gateway, *Show* = *History*, con el periodo. Muestra inicio, fin y duración. Añadir en el filtro el host EDGE 01 para ver si coincidió con un *Link down* del puerto WAN.
+- **Salida a Internet:** lo mismo con el host `ISP-<PROVEEDOR>-INTERNET` y su trigger *Sin salida a Internet por el proveedor*.
 - **Disponibilidad del periodo:** *Reports → Availability report* → *Mode: By trigger template* (o *By host*) → host del gateway, trigger **Corte del proveedor** (incluye los cortes breves; *Unavailable by ICMP ping* solo cuenta los de varios minutos) → periodo. Da el % de tiempo *Problem* y *OK*.
 - **Gráficos:** *Latest data* → `ICMP loss` y `ICMP response time` → *Graph*. Se pueden exportar como imagen.
 
@@ -56,6 +77,9 @@ Con el enlace activo, la ruta directa tiene prioridad y esta no se usa. Sin enla
 ## Con scripts
 
 ```sh
+printf '%s\n' "$TOKEN" | agents/scripts/run_remote.sh zbx_create_snmp_host.py --name ISP-COEFI01-INTERNET --ip 208.67.222.222 \
+    --group "Proveedores de internet" --interface ping --template "ISP internet fast ping" \
+    --macro '{$ISP.INET.TARGET1}=208.67.222.222' '{$ISP.INET.TARGET2}=8.8.4.4' --tag proveedor=Coefi01 uplink=ISP-COEFI01-GW --dry-run
 printf '%s\n' "$TOKEN" | agents/scripts/run_remote.sh zbx_create_snmp_host.py --name ISP-COEFI01-GW --ip 170.80.29.30 \
     --group "Proveedores de internet" --interface ping --template "ICMP Ping" "ISP gateway fast ping" --tag proveedor=Coefi01 --uplink "EDGE 01" --dry-run
 printf '%s\n' "$TOKEN" | agents/scripts/run_remote.sh zbx_add_dependency.py --host ISP-COEFI01-GW --trigger "Corte del proveedor" --parent-host "EDGE 01" --parent-trigger "Unavailable by ICMP ping"

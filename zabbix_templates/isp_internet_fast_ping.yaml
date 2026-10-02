@@ -1,0 +1,113 @@
+zabbix_export:
+  version: '7.0'
+  template_groups:
+    - uuid: 3a6730e62a4f4685831df097d40f3044
+      name: Templates/Likson
+  templates:
+    - uuid: a4e35a7999634e6a91328b005787290b
+      template: 'ISP internet fast ping'
+      name: 'ISP internet fast ping'
+      description: |
+        Fast ping to two internet addresses that EDGE 01 routes only through one provider, to detect when the
+        provider gateway answers but there is no internet beyond it. Both addresses must fail to open the problem.
+        If the WAN port of that provider is down, EDGE 01 reaches them through the other provider (no alert here;
+        the gateway template and the port Link down alert instead). See docs/operacion/procedimientos/anadir-gateway-proveedor.md.
+      groups:
+        - name: Templates/Likson
+      items:
+        - uuid: c7014aa4fb484cd7a2cb2f3574e1627a
+          name: 'Ping rápido a Internet 1'
+          description: 'Address in {$ISP.INET.TARGET1} (host macro). 1 = at least one reply.'
+          type: SIMPLE
+          key: 'icmpping[{$ISP.INET.TARGET1},{$ISP.PING.COUNT},200,,500]'
+          delay: '{$ISP.PING.INTERVAL}'
+          history: 31d
+          valuemap:
+            name: 'Service state'
+          tags:
+            - tag: component
+              value: isp
+        - uuid: 4fdfee3961da4cafa7cc971651d378c7
+          name: 'Pérdida a Internet 1'
+          description: 'Packet loss to the address in {$ISP.INET.TARGET1} (host macro).'
+          type: SIMPLE
+          key: 'icmppingloss[{$ISP.INET.TARGET1},{$ISP.PING.COUNT},200,,500]'
+          delay: '{$ISP.PING.INTERVAL}'
+          history: 31d
+          value_type: FLOAT
+          units: '%'
+          tags:
+            - tag: component
+              value: isp
+        - uuid: 1bec812003dd4412aa40e6c9b98097c4
+          name: 'Ping rápido a Internet 2'
+          description: 'Address in {$ISP.INET.TARGET2} (host macro). 1 = at least one reply.'
+          type: SIMPLE
+          key: 'icmpping[{$ISP.INET.TARGET2},{$ISP.PING.COUNT},200,,500]'
+          delay: '{$ISP.PING.INTERVAL}'
+          history: 31d
+          valuemap:
+            name: 'Service state'
+          tags:
+            - tag: component
+              value: isp
+        - uuid: fa831265c9104e9fafdbd99bf6c7c44d
+          name: 'Pérdida a Internet 2'
+          description: 'Packet loss to the address in {$ISP.INET.TARGET2} (host macro).'
+          type: SIMPLE
+          key: 'icmppingloss[{$ISP.INET.TARGET2},{$ISP.PING.COUNT},200,,500]'
+          delay: '{$ISP.PING.INTERVAL}'
+          history: 31d
+          value_type: FLOAT
+          units: '%'
+          tags:
+            - tag: component
+              value: isp
+      macros:
+        - macro: '{$ISP.INET.TARGET1}'
+          value: 208.67.222.222
+          description: 'First internet address routed only through the provider (set per host).'
+        - macro: '{$ISP.INET.TARGET2}'
+          value: 8.8.4.4
+          description: 'Second internet address routed only through the provider (set per host).'
+        - macro: '{$ISP.PING.INTERVAL}'
+          value: 10s
+        - macro: '{$ISP.PING.COUNT}'
+          value: '3'
+        - macro: '{$ISP.LOSS.CHECKS}'
+          value: '3'
+          description: 'Checks with packet loss within 5 minutes, on both addresses, that open "Intermittent loss".'
+      valuemaps:
+        - uuid: 3ce69d4cca414e89901b3b90c17958bc
+          name: 'Service state'
+          mappings:
+            - value: '0'
+              newvalue: Down
+            - value: '1'
+              newvalue: Up
+  triggers:
+    - uuid: fdaceccb327e478aa09510127f990b9f
+      expression: 'max(/ISP internet fast ping/icmpping[{$ISP.INET.TARGET1},{$ISP.PING.COUNT},200,,500],#2)=0 and max(/ISP internet fast ping/icmpping[{$ISP.INET.TARGET2},{$ISP.PING.COUNT},200,,500],#2)=0'
+      recovery_mode: RECOVERY_EXPRESSION
+      recovery_expression: 'min(/ISP internet fast ping/icmpping[{$ISP.INET.TARGET1},{$ISP.PING.COUNT},200,,500],#3)=1 or min(/ISP internet fast ping/icmpping[{$ISP.INET.TARGET2},{$ISP.PING.COUNT},200,,500],#3)=1'
+      name: 'Sin salida a Internet por el proveedor'
+      event_name: 'Sin salida a Internet: {HOST.NAME} ({$ISP.INET.TARGET1} y {$ISP.INET.TARGET2} no responden)'
+      priority: HIGH
+      description: 'Ninguna de las dos direcciones de Internet respondió en 2 comprobaciones seguidas (unos 20 s), aunque se enrutan solo por este proveedor. Si el gateway del proveedor sí responde, la falla está en la red del proveedor más allá de su gateway. Se resuelve cuando una de las dos responde 3 veces seguidas.'
+      tags:
+        - tag: scope
+          value: availability
+    - uuid: 5c58f264789b4dfa9c88ab14b6d98786
+      expression: 'count(/ISP internet fast ping/icmppingloss[{$ISP.INET.TARGET1},{$ISP.PING.COUNT},200,,500],5m,"gt",0)>={$ISP.LOSS.CHECKS} and count(/ISP internet fast ping/icmppingloss[{$ISP.INET.TARGET2},{$ISP.PING.COUNT},200,,500],5m,"gt",0)>={$ISP.LOSS.CHECKS}'
+      recovery_mode: RECOVERY_EXPRESSION
+      recovery_expression: 'count(/ISP internet fast ping/icmppingloss[{$ISP.INET.TARGET1},{$ISP.PING.COUNT},200,,500],5m,"gt",0)=0 or count(/ISP internet fast ping/icmppingloss[{$ISP.INET.TARGET2},{$ISP.PING.COUNT},200,,500],5m,"gt",0)=0'
+      name: 'Pérdida intermitente hacia Internet por el proveedor'
+      priority: WARNING
+      description: 'Las dos direcciones de Internet tuvieron pérdida de paquetes en al menos {$ISP.LOSS.CHECKS} comprobaciones en 5 minutos: salida a Internet del proveedor inestable.'
+      dependencies:
+        - name: 'Sin salida a Internet por el proveedor'
+          expression: 'max(/ISP internet fast ping/icmpping[{$ISP.INET.TARGET1},{$ISP.PING.COUNT},200,,500],#2)=0 and max(/ISP internet fast ping/icmpping[{$ISP.INET.TARGET2},{$ISP.PING.COUNT},200,,500],#2)=0'
+          recovery_expression: 'min(/ISP internet fast ping/icmpping[{$ISP.INET.TARGET1},{$ISP.PING.COUNT},200,,500],#3)=1 or min(/ISP internet fast ping/icmpping[{$ISP.INET.TARGET2},{$ISP.PING.COUNT},200,,500],#3)=1'
+      tags:
+        - tag: scope
+          value: performance

@@ -21,6 +21,7 @@ server-04 (192.168.50.254)                    depende del enlace de red del Zabb
 KPI Likson                                    host sin interfaz: indicadores calculados (dashboard)
 EDGE 01 (192.168.200.1)  MikroTik CCR2004  depende del enlace de red del Zabbix server
 ├── ISP-COEFI01-GW (170.80.29.30)  gateway del proveedor Coefi01 (ping por ether1)
+│   └── ISP-COEFI01-INTERNET  salida a Internet por Coefi01 (ping a 208.67.222.222 y 8.8.4.4)
 ├── NVR 01 (192.168.60.2)  NVR Hikvision
 │   └── MAIN-CAM-01 – MAIN-CAM-05 (192.168.60.10 – .14)  cámaras Hikvision de Main Site
 ├── STA-Lk_Trunk_01_A (10.100.0.3)  Mimosa C5C, extremo del troncal conectado a EDGE 01
@@ -47,6 +48,7 @@ Los sectores `172.16.2.x` están conectados físicamente a NAS-02, que se va a r
 ### Inventario (generado desde Zabbix)
 
 Tablas generadas con `agents/scripts/zbx_inventory.py --markdown` y pegadas aquí; no editarlas a mano. Para regenerarlas, ver [agents/scripts/README.md](../../agents/scripts/README.md). Las macros con regex largas se muestran solo por nombre.
+
 
 
 
@@ -129,6 +131,7 @@ Tablas generadas con `agents/scripts/zbx_inventory.py --markdown` y pegadas aqu�
 | Host | Interfaz | Plantillas | Macros de host | Etiquetas | Depende de |
 |---|---|---|---|---|---|
 | ISP-COEFI01-GW | agent 170.80.29.30 | ISP gateway fast ping, ICMP Ping | — | proveedor=Coefi01, uplink=EDGE 01 | EDGE 01 |
+| ISP-COEFI01-INTERNET | agent 208.67.222.222 | ISP internet fast ping | {$ISP.INET.TARGET1}=208.67.222.222, {$ISP.INET.TARGET2}=8.8.4.4 | proveedor=Coefi01, uplink=ISP-COEFI01-GW | — |
 
 #### Routers & Switches Likson
 

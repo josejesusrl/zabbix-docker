@@ -125,6 +125,16 @@ Items: ping de `{$ISP.PING.COUNT}` (3) paquetes cada `{$ISP.PING.INTERVAL}` (10 
 
 *ICMP Ping: Unavailable by ICMP ping* del gateway depende de *Corte del proveedor*, para que un corte largo no avise dos veces. El número de comprobaciones de *Corte* es fijo (`#2`): Zabbix no admite una macro en ese parámetro.
 
+### ISP internet fast ping — `isp_internet_fast_ping.yaml`
+**Para:** comprobar la **salida a Internet** de un proveedor, más allá de su gateway. Hace ping cada 10 s a dos direcciones de Internet que EDGE 01 enruta **solo** por ese proveedor: `{$ISP.INET.TARGET1}` y `{$ISP.INET.TARGET2}`, macros de host (Coefi01: `208.67.222.222` y `8.8.4.4`, las mismas que Uptime Kuma).
+
+| Trigger | Severidad | Cuándo |
+|---|---|---|
+| Sin salida a Internet por el proveedor | High | **Las dos** direcciones sin respuesta en 2 comprobaciones seguidas (unos 20 s). Si solo falla una, el problema suele ser de ese destino y no avisa. Se resuelve cuando una responde 3 veces. Depende de *Corte del proveedor* del gateway y de EDGE 01 |
+| Pérdida intermitente hacia Internet por el proveedor | Warning | Pérdida en las dos direcciones en `{$ISP.LOSS.CHECKS}` (3) comprobaciones en 5 min |
+
+Lectura junto con el gateway: si *Corte del proveedor* está activo, falla el primer salto; si solo está *Sin salida a Internet*, el gateway responde pero la red del proveedor no da salida. **Límite:** con el puerto WAN del proveedor desconectado, EDGE 01 alcanza esas direcciones por el otro proveedor y este aviso no salta; en ese caso avisan *Corte del proveedor* y el *Link down* del puerto. El host no tiene *ICMP Ping*: su interfaz solo existe porque los chequeos simples la requieren.
+
 ## Plantillas oficiales en uso y ajustes necesarios
 
 | Plantilla | Para | Ajustes |

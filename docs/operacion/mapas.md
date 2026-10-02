@@ -7,7 +7,7 @@
 
 | Mapa | Contenido |
 |---|---|
-| **Likson - Red general** | Zabbix server, EDGE 01, el gateway de Coefi01, el troncal Mimosa, server-04 y un elemento por cada sitio. El icono de cada sitio toma el color del peor problema de sus equipos; al hacer clic se abre su submapa |
+| **Likson - Red general** | Zabbix server, EDGE 01, el gateway y la salida a Internet de Coefi01, el troncal Mimosa, server-04 y un elemento por cada sitio. El icono de cada sitio toma el color del peor problema de sus equipos; al hacer clic se abre su submapa |
 | **Likson - Sitio NAS-01** | NAS-01, MAIN-SW-01, sus APs, los sectores y los enlaces de backhaul (Mayólica, Caribe, Pintores → Cañadas) |
 | **Likson - Sitio NAS-03 Cañadas** | NAS-03, los APs LIKSON_CANADAS y CANADAS-CAM-01 |
 | **Likson - CCTV NVR 01** | NVR 01 y las cámaras MAIN-CAM-01 a 05 |
@@ -30,7 +30,7 @@ Los mapas **no se dibujan a mano**: se generan desde la topología de Zabbix, es
 
 La colocación es automática en árbol, de arriba abajo. Cuando un equipo tiene muchos hijos sin descendientes, como los APs de MAIN-SW-01, se colocan en filas de 8.
 
-server-04 aparece suelto en el mapa general. Su dependencia está en el trigger del agente, que el generador no usa, por eso no tiene línea hacia el Zabbix server (el inventario también lo muestra sin padre).
+Los hosts sin trigger de ping (p. ej. `ISP-COEFI01-INTERNET`) se colocan bajo el equipo de su etiqueta `uplink`, sin indicador en la línea. server-04 aparece suelto en el mapa general. Su dependencia está en el trigger del agente, que el generador no usa, por eso no tiene línea hacia el Zabbix server (el inventario también lo muestra sin padre).
 
 ## Actualizar los mapas (después de un alta, una baja o un cambio de padre)
 
