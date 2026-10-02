@@ -12,6 +12,7 @@ El host "Zabbix server" monitorea el propio servidor: el Agent 2 en red de host 
 | [*Linux hwmon temperature by Zabbix agent 2*](../operacion/plantillas/linux-hwmon-temperature.md) | Temperaturas de CPU, NVMe, placa | Importar `zabbix_templates/linux_hwmon_temperature.yaml` |
 | *Website certificate by Zabbix agent 2* | Caducidad del certificado autofirmado del origen | Oficial |
 | [*Cloudflare Tunnel by HTTP*](../operacion/plantillas/cloudflare-tunnel.md) | Conexiones del túnel ([acceso externo](acceso-externo.md)) | Importar `zabbix_templates/cloudflared_tunnel.yaml` |
+| [*Likson topology root by Zabbix agent*](../operacion/plantillas/likson-topology-root.md) | Raíz de la topología: enlace del servidor cada 5 s | Importar `zabbix_templates/likson_topology_root.yaml` |
 
 ## Pasos (en la interfaz web)
 
@@ -34,12 +35,12 @@ El host "Zabbix server" monitorea el propio servidor: el Agent 2 en red de host 
    ```
    El agente se conecta a `127.0.0.1:443` con el nombre `zabbix.likson.com`, sin depender del DNS ni del túnel. Con el certificado autofirmado el resultado es `valid-but-self-signed`, sin alerta, y avisa 14 días antes de que caduque (dura 10 años). El certificado público lo renueva Cloudflare.
 6. **Túnel:** importar `zabbix_templates/cloudflared_tunnel.yaml` y enlazar *Cloudflare Tunnel by HTTP*.
-7. **Raíz de la topología:** crear en el host el trigger que sigue activo 5 min después de un corte del enlace. En *Triggers → Create trigger*:
-   - *Name:* `Interface enp2s0: link not stable in the last 5m (topology root)`.
-   - *Severity:* **Information** (no notifica).
-   - *Expression:* `count(/Zabbix server/vfs.file.contents["/sys/class/net/enp2s0/operstate"],5m,"ne",6)>0` (6 = `up`).
+7. **Raíz de la topología:** importar `zabbix_templates/likson_topology_root.yaml` y enlazar *Likson topology root by Zabbix agent* ([ficha](../operacion/plantillas/likson-topology-root.md)). Si la interfaz no es `enp2s0`, poner la macro de host `{$ROOT.IF}`. Después, añadir como dependencia su trigger *link not stable in the last 5m* a:
+   - *EDGE 01: Unavailable by ICMP ping* y *server-04: Zabbix agent is not available* (equipos raíz, [dependencias](../operacion/procedimientos/dependencias.md), paso 6), además de *Interface enp2s0: Link down*.
+   - *Cloudflared: Tunnel connector not responding* y *Tunnel down* de este host.
+   - *High CPU utilization* y *High memory utilization* de las cámaras y el NVR.
 
-   El trigger de disponibilidad de los equipos raíz (EDGE 01, server-04) depende de este y de *Interface enp2s0: Link down*. Así, si cae la red del propio servidor, no se reporta toda la red como caída, ni durante el corte ni justo al volver ([dependencias](../operacion/procedimientos/dependencias.md), paso 6). Si el servidor nuevo tiene otra interfaz, cambiar `enp2s0`.
+   Así, si cae la red del propio servidor, no se reporta toda la red como caída, ni durante el corte ni justo al volver.
 
 ## Verificar
 
@@ -52,7 +53,8 @@ El host "Zabbix server" monitorea el propio servidor: el Agent 2 en red de host 
 S=agents/scripts/run_remote.sh
 printf '%s\n' "$TOKEN" | $S -f zabbix_templates/linux_hwmon_temperature.yaml zbx_import_template.py linux_hwmon_temperature.yaml
 printf '%s\n' "$TOKEN" | $S -f zabbix_templates/cloudflared_tunnel.yaml zbx_import_template.py cloudflared_tunnel.yaml
-printf '%s\n' "$TOKEN" | $S zbx_link_template.py --host "Zabbix server" --template "Linux hwmon temperature by Zabbix agent 2" "Cloudflare Tunnel by HTTP" "Website certificate by Zabbix agent 2"
+printf '%s\n' "$TOKEN" | $S -f zabbix_templates/likson_topology_root.yaml zbx_import_template.py likson_topology_root.yaml
+printf '%s\n' "$TOKEN" | $S zbx_link_template.py --host "Zabbix server" --template "Linux hwmon temperature by Zabbix agent 2" "Cloudflare Tunnel by HTTP" "Website certificate by Zabbix agent 2" "Likson topology root by Zabbix agent"
 printf '%s\n' "$TOKEN" | $S zbx_set_macro.py --host "Zabbix server" --macro '{$CERT.WEBSITE.HOSTNAME}=zabbix.likson.com' '{$CERT.WEBSITE.IP}=127.0.0.1' '{$CERT.EXPIRY.WARN}=14'
 printf '%s\n' "$TOKEN" | $S zbx_set_status.py --host "Zabbix server" --item "Checksum of /etc/passwd" "Number of logged in users" --disable
 printf '%s\n' "$TOKEN" | $S zbx_add_dependency.py --host "EDGE 01" --trigger "Unavailable by ICMP ping" --parent-host "Zabbix server" --parent-trigger "enp2s0: Link down" --dry-run

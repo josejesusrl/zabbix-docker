@@ -1,0 +1,46 @@
+zabbix_export:
+  version: '7.0'
+  template_groups:
+    - uuid: 3a6730e62a4f4685831df097d40f3044
+      name: Templates/Likson
+  templates:
+    - uuid: 30c7b61eece04e2aa6826f8ee3bc7e0f
+      template: 'Likson topology root by Zabbix agent'
+      name: 'Likson topology root by Zabbix agent'
+      description: |
+        Root of the topology, linked only to the host "Zabbix server". Reads the network link of the monitoring
+        server every 5 s through the local agent (it keeps working without external network) and keeps a problem
+        open for 5 minutes after any moment without link. The availability triggers of the root devices depend on it,
+        so an outage of the server own network does not report the whole network as down, neither during the
+        outage nor right after it. See docs/despliegue/host-zabbix-server.md.
+      groups:
+        - name: Templates/Likson
+      items:
+        - uuid: 17a863d6b1c44749bd8f1b43b7fcd959
+          name: 'Interface {$ROOT.IF}: link state (fast)'
+          key: 'vfs.file.contents[/sys/class/net/{$ROOT.IF}/operstate]'
+          delay: 5s
+          history: 7d
+          value_type: CHAR
+          trends: '0'
+          description: 'Operational state of the server network interface (up, down…), read every 5 s.'
+          preprocessing:
+            - type: TRIM
+              parameters:
+                - ' \n'
+          tags:
+            - tag: component
+              value: network
+      macros:
+        - macro: '{$ROOT.IF}'
+          value: enp2s0
+          description: 'Network interface of the monitoring server.'
+  triggers:
+    - uuid: b957998f7e904ca4873119f1e7618940
+      expression: 'count(/Likson topology root by Zabbix agent/vfs.file.contents[/sys/class/net/{$ROOT.IF}/operstate],5m,"ne","up")>0'
+      name: 'Interface {$ROOT.IF}: link not stable in the last 5m (topology root)'
+      priority: INFO
+      description: 'The server network link was not up at some moment of the last 5 minutes. Root of the topology: EDGE 01, server-04 and the tunnel depend on it. While it is active, dependent triggers neither open nor resolve. Information: no notification.'
+      tags:
+        - tag: scope
+          value: availability

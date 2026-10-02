@@ -16,6 +16,7 @@ Una ficha por plantilla en [`plantillas/`](plantillas/), con sus items, triggers
 | [Cloudflare Tunnel by HTTP](plantillas/cloudflare-tunnel.md) | `cloudflared_tunnel.yaml` | el host **Zabbix server** |
 | [ISP gateway fast ping](plantillas/isp-gateway-fast-ping.md) | `isp_gateway_fast_ping.yaml` | los gateways de los proveedores de internet (grupo *Proveedores de internet*), **junto con** *ICMP Ping* |
 | [ISP internet fast ping](plantillas/isp-internet-fast-ping.md) | `isp_internet_fast_ping.yaml` | comprobar la **salida a Internet** de un proveedor, más allá de su gateway |
+| [Likson topology root by Zabbix agent](plantillas/likson-topology-root.md) | `likson_topology_root.yaml` | Raíz de la topología: estado del enlace del Zabbix server cada 5 s |
 
 ## Plantillas oficiales en uso y ajustes necesarios
 
@@ -43,7 +44,7 @@ Resumen de lo que hay que recordar al dar de alta cada tipo de equipo. El detall
 | TP-Link | `{$PORT.IFNAME.NOT_MATCHES}=^(<\|Vlan-interface)` y `{$IFCONTROL}=0` con la plantilla de puertos |
 | Mimosa C5C (PTP) | SNMPv2. `Network Generic Device by SNMP` + `Mimosa C5C by SNMP` + `Switch port changes by SNMP`. Umbrales de RX según la señal de diseño. El extremo lejano depende del cercano a Zabbix |
 | Ubiquiti en enlaces PTP | Umbrales propios de cada enlace como macros de host: `{$UBNT.STA.TXCAP.MIN}` en el AP y `{$UBNT.STA.RXCAP.MIN}` en la estación (Mbps, 0 = desactivado), y la señal. Nombres con `[ ]`: *Host name* sin ellos y `--visible-name` con el nombre exacto |
-| Equipos raíz de la topología | Su trigger de disponibilidad depende de *Zabbix server: Interface enp2s0: Link down* y de *Zabbix server: Interface enp2s0: link not stable in the last 5m (topology root)*, para que una caída de red del servidor no se reporte como caída de toda la red ([dependencias](procedimientos/dependencias.md), paso 6) |
+| Equipos raíz de la topología | Su trigger de disponibilidad depende de *Zabbix server: Interface enp2s0: Link down* y del trigger raíz de [Likson topology root](plantillas/likson-topology-root.md), para que una caída de red del servidor no se reporte como caída de toda la red ([dependencias](procedimientos/dependencias.md), paso 6) |
 | MikroTik (cualquier modelo) | Sus avisos de disco usan `{$VFS.FS.FREE.MIN.WARN}` y `{$VFS.FS.FREE.MIN.CRIT}` sin definirlos en la plantilla oficial: los definen las macros globales ([configuración base](../despliegue/configuracion-base.md#macros-globales-administration--macros)). Sin ellas, los avisos quedan en error y nunca saltan |
 | MikroTik NAS con muchas sesiones PPPoE | *Max repetition count* 50 en la interfaz SNMP; desactivar *SNMP walk wireless interfaces* en routers sin radios |
 | Problemas de objetos ya no descubiertos o desactivados | Zabbix no los cierra: cerrarlos con comentario (`zbx_close_problems.py`). Cada objeto desactivado a propósito se registra en el [registro](registro.md) |

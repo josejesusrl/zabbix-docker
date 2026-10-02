@@ -56,6 +56,7 @@ Tablas generadas con `agents/scripts/zbx_inventory.py --markdown` y pegadas aqu�
 
 
 
+
 #### Access Points PPPoE Clients
 
 | Host | Interfaz | Plantillas | Macros de host | Etiquetas | Depende de |
@@ -148,6 +149,6 @@ Tablas generadas con `agents/scripts/zbx_inventory.py --markdown` y pegadas aqu�
 
 | Host | Interfaz | Plantillas | Macros de host | Etiquetas | Depende de |
 |---|---|---|---|---|---|
-| Zabbix server | agent 172.16.238.1 | Linux hwmon temperature by Zabbix agent 2, Cloudflare Tunnel by HTTP, Linux by Zabbix agent, Zabbix server health, Website certificate by Zabbix agent 2 | {$VFS.FS.FSNAME.MATCHES}=^/rootfs(/\|$), {$CERT.WEBSITE.HOSTNAME}=zabbix.likson.com, {$CERT.WEBSITE.IP}=127.0.0.1, {$CERT.EXPIRY.WARN}=14, {$VFS.FS.FSNAME.NOT_MATCHES} (regex) | — | — |
+| Zabbix server | agent 172.16.238.1 | Linux hwmon temperature by Zabbix agent 2, Cloudflare Tunnel by HTTP, Likson topology root by Zabbix agent, Linux by Zabbix agent, Zabbix server health, Website certificate by Zabbix agent 2 | {$VFS.FS.FSNAME.MATCHES}=^/rootfs(/\|$), {$CERT.WEBSITE.HOSTNAME}=zabbix.likson.com, {$CERT.WEBSITE.IP}=127.0.0.1, {$CERT.EXPIRY.WARN}=14, {$VFS.FS.FSNAME.NOT_MATCHES} (regex) | — | — |
 
 IPs de APs: `172.16.1.x` (las `.12` y `.13` no responden y no están dadas de alta), `172.16.2.x` y `172.16.3.x` (la `.14` no responde y no está dada de alta). Las IPs pueden cambiar: [Cambiar la IP de un equipo](procedimientos/cambiar-ip.md).

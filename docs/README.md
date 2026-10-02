@@ -87,7 +87,7 @@ Antes de cualquier cambio, respaldo (`sudo ./server_backup.sh`). Leer las [parti
 | Coefi01, gateway, cortes del proveedor, evidencia, Uptime Kuma | [Vigilar un proveedor](operacion/procedimientos/anadir-gateway-proveedor.md) · [ping rápido al gateway](operacion/plantillas/isp-gateway-fast-ping.md) · [salida a Internet](operacion/plantillas/isp-internet-fast-ping.md) |
 | Contraseñas, secretos, comunidad SNMP | [AGENTS.md, regla 4](../AGENTS.md#regla-4--secretos) · [configuración base](despliegue/configuracion-base.md#macros-globales-administration--macros) |
 | CPU, KPIs del dashboard | [Plantilla Likson KPIs](operacion/plantillas/likson-kpis.md) · [dashboard](operacion/dashboard.md) |
-| Dependencias, `uplink`, equipos raíz | [Dependencias](operacion/procedimientos/dependencias.md) |
+| Dependencias, `uplink`, equipos raíz, corte de red del servidor | [Dependencias](operacion/procedimientos/dependencias.md) · [trigger raíz](operacion/plantillas/likson-topology-root.md) |
 | Disco, temperaturas, carga de servidores | [Añadir un servidor Linux](operacion/procedimientos/anadir-servidor-linux.md) · [plantilla de temperaturas](operacion/plantillas/linux-hwmon-temperature.md) |
 | Docker, `zbx`, logs, estado del stack | [Mantenimiento](despliegue/mantenimiento.md) |
 | Enlaces PTP, Mimosa, capacidad, PHY | [Plantilla Mimosa](operacion/plantillas/mimosa-c5c.md) · [enlace Mimosa](operacion/procedimientos/enlace-ptp-mimosa.md) · [enlace Ubiquiti](operacion/procedimientos/enlace-ptp-ubiquiti.md) |
@@ -154,6 +154,6 @@ docs/
 
 **Fichas de plantillas propias (`docs/operacion/plantillas/`)**
 
-[Mimosa C5C](operacion/plantillas/mimosa-c5c.md) · [Ubiquiti airOS 8](operacion/plantillas/ubiquiti-airos8.md) · [Ubiquiti airMAX M (airOS 6)](operacion/plantillas/ubiquiti-airmax-m-airos6.md) · [MikroTik link traps](operacion/plantillas/mikrotik-link-traps.md) · [Switch port changes](operacion/plantillas/switch-port-changes.md) · [Linux hwmon temperature](operacion/plantillas/linux-hwmon-temperature.md) · [Likson KPIs](operacion/plantillas/likson-kpis.md) · [Cloudflare Tunnel](operacion/plantillas/cloudflare-tunnel.md) · [ISP gateway fast ping](operacion/plantillas/isp-gateway-fast-ping.md) · [ISP internet fast ping](operacion/plantillas/isp-internet-fast-ping.md)
+[Mimosa C5C](operacion/plantillas/mimosa-c5c.md) · [Ubiquiti airOS 8](operacion/plantillas/ubiquiti-airos8.md) · [Ubiquiti airMAX M (airOS 6)](operacion/plantillas/ubiquiti-airmax-m-airos6.md) · [MikroTik link traps](operacion/plantillas/mikrotik-link-traps.md) · [Switch port changes](operacion/plantillas/switch-port-changes.md) · [Linux hwmon temperature](operacion/plantillas/linux-hwmon-temperature.md) · [Likson KPIs](operacion/plantillas/likson-kpis.md) · [Cloudflare Tunnel](operacion/plantillas/cloudflare-tunnel.md) · [ISP gateway fast ping](operacion/plantillas/isp-gateway-fast-ping.md) · [ISP internet fast ping](operacion/plantillas/isp-internet-fast-ping.md) · [Likson topology root](operacion/plantillas/likson-topology-root.md)
 
 **Procedimientos (`docs/operacion/procedimientos/`)**: todos están en las tablas de la [sección 1](#1-por-necesidad).
