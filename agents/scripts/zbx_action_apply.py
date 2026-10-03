@@ -6,9 +6,12 @@ Usage (token on stdin, see README.md). Requires a recent backup (AGENTS.md, rule
 JSON keys (names instead of ids):
   name, esc_period, pause_suppressed (default 1), notify_if_canceled (default 0)
   conditions: [{"tag": T, "value": V}] (tag value equals), [{"tag": T, "not_value": V}] (does not equal),
-              [{"tag_exists": T}] (tag name equals); all must match
+              [{"tag_exists": T}] (tag name equals), [{"not_suppressed": true}] (problem not in maintenance
+              when it starts); all must match
   operations: [{"esc_step_from", "esc_step_to", "users": [USERNAME], "mediatype": NAME, "subject", "message"}]
-  recovery: {"subject", "message"} sent to everyone notified about the problem (optional)
+  recovery: {"subject", "message"} sent to everyone notified about the problem, or with
+            "users" and "mediatype" sent always to those users, also when the problem resolved before any
+            operation step (short incidents) (optional)
 The action is matched by name; conditions and operations are replaced on every run.
 """
 import argparse
@@ -16,14 +19,16 @@ import json
 
 from zbx_api import ZabbixError, api_from_stdin
 
-TAG_NAME, TAG_VALUE = 25, 26
-EQUAL, NOT_EQUAL = 0, 1
+TAG_NAME, TAG_VALUE, SUPPRESSED = 25, 26, 16
+EQUAL, NOT_EQUAL, NO = 0, 1, 11
 
 
 def conditions(spec):
     out = []
     for c in spec:
-        if "tag_exists" in c:
+        if c.get("not_suppressed"):
+            out.append({"conditiontype": SUPPRESSED, "operator": NO})
+        elif "tag_exists" in c:
             out.append({"conditiontype": TAG_NAME, "operator": EQUAL, "value": c["tag_exists"]})
         elif "not_value" in c:
             out.append({"conditiontype": TAG_VALUE, "operator": NOT_EQUAL, "value": c["not_value"], "value2": c["tag"]})
@@ -56,7 +61,16 @@ def main():
             "pause_suppressed": spec.get("pause_suppressed", 1), "notify_if_canceled": spec.get("notify_if_canceled", 0),
             "filter": {"evaltype": 0, "conditions": conditions(spec["conditions"])}, "operations": operations}
     if "recovery" in spec:
-        body["recovery_operations"] = [{"operationtype": 11, "opmessage": {"default_msg": 0, **spec["recovery"]}}]
+        rec = spec["recovery"]
+        message = {"default_msg": 0, "subject": rec["subject"], "message": rec["message"]}
+        if "users" in rec:
+            missing = [u for u in rec["users"] if u not in users] + ([rec["mediatype"]] if rec["mediatype"] not in media else [])
+            if missing:
+                raise ZabbixError(f"not found: {', '.join(missing)}")
+            body["recovery_operations"] = [{"operationtype": 0, "opmessage": {**message, "mediatypeid": media[rec["mediatype"]]},
+                                            "opmessage_usr": [{"userid": users[u]} for u in rec["users"]]}]
+        else:
+            body["recovery_operations"] = [{"operationtype": 11, "opmessage": message}]
     existing = api.call("action.get", {"output": ["actionid"], "filter": {"name": [spec["name"]]}})
     print(f"acción {spec['name']}: {'actualizar' if existing else 'crear'} | {len(body['filter']['conditions'])} condiciones | "
           f"{len(operations)} operaciones | escalada {body['esc_period']} | recuperación {'sí' if 'recovery' in spec else 'no'}")

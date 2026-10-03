@@ -3,7 +3,11 @@
 > **Cuándo:** para que el soporte de un proveedor (hoy Coefi01) reciba por correo las incidencias de su servicio sin intervención de Likson.
 > **Requisitos:** el proveedor ya vigilado ([vigilar un proveedor](anadir-gateway-proveedor.md)), respaldo reciente ([AGENTS.md](../../../AGENTS.md), regla 1), el correo de soporte del proveedor y el número de contrato.
 
-El proveedor recibe un correo **5 minutos** después de que empiece una incidencia, si sigue activa, y otro cuando se resuelve. El mensaje tiene lo necesario para diagnosticar y nada de la infraestructura interna:
+El proveedor recibe:
+- **Incidencia en curso:** un correo 5 minutos después de que empiece, si sigue activa.
+- **Incidencia normalizada:** un correo **siempre** que se resuelve, con inicio, fin y duración. Así se le informa también de los cortes de pocos segundos, que no llegan a durar 5 minutos.
+
+Los problemas que empiezan durante un mantenimiento no se le envían. El mensaje tiene lo necesario para diagnosticar y nada de la infraestructura interna:
 
 | Incluye | No incluye |
 |---|---|
@@ -53,11 +57,12 @@ Las plantillas ya traen la etiqueta. En el trigger de degradación, creado en el
      - *Tag value* `proveedor` *equals* `Coefi01`.
      - *Tag name* *equals* `aviso_proveedor`.
      - *Tag value* `notificar` *does not equal* `no`.
+     - *Problem is suppressed* *No* (no enviar problemas que empiezan en mantenimiento).
    - *Operations:*
      - *Default operation step duration* `5m`.
      - Operación en los **pasos 2 → 2**: enviar a `coefi01-noc` solo por Gmail, con *Custom message*.
      - Marcar *Pause operations for suppressed problems*. Desmarcar *Notify about canceled escalations*.
-   - *Recovery operations:* *Notify all involved* con *Custom message*. Solo lo recibe si ya recibió el aviso.
+   - *Recovery operations:* **Send message** a `coefi01-noc` solo por Gmail, con *Custom message*. Con *Send message* (y no *Notify all involved*) lo recibe siempre, también en cortes que se resolvieron antes de los 5 minutos.
    - **Textos:** asunto y cuerpo HTML de `zabbix_media/proveedor_coefi01.json` (campos `operations[0]` y `recovery`).
 
 ## Ticket del proveedor
@@ -66,7 +71,11 @@ Cuando el proveedor abra un ticket, poner su número en `{$ISP.COEFI01.TICKET}` 
 
 ## Verificar
 
-1. Con **tu propio correo** en el medio del usuario (en lugar del proveedor), forzar una incidencia de prueba que dure más de 5 min (sección *Con scripts*). Deben llegar el correo de incidencia y el de "Resuelto", sin nombres internos.
+1. Con **tu propio correo** en el medio del usuario (en lugar del proveedor), forzar dos incidencias de prueba (sección *Con scripts*):
+   - de más de 5 min: llegan el correo de incidencia en curso y el de normalizada;
+   - de unos segundos (`--hold 15`): solo llega el de normalizada.
+
+   Ninguno debe mostrar nombres internos.
 2. Poner el correo del proveedor y `servicio_clientes@likson.com` en el medio del usuario.
 3. En *Reports → Action log*, filtrando por la acción, aparecen los envíos al proveedor.
 

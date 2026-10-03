@@ -51,9 +51,9 @@ Incluir el equipo en el que se trabaja **y todos los que dependen de él**. Las 
 
 ## Trabajos en el router o el rack: no avisar al proveedor
 
-**Riesgo:** el soporte de Coefi01 recibe un correo automático 5 minutos después de que empiece una incidencia de su servicio ([avisar al proveedor](avisar-proveedor.md)). Si al trabajar en EDGE 01 o en el rack se desconecta `ether1`, se reinicia el router o se mueve el cable del proveedor, Zabbix vería "el gateway no responde" o "sin salida a Internet" y **avisaría al proveedor de un fallo nuestro**.
+**Riesgo:** el soporte de Coefi01 recibe un correo automático de cada incidencia de su servicio: a los 5 minutos si sigue activa y, **siempre**, al normalizarse, también en cortes de segundos ([avisar al proveedor](avisar-proveedor.md)). Si al trabajar en EDGE 01 o en el rack se desconecta `ether1`, se reinicia el router o se mueve el cable del proveedor, Zabbix vería "el gateway no responde" o "sin salida a Internet" y **avisaría al proveedor de un fallo nuestro**.
 
-**Protección:** la acción del proveedor tiene *Pause operations for suppressed problems*. Mientras sus hosts están en mantenimiento, sus problemas quedan suprimidos y no se le envía nada.
+**Protección:** la acción del proveedor no se ejecuta para problemas que **empiezan** durante un mantenimiento (condición *Problem is suppressed: No*), así que no se le envía ninguno de los dos correos. Por eso el mantenimiento debe estar activo **antes** de tocar nada.
 
 **Hosts que siempre hay que incluir**, porque los avisos al proveedor salen de ellos:
 
@@ -81,11 +81,10 @@ Incluir el equipo en el que se trabaja **y todos los que dependen de él**. Las 
 
 ### Desconexión accidental (sin mantenimiento)
 
-Hay **5 minutos** desde el inicio de la incidencia hasta el aviso al proveedor:
-1. **Lo más rápido:** *Alerts → Actions → Trigger actions* → *Aviso a proveedor Coefi01* → **Disable**. Detiene el aviso en cuanto se guarda.
+El correo de "en curso" sale a los 5 minutos y el de "normalizada" **en cuanto se recupere**: un mantenimiento creado después ya no lo evita, porque el problema empezó fuera de él. Solo lo evita desactivar la acción **antes de que se recupere el enlace**:
+1. *Alerts → Actions → Trigger actions* → *Aviso a proveedor Coefi01* → **Disable**, antes de reconectar. Con la acción desactivada no se envía ninguno de los dos correos.
 2. Corregir la desconexión y comprobar que todo vuelve a verde.
 3. **Volver a activar la acción** (*Enable*). Si se queda desactivada, el proveedor deja de recibir avisos reales. Comprobar en *Reports → Action log* que no salió nada.
-4. Alternativa, si queda margen: crear el mantenimiento (variante A). Los problemas ya abiertos se suprimen en cuanto se aplica (≈1 min).
 
 Si el aviso llegó a salir, responder al correo del proveedor indicando la referencia `#ID` y que fue un trabajo de Likson.
 

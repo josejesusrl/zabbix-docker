@@ -32,7 +32,7 @@ Con el enlace activo, la ruta directa tiene prioridad y esta no se usa. Sin enla
 1. **Host name:** `ISP-<PROVEEDOR>-GW` (p. ej. `ISP-COEFI01-GW`).
 2. **Templates:** `ICMP Ping` e `ISP gateway fast ping` ([catálogo](../plantillas/isp-gateway-fast-ping.md)).
    - *ICMP Ping* comprueba cada minuto: *Unavailable by ICMP ping* (High), *High ICMP ping loss* y *High ICMP ping response time* (Warning). Solo detecta caídas de varios minutos.
-   - *ISP gateway fast ping* comprueba cada 10 s: **Corte del proveedor** (High, Telegram y Gmail) con unos 20 s sin respuesta, y *Pérdida intermitente* (Warning).
+   - *ISP gateway fast ping* comprueba cada 5 s: **Corte del proveedor** (High, Telegram y Gmail) con una sola comprobación sin respuesta, incluso en cortes de pocos segundos, y *Pérdida intermitente* (Warning).
 3. **Host groups:** `Proveedores de internet`.
 4. **Interfaces → Add → Agent:** IP del gateway, puerto `10050`. No hay agente; la interfaz solo da al ping la IP.
 5. **Tags:** `proveedor` = nombre del proveedor y `uplink` = `EDGE 01`.
@@ -90,7 +90,7 @@ En EDGE 01:
 
 ## Verificar
 
-- *Latest data*: `ICMP ping` = 1, `ICMP response time` con valor en milisegundos y `Ping rápido al gateway` = 1 (Up) con datos cada 10 s.
+- *Latest data*: `ICMP ping` = 1, `ICMP response time` con valor en milisegundos y `Ping rápido al gateway` = 1 (Up) con datos cada 5 s.
 - En RouterOS, `/ip route print where dst-address=<IP>/32` muestra la ruta *blackhole* inactiva mientras la interfaz está arriba.
 - En el mapa general, el gateway aparece bajo EDGE 01 con icono de nube.
 

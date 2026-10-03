@@ -39,7 +39,7 @@ zabbix_export:
               value: isp
       macros:
         - macro: '{$ISP.PING.INTERVAL}'
-          value: 10s
+          value: 5s
           description: 'Interval of the fast ping.'
         - macro: '{$ISP.PING.COUNT}'
           value: '3'
@@ -57,13 +57,13 @@ zabbix_export:
               newvalue: Up
   triggers:
     - uuid: dd06a5d49efa4d77b3e78c5a6d223b58
-      expression: 'max(/ISP gateway fast ping/icmpping[,{$ISP.PING.COUNT},200,,500],#2)=0'
+      expression: 'max(/ISP gateway fast ping/icmpping[,{$ISP.PING.COUNT},200,,500],#1)=0'
       recovery_mode: RECOVERY_EXPRESSION
       recovery_expression: 'min(/ISP gateway fast ping/icmpping[,{$ISP.PING.COUNT},200,,500],#3)=1'
       name: 'Corte del proveedor: el gateway no responde'
       event_name: 'Corte del proveedor: {HOST.NAME} no responde'
       priority: HIGH
-      description: 'Ningún paquete respondió en 2 comprobaciones seguidas (unos 20 s). Cruzar con el estado del puerto WAN de EDGE 01: si el puerto sigue arriba, la falla es del proveedor. Se resuelve con 3 comprobaciones correctas. Duración y hora exactas: Monitoring → Problems.'
+      description: 'Ningún paquete respondió en una comprobación (3 paquetes en 1 s; comprobación cada 5 s): detecta cortes de pocos segundos. Se registra el inicio exacto y la duración. Cruzar con el estado del puerto WAN de EDGE 01: si el puerto sigue arriba, la falla es del proveedor. Se resuelve con 3 comprobaciones correctas. Duración y hora exactas: Monitoring → Problems.'
       tags:
         - tag: aviso_proveedor
           value: 'El gateway del servicio no responde al ping (pérdida total de paquetes)'
@@ -79,7 +79,7 @@ zabbix_export:
       description: 'Al menos {$ISP.LOSS.CHECKS} comprobaciones con pérdida de paquetes en 5 minutos: enlace del proveedor inestable. Se resuelve tras 5 minutos sin pérdida.'
       dependencies:
         - name: 'Corte del proveedor: el gateway no responde'
-          expression: 'max(/ISP gateway fast ping/icmpping[,{$ISP.PING.COUNT},200,,500],#2)=0'
+          expression: 'max(/ISP gateway fast ping/icmpping[,{$ISP.PING.COUNT},200,,500],#1)=0'
           recovery_expression: 'min(/ISP gateway fast ping/icmpping[,{$ISP.PING.COUNT},200,,500],#3)=1'
       tags:
         - tag: aviso_proveedor
