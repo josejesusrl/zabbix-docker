@@ -32,12 +32,12 @@ Con el enlace activo, la ruta directa tiene prioridad y esta no se usa. Sin enla
 1. **Host name:** `ISP-<PROVEEDOR>-GW` (p. ej. `ISP-COEFI01-GW`).
 2. **Templates:** `ICMP Ping` e `ISP gateway fast ping` ([catálogo](../plantillas/isp-gateway-fast-ping.md)).
    - *ICMP Ping* comprueba cada minuto: *Unavailable by ICMP ping* (High), *High ICMP ping loss* y *High ICMP ping response time* (Warning). Solo detecta caídas de varios minutos.
-   - *ISP gateway fast ping* comprueba cada 5 s: **Corte del proveedor** (High, Telegram y Gmail) con una sola comprobación sin respuesta, incluso en cortes de pocos segundos, y *Pérdida intermitente* (Warning).
+   - *ISP gateway fast ping* comprueba cada 5 s: **Corte del proveedor** (High, Telegram y Gmail) con más del 33 % de pérdida en 1 minuto (corte real, no una comprobación aislada), *Pérdida intermitente* (Information, sin aviso) y los dos avisos para el proveedor (más de 5 min sin respuesta, o pérdida del 50 % o más en 5 min).
 3. **Host groups:** `Proveedores de internet`.
 4. **Interfaces → Add → Agent:** IP del gateway, puerto `10050`. No hay agente; la interfaz solo da al ping la IP.
 5. **Tags:** `proveedor` = nombre del proveedor y `uplink` = `EDGE 01`.
 6. **Add**. Después, **dependencias** ([dependencias](dependencias.md)):
-   - Los triggers de *ICMP Ping*, *Corte del proveedor* y *Pérdida intermitente* dependen de *EDGE 01: Unavailable by ICMP ping*. Así, si cae nuestro router, no se culpa al proveedor.
+   - Los triggers de *ICMP Ping*, *Corte del proveedor*, *Pérdida intermitente* y los dos *Aviso al proveedor* dependen de *EDGE 01: Unavailable by ICMP ping*. Así, si cae nuestro router, no se culpa al proveedor.
    - *Unavailable by ICMP ping* del gateway depende también de su propio *Corte del proveedor*, para recibir un solo aviso en un corte largo.
 7. Regenerar el [inventario](../inventario.md) y los [mapas](../mapas.md).
 
@@ -53,7 +53,7 @@ El gateway puede responder aunque el proveedor no dé salida a Internet. Para de
    - **Interfaz *Agent*** con la primera dirección (solo la requieren los chequeos simples).
    - **Macros** `{$ISP.INET.TARGET1}` y `{$ISP.INET.TARGET2}` con las dos direcciones.
    - **Etiquetas:** `proveedor` y `uplink` = el host del gateway.
-3. **Dependencias:** *Sin salida a Internet* y *Pérdida intermitente hacia Internet* dependen de *Corte del proveedor* del gateway. *Sin salida a Internet* depende también de *EDGE 01: Unavailable by ICMP ping*.
+3. **Dependencias:** *Sin salida a Internet* y *Pérdida intermitente hacia Internet* dependen de *Corte del proveedor* del gateway. *Sin salida a Internet* depende también de *EDGE 01: Unavailable by ICMP ping*. Los dos *Aviso al proveedor* de Internet dependen de EDGE 01 y de los *Aviso al proveedor* del gateway, para que en un corte total el proveedor reciba un solo aviso.
 
 | Gateway | Internet por el proveedor | Interpretación |
 |---|---|---|

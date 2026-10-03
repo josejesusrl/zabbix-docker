@@ -6,13 +6,16 @@
 
 Items: ping de `{$ISP.PING.COUNT}` (3) paquetes cada `{$ISP.PING.INTERVAL}` (**5 s**), y su pérdida.
 
-| Trigger | Severidad | Cuándo |
-|---|---|---|
-| Corte del proveedor: el gateway no responde | High | **Una** comprobación sin ninguna respuesta (los 3 paquetes perdidos): detecta cortes de pocos segundos. Se resuelve con 3 correctas (15 s). Depende de *EDGE 01: Unavailable by ICMP ping* |
-| Pérdida intermitente hacia el gateway | Warning | `{$ISP.LOSS.CHECKS}` (3) comprobaciones con pérdida en 5 min. Depende del anterior y de EDGE 01 |
+| Trigger | Severidad | Para | Cuándo |
+|---|---|---|---|
+| Corte del proveedor: el gateway no responde | High | **Likson** | Pérdida media de más de `{$ISP.CUT.LOSS}` (33 %) en 1 minuto: corte real. Una comprobación aislada fallida (un 8 % del minuto) no lo abre. Se resuelve por debajo de `{$ISP.CUT.LOSS.RECOVERY}` (10 %). Depende de *EDGE 01: Unavailable by ICMP ping* |
+| Pérdida intermitente hacia el gateway | Information (no notifica) | Registro | `{$ISP.LOSS.CHECKS}` (3) comprobaciones con pérdida en 5 min |
+| Aviso al proveedor: gateway sin respuesta más de 5 min | Information | **Proveedor** | Ninguna comprobación respondió durante 5 minutos seguidos. Etiqueta `aviso_proveedor` |
+| Aviso al proveedor: pérdida alta hacia el gateway durante 5 min | Information | **Proveedor** | Pérdida media de `{$ISP.PROVIDER.LOSS}` (50 %) o más durante 5 min. Se resuelve por debajo de `{$ISP.PROVIDER.LOSS.RECOVERY}` (20 %). Depende del anterior |
 
-Cada 5 s y con una sola comprobación fallida desde el 2026-10-03: antes (cada 10 s, 2 fallos seguidos) no se avisó de los cortes de pocos segundos de ese día; solo una comprobación, la de las 10:03:12, perdió los 3 paquetes. La pérdida suelta de 1 paquete de 3 es habitual (unas 30 veces al día) y no abre el corte.
+Los avisos para el proveedor son *Information* para que Likson no reciba el mismo aviso dos veces: Likson ya recibe *Corte del proveedor*. Solo los envía la acción del proveedor ([avisar al proveedor](../procedimientos/avisar-proveedor.md)). Los cortes de pocos segundos no avisan ni a Likson ni al proveedor; quedan registrados en *Latest data* (`Pérdida en ping rápido`).
+
+Criterios del 2026-10-03: avisar a Likson solo de cortes reales (más del 33 % de pérdida en 1 minuto) y al proveedor solo de cortes de más de 5 minutos o de pérdida del 50 % o más durante 5 minutos. La pérdida suelta de 1 paquete de 3 es habitual (unas 30 veces al día).
 
 *ICMP Ping: Unavailable by ICMP ping* del gateway depende de *Corte del proveedor*, para que un corte largo no avise dos veces. El número de comprobaciones de *Corte* es fijo (`#2`): Zabbix no admite una macro en ese parámetro.
 
-Los dos triggers llevan la etiqueta `aviso_proveedor` con el texto que recibe el proveedor ([avisar al proveedor](../procedimientos/avisar-proveedor.md)).

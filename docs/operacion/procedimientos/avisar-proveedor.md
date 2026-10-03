@@ -3,11 +3,9 @@
 > **Cuándo:** para que el soporte de un proveedor (hoy Coefi01) reciba por correo las incidencias de su servicio sin intervención de Likson.
 > **Requisitos:** el proveedor ya vigilado ([vigilar un proveedor](anadir-gateway-proveedor.md)), respaldo reciente ([AGENTS.md](../../../AGENTS.md), regla 1), el correo de soporte del proveedor y el número de contrato.
 
-El proveedor recibe:
-- **Incidencia en curso:** un correo 5 minutos después de que empiece, si sigue activa.
-- **Incidencia normalizada:** un correo **siempre** que se resuelve, con inicio, fin y duración. Así se le informa también de los cortes de pocos segundos, que no llegan a durar 5 minutos.
+El proveedor recibe un correo **solo** cuando hay un **corte de más de 5 minutos seguidos**, una **pérdida de paquetes del 50 % o más durante 5 minutos** o la **bajada degradada** durante 5 minutos, y otro cuando se resuelve. **Los cortes breves nunca se le envían.** Los problemas que empiezan durante un mantenimiento tampoco.
 
-Los problemas que empiezan durante un mantenimiento no se le envían. El mensaje tiene lo necesario para diagnosticar y nada de la infraestructura interna:
+Los 5 minutos están en la condición de cada trigger, así que el correo sale en cuanto se abre; el inicio real de la incidencia es unos 5 minutos antes, y así lo indica el mensaje. El mensaje tiene lo necesario para diagnosticar y nada de la infraestructura interna:
 
 | Incluye | No incluye |
 |---|---|
@@ -26,10 +24,10 @@ Los triggers con la etiqueta **`aviso_proveedor`**, cuyo valor es el texto que l
 
 | Trigger | Texto para el proveedor |
 |---|---|
-| Corte del proveedor ([ficha](../plantillas/isp-gateway-fast-ping.md)) | El gateway del servicio no responde al ping |
-| Pérdida intermitente hacia el gateway | Pérdida de paquetes intermitente hacia el gateway |
-| Sin salida a Internet ([ficha](../plantillas/isp-internet-fast-ping.md)) | El gateway responde, pero no hay salida a Internet |
-| Pérdida intermitente hacia Internet | Pérdida de paquetes intermitente hacia Internet |
+| Aviso al proveedor: gateway sin respuesta más de 5 min ([ficha](../plantillas/isp-gateway-fast-ping.md)) | El gateway del servicio no responde al ping desde hace más de 5 minutos |
+| Aviso al proveedor: pérdida alta hacia el gateway durante 5 min | Pérdida de paquetes del 50 % o más hacia el gateway durante 5 minutos |
+| Aviso al proveedor: sin salida a Internet más de 5 min ([ficha](../plantillas/isp-internet-fast-ping.md)) | El gateway responde, pero no hay salida a Internet desde hace más de 5 minutos |
+| Aviso al proveedor: pérdida alta hacia Internet durante 5 min | Pérdida de paquetes del 50 % o más hacia Internet durante 5 minutos |
 | Bajada degradada (EDGE 01, [sección 4](anadir-gateway-proveedor.md#4-degradación-bajada-por-debajo-de-un-mínimo)) | Enlace conectado, pero con bajada inferior a 20 Mbps |
 
 Las plantillas ya traen la etiqueta. En el trigger de degradación, creado en el host, se añade a mano en su pestaña *Tags*.
@@ -59,10 +57,9 @@ Las plantillas ya traen la etiqueta. En el trigger de degradación, creado en el
      - *Tag value* `notificar` *does not equal* `no`.
      - *Problem is suppressed* *No* (no enviar problemas que empiezan en mantenimiento).
    - *Operations:*
-     - *Default operation step duration* `5m`.
-     - Operación en los **pasos 2 → 2**: enviar a `coefi01-noc` solo por Gmail, con *Custom message*.
+     - Operación en los **pasos 1 → 1** (inmediata: los 5 minutos ya están en el trigger): enviar a `coefi01-noc` solo por Gmail, con *Custom message*.
      - Marcar *Pause operations for suppressed problems*. Desmarcar *Notify about canceled escalations*.
-   - *Recovery operations:* **Send message** a `coefi01-noc` solo por Gmail, con *Custom message*. Con *Send message* (y no *Notify all involved*) lo recibe siempre, también en cortes que se resolvieron antes de los 5 minutos.
+   - *Recovery operations:* *Notify all involved* con *Custom message*: solo recibe el "Resuelto" si recibió el aviso.
    - **Textos:** asunto y cuerpo HTML de `zabbix_media/proveedor_coefi01.json` (campos `operations[0]` y `recovery`).
 
 ## Ticket del proveedor
@@ -71,11 +68,7 @@ Cuando el proveedor abra un ticket, poner su número en `{$ISP.COEFI01.TICKET}` 
 
 ## Verificar
 
-1. Con **tu propio correo** en el medio del usuario (en lugar del proveedor), forzar dos incidencias de prueba (sección *Con scripts*):
-   - de más de 5 min: llegan el correo de incidencia en curso y el de normalizada;
-   - de unos segundos (`--hold 15`): solo llega el de normalizada.
-
-   Ninguno debe mostrar nombres internos.
+1. Con **tu propio correo** en el medio del usuario (en lugar del proveedor), forzar una incidencia de prueba (sección *Con scripts*): deben llegar el aviso y el "Resuelto", sin nombres internos. Después, volver a poner el correo del proveedor.
 2. Poner el correo del proveedor y `servicio_clientes@likson.com` en el medio del usuario.
 3. En *Reports → Action log*, filtrando por la acción, aparecen los envíos al proveedor.
 
@@ -92,7 +85,7 @@ printf '%s\n' "$TOKEN" | $S zbx_notify_user.py --user coefi01-noc --name "Coefi0
 printf '%s\n' "$TOKEN" | $S -f zabbix_media/proveedor_coefi01.json zbx_action_apply.py proveedor_coefi01.json --dry-run
 # Prueba de punta a punta (problema abierto 5 min 30 s)
 printf '%s\n' "$TOKEN" | $S zbx_test_notification.py --severity 2 --group "Proveedores de internet" \
-    --tag proveedor=Coefi01 "aviso_proveedor=Prueba de aviso automático (no es una incidencia real)" --hold 330
+    --tag proveedor=Coefi01 "aviso_proveedor=Prueba de aviso automático (no es una incidencia real)" --hold 30
 ```
 
 Para otro proveedor (p. ej. Telmex): copiar el JSON cambiando `Coefi01`, las macros (`{$ISP.TELMEX.…}`) y el usuario, y añadir `aviso_proveedor` a sus triggers.

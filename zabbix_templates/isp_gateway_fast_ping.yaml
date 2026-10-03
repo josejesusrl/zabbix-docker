@@ -46,7 +46,19 @@ zabbix_export:
           description: 'Packets per check.'
         - macro: '{$ISP.LOSS.CHECKS}'
           value: '3'
-          description: 'Checks with packet loss within 5 minutes that open "Intermittent packet loss".'
+          description: 'Checks with packet loss within 5 minutes that open "Intermittent packet loss" (informative).'
+        - macro: '{$ISP.CUT.LOSS}'
+          value: '33'
+          description: 'Packet loss (%) averaged over 1 minute that is a real outage for Likson ("Corte" triggers, notified to Likson).'
+        - macro: '{$ISP.CUT.LOSS.RECOVERY}'
+          value: '10'
+          description: 'Average 1-minute loss (%) below which the outage is resolved.'
+        - macro: '{$ISP.PROVIDER.LOSS}'
+          value: '50'
+          description: 'Average 5-minute loss (%) that is notified to the provider.'
+        - macro: '{$ISP.PROVIDER.LOSS.RECOVERY}'
+          value: '20'
+          description: 'Average 5-minute loss (%) below which the provider loss notice is resolved.'
       valuemaps:
         - uuid: 80a7dfe945984a51ad0709067bd2f1e1
           name: 'Service state'
@@ -57,32 +69,58 @@ zabbix_export:
               newvalue: Up
   triggers:
     - uuid: dd06a5d49efa4d77b3e78c5a6d223b58
-      expression: 'max(/ISP gateway fast ping/icmpping[,{$ISP.PING.COUNT},200,,500],#1)=0'
+      expression: 'avg(/ISP gateway fast ping/icmppingloss[,{$ISP.PING.COUNT},200,,500],1m)>{$ISP.CUT.LOSS}'
       recovery_mode: RECOVERY_EXPRESSION
-      recovery_expression: 'min(/ISP gateway fast ping/icmpping[,{$ISP.PING.COUNT},200,,500],#3)=1'
+      recovery_expression: 'avg(/ISP gateway fast ping/icmppingloss[,{$ISP.PING.COUNT},200,,500],1m)<{$ISP.CUT.LOSS.RECOVERY}'
       name: 'Corte del proveedor: el gateway no responde'
       event_name: 'Corte del proveedor: {HOST.NAME} no responde'
+      opdata: 'Pérdida en 1 min: {{?avg(/{HOST.HOST}/icmppingloss[,{$ISP.PING.COUNT},200,,500],1m)}.fmtnum(0)}%'
       priority: HIGH
-      description: 'Ningún paquete respondió en una comprobación (3 paquetes en 1 s; comprobación cada 5 s): detecta cortes de pocos segundos. Se registra el inicio exacto y la duración. Cruzar con el estado del puerto WAN de EDGE 01: si el puerto sigue arriba, la falla es del proveedor. Se resuelve con 3 comprobaciones correctas. Duración y hora exactas: Monitoring → Problems.'
+      description: 'Corte real para Likson: pérdida media de más del {$ISP.CUT.LOSS} % en 1 minuto hacia el gateway (ping cada 5 s). Una comprobación aislada fallida no lo abre. Se resuelve con menos del {$ISP.CUT.LOSS.RECOVERY} %. Cruzar con el puerto WAN de EDGE 01: si sigue arriba, la falla es del proveedor.'
       tags:
-        - tag: aviso_proveedor
-          value: 'El gateway del servicio no responde al ping (pérdida total de paquetes)'
         - tag: scope
-          value: availability
+          value: 'availability'
     - uuid: 6da8771c29134522a01f00459ac631a3
       expression: 'count(/ISP gateway fast ping/icmppingloss[,{$ISP.PING.COUNT},200,,500],5m,"gt",0)>={$ISP.LOSS.CHECKS}'
       recovery_mode: RECOVERY_EXPRESSION
       recovery_expression: 'count(/ISP gateway fast ping/icmppingloss[,{$ISP.PING.COUNT},200,,500],5m,"gt",0)=0'
       name: 'Pérdida intermitente hacia el gateway'
       opdata: 'Pérdida actual: {ITEM.LASTVALUE1}'
-      priority: WARNING
-      description: 'Al menos {$ISP.LOSS.CHECKS} comprobaciones con pérdida de paquetes en 5 minutos: enlace del proveedor inestable. Se resuelve tras 5 minutos sin pérdida.'
+      priority: INFO
+      description: 'Comprobaciones con pérdida de paquetes en 5 minutos. Solo informativo (no notifica): la pérdida suelta de ICMP es habitual.'
       dependencies:
         - name: 'Corte del proveedor: el gateway no responde'
-          expression: 'max(/ISP gateway fast ping/icmpping[,{$ISP.PING.COUNT},200,,500],#1)=0'
+          expression: 'avg(/ISP gateway fast ping/icmppingloss[,{$ISP.PING.COUNT},200,,500],1m)>{$ISP.CUT.LOSS}'
+          recovery_expression: 'avg(/ISP gateway fast ping/icmppingloss[,{$ISP.PING.COUNT},200,,500],1m)<{$ISP.CUT.LOSS.RECOVERY}'
+      tags:
+        - tag: scope
+          value: 'performance'
+    - uuid: f8e4386421d34d5486d5c6b4d8714c92
+      expression: 'max(/ISP gateway fast ping/icmpping[,{$ISP.PING.COUNT},200,,500],5m)=0'
+      recovery_mode: RECOVERY_EXPRESSION
+      recovery_expression: 'min(/ISP gateway fast ping/icmpping[,{$ISP.PING.COUNT},200,,500],#3)=1'
+      name: 'Aviso al proveedor: gateway sin respuesta más de 5 min'
+      priority: INFO
+      description: 'Solo para el aviso automático al proveedor: ninguna comprobación respondió durante 5 minutos seguidos. Likson ya recibe el aviso de Corte.'
+      tags:
+        - tag: scope
+          value: 'availability'
+        - tag: aviso_proveedor
+          value: 'El gateway del servicio no responde al ping desde hace más de 5 minutos (corte continuo)'
+    - uuid: fa7322a617044e75b2401fada3a18917
+      expression: 'avg(/ISP gateway fast ping/icmppingloss[,{$ISP.PING.COUNT},200,,500],5m)>={$ISP.PROVIDER.LOSS}'
+      recovery_mode: RECOVERY_EXPRESSION
+      recovery_expression: 'avg(/ISP gateway fast ping/icmppingloss[,{$ISP.PING.COUNT},200,,500],5m)<{$ISP.PROVIDER.LOSS.RECOVERY}'
+      name: 'Aviso al proveedor: pérdida alta hacia el gateway durante 5 min'
+      opdata: 'Pérdida media 5 min: {{?avg(/{HOST.HOST}/icmppingloss[,{$ISP.PING.COUNT},200,,500],5m)}.fmtnum(0)}%'
+      priority: INFO
+      description: 'Solo para el aviso automático al proveedor: pérdida media del {$ISP.PROVIDER.LOSS} % o más durante 5 minutos.'
+      dependencies:
+        - name: 'Aviso al proveedor: gateway sin respuesta más de 5 min'
+          expression: 'max(/ISP gateway fast ping/icmpping[,{$ISP.PING.COUNT},200,,500],5m)=0'
           recovery_expression: 'min(/ISP gateway fast ping/icmpping[,{$ISP.PING.COUNT},200,,500],#3)=1'
       tags:
-        - tag: aviso_proveedor
-          value: 'Pérdida de paquetes intermitente hacia el gateway del servicio'
         - tag: scope
-          value: performance
+          value: 'performance'
+        - tag: aviso_proveedor
+          value: 'Pérdida de paquetes del 50 % o más hacia el gateway del servicio durante 5 minutos'

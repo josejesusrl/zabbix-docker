@@ -76,7 +76,19 @@ zabbix_export:
           value: '3'
         - macro: '{$ISP.LOSS.CHECKS}'
           value: '3'
-          description: 'Checks with packet loss within 5 minutes, on both addresses, that open "Intermittent loss".'
+          description: 'Checks with packet loss within 5 minutes, on both addresses, that open "Intermittent loss" (informative).'
+        - macro: '{$ISP.CUT.LOSS}'
+          value: '33'
+          description: 'Packet loss (%) averaged over 1 minute that is a real outage for Likson ("Corte" triggers, notified to Likson).'
+        - macro: '{$ISP.CUT.LOSS.RECOVERY}'
+          value: '10'
+          description: 'Average 1-minute loss (%) below which the outage is resolved.'
+        - macro: '{$ISP.PROVIDER.LOSS}'
+          value: '50'
+          description: 'Average 5-minute loss (%) that is notified to the provider.'
+        - macro: '{$ISP.PROVIDER.LOSS.RECOVERY}'
+          value: '20'
+          description: 'Average 5-minute loss (%) below which the provider loss notice is resolved.'
       valuemaps:
         - uuid: 3ce69d4cca414e89901b3b90c17958bc
           name: 'Service state'
@@ -87,31 +99,57 @@ zabbix_export:
               newvalue: Up
   triggers:
     - uuid: fdaceccb327e478aa09510127f990b9f
-      expression: 'max(/ISP internet fast ping/icmpping[{$ISP.INET.TARGET1},{$ISP.PING.COUNT},200,,500],#1)=0 and max(/ISP internet fast ping/icmpping[{$ISP.INET.TARGET2},{$ISP.PING.COUNT},200,,500],#1)=0'
+      expression: 'avg(/ISP internet fast ping/icmppingloss[{$ISP.INET.TARGET1},{$ISP.PING.COUNT},200,,500],1m)>{$ISP.CUT.LOSS} and avg(/ISP internet fast ping/icmppingloss[{$ISP.INET.TARGET2},{$ISP.PING.COUNT},200,,500],1m)>{$ISP.CUT.LOSS}'
       recovery_mode: RECOVERY_EXPRESSION
-      recovery_expression: 'min(/ISP internet fast ping/icmpping[{$ISP.INET.TARGET1},{$ISP.PING.COUNT},200,,500],#3)=1 or min(/ISP internet fast ping/icmpping[{$ISP.INET.TARGET2},{$ISP.PING.COUNT},200,,500],#3)=1'
+      recovery_expression: 'avg(/ISP internet fast ping/icmppingloss[{$ISP.INET.TARGET1},{$ISP.PING.COUNT},200,,500],1m)<{$ISP.CUT.LOSS.RECOVERY} or avg(/ISP internet fast ping/icmppingloss[{$ISP.INET.TARGET2},{$ISP.PING.COUNT},200,,500],1m)<{$ISP.CUT.LOSS.RECOVERY}'
       name: 'Sin salida a Internet por el proveedor'
       event_name: 'Sin salida a Internet: {HOST.NAME} ({$ISP.INET.TARGET1} y {$ISP.INET.TARGET2} no responden)'
+      opdata: 'Pérdida en 1 min: {{?avg(/{HOST.HOST}/icmppingloss[{$ISP.INET.TARGET1},{$ISP.PING.COUNT},200,,500],1m)}.fmtnum(0)}% / {{?avg(/{HOST.HOST}/icmppingloss[{$ISP.INET.TARGET2},{$ISP.PING.COUNT},200,,500],1m)}.fmtnum(0)}%'
       priority: HIGH
-      description: 'Ninguna de las dos direcciones de Internet respondió en la misma comprobación (cada 5 s), aunque se enrutan solo por este proveedor. Si el gateway del proveedor sí responde, la falla está en la red del proveedor más allá de su gateway. Se resuelve cuando una de las dos responde 3 veces seguidas.'
+      description: 'Corte real de la salida a Internet para Likson: pérdida media de más del {$ISP.CUT.LOSS} % en 1 minuto hacia las dos direcciones, aunque se enrutan solo por este proveedor. Si el gateway responde, la falla está en la red del proveedor más allá de su gateway.'
       tags:
-        - tag: aviso_proveedor
-          value: 'El gateway responde, pero no hay salida a Internet a través del servicio'
         - tag: scope
-          value: availability
+          value: 'availability'
     - uuid: 5c58f264789b4dfa9c88ab14b6d98786
       expression: 'count(/ISP internet fast ping/icmppingloss[{$ISP.INET.TARGET1},{$ISP.PING.COUNT},200,,500],5m,"gt",0)>={$ISP.LOSS.CHECKS} and count(/ISP internet fast ping/icmppingloss[{$ISP.INET.TARGET2},{$ISP.PING.COUNT},200,,500],5m,"gt",0)>={$ISP.LOSS.CHECKS}'
       recovery_mode: RECOVERY_EXPRESSION
       recovery_expression: 'count(/ISP internet fast ping/icmppingloss[{$ISP.INET.TARGET1},{$ISP.PING.COUNT},200,,500],5m,"gt",0)=0 or count(/ISP internet fast ping/icmppingloss[{$ISP.INET.TARGET2},{$ISP.PING.COUNT},200,,500],5m,"gt",0)=0'
       name: 'Pérdida intermitente hacia Internet por el proveedor'
-      priority: WARNING
-      description: 'Las dos direcciones de Internet tuvieron pérdida de paquetes en al menos {$ISP.LOSS.CHECKS} comprobaciones en 5 minutos: salida a Internet del proveedor inestable.'
+      priority: INFO
+      description: 'Pérdida de paquetes en las dos direcciones en varias comprobaciones de 5 minutos. Solo informativo (no notifica).'
       dependencies:
         - name: 'Sin salida a Internet por el proveedor'
-          expression: 'max(/ISP internet fast ping/icmpping[{$ISP.INET.TARGET1},{$ISP.PING.COUNT},200,,500],#1)=0 and max(/ISP internet fast ping/icmpping[{$ISP.INET.TARGET2},{$ISP.PING.COUNT},200,,500],#1)=0'
+          expression: 'avg(/ISP internet fast ping/icmppingloss[{$ISP.INET.TARGET1},{$ISP.PING.COUNT},200,,500],1m)>{$ISP.CUT.LOSS} and avg(/ISP internet fast ping/icmppingloss[{$ISP.INET.TARGET2},{$ISP.PING.COUNT},200,,500],1m)>{$ISP.CUT.LOSS}'
+          recovery_expression: 'avg(/ISP internet fast ping/icmppingloss[{$ISP.INET.TARGET1},{$ISP.PING.COUNT},200,,500],1m)<{$ISP.CUT.LOSS.RECOVERY} or avg(/ISP internet fast ping/icmppingloss[{$ISP.INET.TARGET2},{$ISP.PING.COUNT},200,,500],1m)<{$ISP.CUT.LOSS.RECOVERY}'
+      tags:
+        - tag: scope
+          value: 'performance'
+    - uuid: d6bf0ece328a4fd38ca7a16c13a58ca2
+      expression: 'max(/ISP internet fast ping/icmpping[{$ISP.INET.TARGET1},{$ISP.PING.COUNT},200,,500],5m)=0 and max(/ISP internet fast ping/icmpping[{$ISP.INET.TARGET2},{$ISP.PING.COUNT},200,,500],5m)=0'
+      recovery_mode: RECOVERY_EXPRESSION
+      recovery_expression: 'min(/ISP internet fast ping/icmpping[{$ISP.INET.TARGET1},{$ISP.PING.COUNT},200,,500],#3)=1 or min(/ISP internet fast ping/icmpping[{$ISP.INET.TARGET2},{$ISP.PING.COUNT},200,,500],#3)=1'
+      name: 'Aviso al proveedor: sin salida a Internet más de 5 min'
+      priority: INFO
+      description: 'Solo para el aviso automático al proveedor: ninguna de las dos direcciones respondió durante 5 minutos seguidos.'
+      tags:
+        - tag: scope
+          value: 'availability'
+        - tag: aviso_proveedor
+          value: 'El gateway responde, pero no hay salida a Internet a través del servicio desde hace más de 5 minutos'
+    - uuid: 30cf484f0048444f8c7e757c7bac6e13
+      expression: 'avg(/ISP internet fast ping/icmppingloss[{$ISP.INET.TARGET1},{$ISP.PING.COUNT},200,,500],5m)>={$ISP.PROVIDER.LOSS} and avg(/ISP internet fast ping/icmppingloss[{$ISP.INET.TARGET2},{$ISP.PING.COUNT},200,,500],5m)>={$ISP.PROVIDER.LOSS}'
+      recovery_mode: RECOVERY_EXPRESSION
+      recovery_expression: 'avg(/ISP internet fast ping/icmppingloss[{$ISP.INET.TARGET1},{$ISP.PING.COUNT},200,,500],5m)<{$ISP.PROVIDER.LOSS.RECOVERY} or avg(/ISP internet fast ping/icmppingloss[{$ISP.INET.TARGET2},{$ISP.PING.COUNT},200,,500],5m)<{$ISP.PROVIDER.LOSS.RECOVERY}'
+      name: 'Aviso al proveedor: pérdida alta hacia Internet durante 5 min'
+      opdata: 'Pérdida media 5 min: {{?avg(/{HOST.HOST}/icmppingloss[{$ISP.INET.TARGET1},{$ISP.PING.COUNT},200,,500],5m)}.fmtnum(0)}% / {{?avg(/{HOST.HOST}/icmppingloss[{$ISP.INET.TARGET2},{$ISP.PING.COUNT},200,,500],5m)}.fmtnum(0)}%'
+      priority: INFO
+      description: 'Solo para el aviso automático al proveedor: pérdida media del {$ISP.PROVIDER.LOSS} % o más durante 5 minutos hacia las dos direcciones.'
+      dependencies:
+        - name: 'Aviso al proveedor: sin salida a Internet más de 5 min'
+          expression: 'max(/ISP internet fast ping/icmpping[{$ISP.INET.TARGET1},{$ISP.PING.COUNT},200,,500],5m)=0 and max(/ISP internet fast ping/icmpping[{$ISP.INET.TARGET2},{$ISP.PING.COUNT},200,,500],5m)=0'
           recovery_expression: 'min(/ISP internet fast ping/icmpping[{$ISP.INET.TARGET1},{$ISP.PING.COUNT},200,,500],#3)=1 or min(/ISP internet fast ping/icmpping[{$ISP.INET.TARGET2},{$ISP.PING.COUNT},200,,500],#3)=1'
       tags:
-        - tag: aviso_proveedor
-          value: 'Pérdida de paquetes intermitente hacia Internet a través del servicio'
         - tag: scope
-          value: performance
+          value: 'performance'
+        - tag: aviso_proveedor
+          value: 'Pérdida de paquetes del 50 % o más hacia Internet a través del servicio durante 5 minutos'
